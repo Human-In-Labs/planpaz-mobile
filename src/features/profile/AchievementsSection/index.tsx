@@ -5,6 +5,7 @@ import { colors } from '../../../shared/theme';
 import AchievementCard from '../AchievementCard';
 import { AchievementsSectionProps, } from './types';
 import { styles } from './styles';
+import { AppIcons } from '../../../shared/constants/appIcons';
 
 export default function AchievementsSection({
     achievements,
@@ -23,7 +24,7 @@ export default function AchievementsSection({
                 </Text>
 
                 <AppIcon
-                    name="chevronRight"
+                    icon={AppIcons.CHEVRON_RIGHT}
                     size={20}
                     color={colors.primary}
                 />

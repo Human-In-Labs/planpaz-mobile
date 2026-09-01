@@ -54,25 +54,25 @@ export default function ProfileScreen() {
                     achievements={[
                         {
                             id: '1',
-                            icon: AppIcons.EDIT,
+                            icon: AppIcons.NOTE_PENCIL,
                             title: 'Jardineiro',
                             level: 'I',
                         },
                         {
                             id: '2',
-                            icon: AppIcons.EDIT,
+                            icon: AppIcons.NOTE_PENCIL,
                             title: 'Jardineiro',
                             level: 'II',
                         },
                         {
                             id: '3',
-                            icon: AppIcons.EDIT,
+                            icon: AppIcons.NOTE_PENCIL,
                             title: 'Jardineiro',
                             level: 'III',
                         },
                         {
                             id: '4',
-                            icon: AppIcons.EDIT,
+                            icon: AppIcons.NOTE_PENCIL,
                             title: 'PlanPaz',
                         },
                     ]}

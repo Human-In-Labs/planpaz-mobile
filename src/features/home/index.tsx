@@ -7,7 +7,8 @@ import { ScrollView } from 'react-native';
 import ActivitySection from './ActivitySection';
 import LocationOverlay from './overlays/Location';
 import NotificationOverlay from './overlays/Notification';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { getToken } from '../../shared/services/storage';
 
 const location = {
     id: '1',
@@ -21,6 +22,15 @@ export default function HomeScreen() {
     const [activeOverlay, setActiveOverlay] = useState<
         'location' | 'notification' | null
     >(null);
+
+    useEffect(() => {
+        const testarToken = async () => {
+            const token = await getToken();
+            console.log('[HOME] Token recuperado:', token);
+        };
+
+        testarToken();
+    }, []);
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>

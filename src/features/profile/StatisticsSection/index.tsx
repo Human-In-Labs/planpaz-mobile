@@ -5,6 +5,7 @@ import { colors } from '../../../shared/theme';
 import StatisticCard from '../StatisticCard';
 import { StatisticsSectionProps, } from './types';
 import { styles } from './styles';
+import { AppIcons } from '../../../shared/constants/appIcons';
 
 export default function StatisticsSection({
     statistics,
@@ -22,7 +23,7 @@ export default function StatisticsSection({
                 </Text>
 
                 <AppIcon
-                    name="chevronRight"
+                    icon={AppIcons.CHEVRON_RIGHT}
                     size={20}
                     color={colors.primary}
                 />

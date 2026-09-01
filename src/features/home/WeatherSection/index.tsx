@@ -49,7 +49,7 @@ export default function WeatherSection({
                 >
                     <View style={styles.locationButtonContainer}>
                         <AppIcon
-                            name={AppIcons.MAP_PIN}
+                            icon={AppIcons.MAP_PIN}
                             size={14}
                             color={colors.black}
                         />
@@ -59,7 +59,7 @@ export default function WeatherSection({
                         </Text>
 
                         <AppIcon
-                            name={AppIcons.EDIT}
+                            icon={AppIcons.NOTE_PENCIL}
                             size={14}
                             color={colors.primary}
                         />
@@ -86,7 +86,7 @@ export default function WeatherSection({
                         style={styles.summaryCard}
                     >
                         <AppIcon
-                            name={item.icon}
+                            icon={item.icon}
                             size={24}
                             color={colors.black}
                         />

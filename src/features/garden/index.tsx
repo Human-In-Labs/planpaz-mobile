@@ -132,7 +132,7 @@ export default function GardenScreen() {
                                 style={styles.filterButton}
                             >
                                 <AppIcon
-                                    name="edit"
+                                    icon={AppIcons.FILTER}
                                     size={20}
                                     color={colors.primary}
                                 />

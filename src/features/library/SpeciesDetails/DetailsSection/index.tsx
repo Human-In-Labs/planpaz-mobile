@@ -4,6 +4,7 @@ import AppIcon from '../../../../shared/components/AppIcon';
 import { colors } from '../../../../shared/theme';
 import { DetailsSectionProps } from './types';
 import { styles } from './styles';
+import { AppIcons } from '../../../../shared/constants/appIcons';
 
 export default function DetailsSection({
     commonName,
@@ -44,7 +45,7 @@ export default function DetailsSection({
 
                 <View style={styles.infoRow}>
                     <AppIcon
-                        name="sun"
+                        icon={AppIcons.SUN}
                         size={20}
                         color={colors.primary}
                     />
@@ -64,7 +65,7 @@ export default function DetailsSection({
 
                 <View style={styles.infoRow}>
                     <AppIcon
-                        name="droplet"
+                        icon={AppIcons.DROPLET}
                         size={20}
                         color={colors.primary}
                     />

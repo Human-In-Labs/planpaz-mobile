@@ -1,5 +1,7 @@
 import React from 'react';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import AppIcon from '../../../shared/components/AppIcon';
+import { AppIcons } from '../../../shared/constants/appIcons';
 
 interface Props {
     name: 'social' | 'home' | 'garden' | 'profile';
@@ -15,40 +17,61 @@ export default function TabBarIcon({
 
     const size = 24;
 
-    let iconName = '';
-
     switch (name) {
 
         case 'social':
-            iconName = focused
-                ? 'account-group'
-                : 'account-group-outline';
-            break;
+            return (
+                <AppIcon
+                    icon={
+                        focused
+                            ? AppIcons.USERS_FILL
+                            : AppIcons.USERS
+                    }
+                    size={size}
+                    color={color}
+                />
+            );
 
         case 'home':
-            iconName = focused
-                ? 'home'
-                : 'home-outline';
-            break;
+            return (
+                <AppIcon
+                    icon={
+                        focused
+                            ? AppIcons.HOUSE_FILL
+                            : AppIcons.HOUSE
+                    }
+                    size={size}
+                    color={color}
+                />
+            );
 
         case 'garden':
-            iconName = focused
-                ? 'sprout'
-                : 'sprout-outline';
-            break;
+            return (
+                <AppIcon
+                    icon={
+                        focused
+                            ? AppIcons.PLANT_FILL
+                            : AppIcons.PLANT
+                    }
+                    size={size}
+                    color={color}
+                />
+            );
 
         case 'profile':
-            iconName = focused
-                ? 'account'
-                : 'account-outline';
-            break;
-    }
+            return (
+                <AppIcon
+                    icon={
+                        focused
+                            ? AppIcons.USER_FILL
+                            : AppIcons.USER
+                    }
+                    size={size}
+                    color={color}
+                />
+            );
 
-    return (
-        <MaterialCommunityIcons
-            name={iconName}
-            size={size}
-            color={color}
-        />
-    );
+        default:
+            return null;
+    }
 }

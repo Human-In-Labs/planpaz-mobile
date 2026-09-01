@@ -1,8 +1,11 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
+
 import AppIcon from '../AppIcon';
+
 import { styles } from './styles';
 import { FloatingActionButtonProps } from './types';
+
 import { colors } from '../../theme';
 
 export default function FloatingActionButton({
@@ -17,7 +20,7 @@ export default function FloatingActionButton({
             onPress={onPress}
         >
             <AppIcon
-                name={icon}
+                icon={icon}
                 size={32}
                 color={colors.primary}
             />

@@ -5,6 +5,7 @@ import Tag from '../Tag';
 import { colors } from '../../../../shared/theme';
 import { ImageCardProps } from './types';
 import { styles } from './styles';
+import { AppIcons } from '../../../../shared/constants/appIcons';
 
 export default function ImageCard({
     image,
@@ -39,10 +40,10 @@ export default function ImageCard({
 
             >
                 <AppIcon
-                    name={
+                    icon={
                         expanded
-                            ? 'chevronUp'
-                            : 'chevronDown'
+                            ? AppIcons.CHEVRON_UP
+                            : AppIcons.CHEVRON_DOWN
                     }
                     size={28}
                     color={colors.primary}

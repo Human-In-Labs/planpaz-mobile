@@ -75,7 +75,7 @@ export default function OnboardingScreen() {
           <TouchableOpacity style={styles.nextButton}
             onPress={() => {
               if (isLastPage) {
-                navigation.replace('MainTabs');
+                navigation.replace('Login');
               }else{
                 setCurrentPage(currentPage + 1);
               }

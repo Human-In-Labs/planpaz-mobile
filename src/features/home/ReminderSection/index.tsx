@@ -36,9 +36,7 @@ export default function ReminderSection() {
                 horizontal
                 data={reminders}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <ReminderCard reminder={item} />
-                )}
+                renderItem={({ item }) => (<ReminderCard reminder={item} />)}
                 ItemSeparatorComponent={Separator}
                 contentContainerStyle={styles.listContent}
                 showsHorizontalScrollIndicator={false}

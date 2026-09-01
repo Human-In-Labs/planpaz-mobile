@@ -44,7 +44,7 @@ export default function AppHeader({
             >
 
                 <AppIcon
-                    name={
+                    icon={
                         backButton
                             ? AppIcons.ARROW_LEFT
                             : AppIcons.BELL
@@ -58,6 +58,7 @@ export default function AppHeader({
                 )}
 
             </TouchableOpacity>
+
         </View>
     );
 }

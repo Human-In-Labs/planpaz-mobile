@@ -6,6 +6,7 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { colors } from '../../../shared/theme';
 import { styles } from './styles';
 import { FilterSectionProps } from './types';
+import { AppIcons } from '../../../shared/constants/appIcons';
 
 export default function FilterSection({
     search,
@@ -47,7 +48,7 @@ export default function FilterSection({
                     onPress={onFilterPress}
                 >
                     <AppIcon
-                        name="edit"
+                        icon={AppIcons.NOTE_PENCIL}
                         size={20}
                         color={colors.primary}
                     />
@@ -65,7 +66,7 @@ export default function FilterSection({
 
                     <View style={styles.arrow}>
                         <AppIcon
-                            name="chevronRight"
+                            icon={AppIcons.CHEVRON_RIGHT}
                             size={12}
                             color={colors.primary}
                         />

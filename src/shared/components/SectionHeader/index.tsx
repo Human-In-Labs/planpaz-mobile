@@ -4,6 +4,7 @@ import { styles } from './styles';
 import { SectionHeaderProps } from './types';
 import AppIcon from '../AppIcon';
 import { colors } from '../../theme';
+import { AppIcons } from '../../constants/appIcons';
 
 export default function SectionHeader({
     title,
@@ -22,7 +23,7 @@ export default function SectionHeader({
             </Text>
 
             <AppIcon
-                name="chevronRight"
+                icon={AppIcons.CHEVRON_RIGHT}
                 size={20}
                 color={colors.primary}
                 style={styles.icon}

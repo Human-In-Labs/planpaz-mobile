@@ -4,6 +4,7 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { colors } from '../../../shared/theme';
 import { styles } from './styles';
 import { SpeciesCardProps } from './types';
+import { AppIcons } from '../../../shared/constants/appIcons';
 
 export default function SpeciesCard({
     image,
@@ -34,7 +35,7 @@ export default function SpeciesCard({
                     </Text>
 
                     <AppIcon
-                        name="arrowRight"
+                        icon={AppIcons.ARROW_RIGHT}
                         size={22}
                         color={colors.primary}
                     />
@@ -42,7 +43,7 @@ export default function SpeciesCard({
 
                 <View style={styles.infoRow}>
                     <AppIcon
-                        name="sun"
+                        icon={AppIcons.SUN}
                         size={22}
                         color={colors.black}
                     />
@@ -54,7 +55,7 @@ export default function SpeciesCard({
 
                 <View style={styles.infoRow}>
                     <AppIcon
-                        name="droplet"
+                        icon={AppIcons.DROPLET}
                         size={22}
                         color={colors.black}
                     />

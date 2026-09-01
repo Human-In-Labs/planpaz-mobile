@@ -30,7 +30,7 @@ export default function FilterChip({
 
             {removable && (
                 <AppIcon
-                    name="x"
+                    icon="x"
                     size={16}
                     color={colors.primary}
                     style={styles.icon}

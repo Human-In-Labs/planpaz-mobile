@@ -14,7 +14,7 @@ export default function AchievementCard({
         <View style={styles.container}>
             <View style={styles.card}>
                 <AppIcon
-                    name={icon}
+                    icon={icon}
                     size={32}
                     color={colors.primary}
                 />

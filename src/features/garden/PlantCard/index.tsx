@@ -4,6 +4,7 @@ import { PlantCardProps } from './types';
 import { styles } from './styles';
 import AppIcon from '../../../shared/components/AppIcon';
 import { colors } from '../../../shared/theme';
+import { AppIcons } from '../../../shared/constants/appIcons';
 
 export default function PlantCard({
     image,
@@ -34,7 +35,7 @@ export default function PlantCard({
                     </Text>
 
                     <AppIcon
-                        name="edit"
+                        icon={AppIcons.NOTE_PENCIL}
                         size={16}
                         color={colors.primary}
                     />

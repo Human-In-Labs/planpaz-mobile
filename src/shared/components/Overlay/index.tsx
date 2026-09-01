@@ -36,7 +36,7 @@ export default function Overlay({
                         onPress={onClose}
                     >
                         <AppIcon
-                            name={AppIcons.X}
+                            icon={AppIcons.X}
                             size={22}
                             color={colors.primary}
                         />
