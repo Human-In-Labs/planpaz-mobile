@@ -1,120 +1,62 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Alert, } from 'react-native';
-import { NativeStackNavigationProp, } from '@react-navigation/native-stack';
-import { useNavigation, } from '@react-navigation/native';
-import { RootStackParamList, } from '../../../navigation/types';
-import { colors, } from '../../../shared/theme';
-import { styles, } from './styles';
-import { register, } from '../../../shared/api';
+import { View, Text, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '../../../navigation/types';
+import { colors } from '../../../shared/theme';
+import AppIcon from '../../../shared/components/AppIcon';
+import { styles } from './styles';
 
-type RegisterScreenNavigationProp = NativeStackNavigationProp< RootStackParamList, 'Register' >;
+type RegisterNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
 export default function RegisterScreen() {
-  const navigation = useNavigation<RegisterScreenNavigationProp>();
-  const [ name, setName, ] = useState('');
-  const [ email, setEmail, ] = useState('');
-  const [ password, setPassword, ] = useState('');
-  const [ confirmPassword, setConfirmPassword, ] = useState('');
-  const [ loading, setLoading, ] = useState(false);
+  const navigation = useNavigation<RegisterNavigationProp>();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  async function handleRegister() {
-    const cleanName = name.trim();
+  const hasMinLength = password.length >= 8;
+  const hasNumber = /\d/.test(password);
+
+  const handleNext = () => {
     const cleanEmail = email.trim();
-    /* VALIDAÇÃO DOS CAMPOS */
-    if (
-      !cleanName ||
-      !cleanEmail ||
-      !password ||
-      !confirmPassword
-    ) {
-      Alert.alert('Campos obrigatórios', 'Preencha todos os campos para continuar.',);
+
+    if (!cleanEmail || !password || !confirmPassword) {
+      Alert.alert('Campos obrigatórios', 'Preencha todos os campos para continuar.');
       return;
     }
 
-    /* VALIDAÇÃO DO EMAIL */
-    if (
-      !cleanEmail.includes('@')
-    ) {
-      Alert.alert('Email inválido', 'Digite um endereço de email válido.',);
+    if (!cleanEmail.includes('@')) {
+      Alert.alert('Email inválido', 'Digite um endereço de email válido.');
       return;
     }
 
-    /* VALIDAÇÃO DA SENHA */
-    if (
-      password.length < 6
-    ) {
-      Alert.alert('Senha inválida', 'A senha deve possuir pelo menos 6 caracteres.',);
+    if (!hasMinLength) {
+      Alert.alert('Senha inválida', 'A senha deve possuir pelo menos 8 caracteres.');
       return;
     }
 
-    /* CONFIRMAÇÃO DA SENHA */
-    if (
-      password !== confirmPassword
-    ) {
-      Alert.alert('Senhas diferentes', 'A senha e a confirmação de senha precisam ser iguais.',);
+    if (!hasNumber) {
+      Alert.alert('Senha inválida', 'A senha deve conter pelo menos um número.');
       return;
     }
 
-    try {
-      setLoading(true);
-      console.log('========== CADASTRO ==========',);
-      console.log('NOME:', cleanName,);
-      console.log('EMAIL:', cleanEmail,);
-
-      /*  CHAMADA DA API : A comunicação HTTP fica centralizada em shared/api. */
-      const response =
-        await register({
-          name: cleanName,
-          email: cleanEmail,
-          password,
-        });
-
-      console.log('CADASTRO REALIZADO:', response,);
-
-      Alert.alert(
-        'Cadastro realizado!',
-        'Sua conta foi criada com sucesso.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate(
-                'Login',
-              );
-            },
-          },
-        ],
-      );
-
-    } catch (error: any) {
-      console.log('========== ERRO NO CADASTRO ==========',);
-      console.log(error,);
-      if (error.response) {
-        console.log('STATUS:', error.response.status,);
-        console.log('DATA:', error.response.data,);
-        if (
-          error.response.status === 400
-        ) {
-          Alert.alert('Cadastro não realizado', 'Este email já está cadastrado.',);
-        } else {
-          Alert.alert('Erro', 'Não foi possível realizar o cadastro.',);
-        }
-      } else {
-        Alert.alert('Erro de conexão', 'Não foi possível conectar ao servidor. Verifique se a API está funcionando.',);
-      }
-    } finally {
-      setLoading(false);
+    if (password !== confirmPassword) {
+      Alert.alert('Senhas diferentes', 'A senha e a confirmação de senha precisam ser iguais.');
+      return;
     }
-  }
+
+    navigation.navigate('RegisterStep2', {
+      email: cleanEmail,
+      password,
+    });
+  };
 
   return (
-    <View
-      style={styles.container}
-    >
-      <View
-        style={styles.header}
-      >
-
+    <View style={styles.container}>
+      <View style={styles.header}>
         <Image
           source={require('../../../assets/images/auth-banner.png')}
           resizeMode="cover"
@@ -124,19 +66,7 @@ export default function RegisterScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
-          <Text style={styles.title}>
-            Cadastrar
-          </Text>
-
-          <TextInput
-            style={styles.inputEmail}
-            placeholder="Nome completo"
-            placeholderTextColor={colors.black}
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
+          <Text style={styles.title}>Cadastrar</Text>
 
           <TextInput
             style={styles.inputEmail}
@@ -149,55 +79,104 @@ export default function RegisterScreen() {
             autoCorrect={false}
           />
 
-          <TextInput
-            style={styles.inputPassword}
-            placeholder="Password"
-            placeholderTextColor={colors.black}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.inputPassword}
+              placeholder="Password"
+              placeholderTextColor={colors.black}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowPassword(prev => !prev)}
+            >
+              <AppIcon
+                icon={showPassword ? 'eye' : 'eyeSlash'}
+                size={22}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
 
-          <TextInput
-            style={styles.inputPassword}
-            placeholder="Confirm Password"
-            placeholderTextColor={colors.black}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.inputPassword}
+              placeholder="Confirm password"
+              placeholderTextColor={colors.black}
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowConfirmPassword(prev => !prev)}
+            >
+              <AppIcon
+                icon={showConfirmPassword ? 'eye' : 'eyeSlash'}
+                size={22}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.criteriaContainer}>
+            <Text style={styles.criteriaTitle}>Sua senha deve conter:</Text>
+
+            <View style={styles.criteriaRow}>
+              <View
+                style={[
+                  styles.criteriaCircle,
+                  hasMinLength && styles.criteriaCircleActive,
+                ]}
+              />
+              <Text
+                style={[
+                  styles.criteriaText,
+                  hasMinLength && styles.criteriaTextActive,
+                ]}
+              >
+                Mínimo de 8 caracteres
+              </Text>
+            </View>
+
+            <View style={styles.criteriaRow}>
+              <View
+                style={[
+                  styles.criteriaCircle,
+                  hasNumber && styles.criteriaCircleActive,
+                ]}
+              />
+              <Text
+                style={[
+                  styles.criteriaText,
+                  hasNumber && styles.criteriaTextActive,
+                ]}
+              >
+                Número
+              </Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => navigation.replace('Login',)}
-            disabled={loading}
+            style={styles.alreadyHaveAccountButton}
+            onPress={() => navigation.navigate('Login')}
           >
-            <Text
-              style={styles.registerButtonText}
-            >
-              Já tem uma conta?
+            <Text style={styles.alreadyHaveAccountButtonText}>
+              Já possuo conta
             </Text>
-
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleRegister}
-            disabled={loading}
+            style={styles.nextButton}
+            onPress={handleNext}
           >
-            <Text
-              style={styles.loginButtonText}
-            >
-              {
-                loading
-                  ? 'Cadastrando...'
-                  : 'Cadastrar'
-              }
-            </Text>
+            <Text style={styles.nextButtonText}>Próximo</Text>
           </TouchableOpacity>
         </View>
       </View>

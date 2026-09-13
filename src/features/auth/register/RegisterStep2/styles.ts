@@ -1,6 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { colors, radius, shadows, spacing, typography } from '../../../shared/theme';
-import { verticalScale } from '../../../shared/theme/scale';
+import { colors, radius, shadows, spacing, typography } from '../../../../shared/theme';
+import { verticalScale } from '../../../../shared/theme/scale';
 
 const { width } = Dimensions.get('window');
 
@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
 
-  inputEmail: {
+  input: {
     height: verticalScale(72),
     backgroundColor: colors.white,
     borderRadius: radius.xl,
@@ -48,71 +48,6 @@ export const styles = StyleSheet.create({
     color: colors.black,
   },
 
-  passwordContainer: {
-    height: verticalScale(72),
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
-    ...shadows.medium,
-    marginBottom: spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingStart: spacing.md,
-    paddingEnd: spacing.sm,
-  },
-
-  inputPassword: {
-    flex: 1,
-    height: '100%',
-    ...typography.bodyStrong,
-    color: colors.black,
-  },
-
-  iconButton: {
-    padding: spacing.xs,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  criteriaContainer: {
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.xs,
-  },
-
-  criteriaTitle: {
-    ...typography.captionStrong,
-    color: colors.black,
-    marginBottom: spacing.xxs,
-  },
-
-  criteriaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: 3,
-  },
-
-  criteriaCircle: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: colors.text,
-  },
-
-  criteriaCircleActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-
-  criteriaText: {
-    ...typography.captionRegular,
-    color: colors.text,
-  },
-
-  criteriaTextActive: {
-    color: colors.primary,
-  },
-
   footer: {
     marginTop: 'auto',
     flexDirection: 'row',
@@ -121,20 +56,20 @@ export const styles = StyleSheet.create({
     gap: spacing.xs,
   },
 
-  alreadyHaveAccountButton: {
+  backButton: {
     flex: 1,
     height: verticalScale(spacing.xxxl),
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  alreadyHaveAccountButtonText: {
+  backButtonText: {
     ...typography.button,
     color: colors.primary,
     textDecorationLine: 'underline',
   },
 
-  nextButton: {
+  registerButton: {
     flex: 1,
     height: verticalScale(spacing.xxxl),
     backgroundColor: colors.primary,
@@ -143,7 +78,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  nextButtonText: {
+  registerButtonText: {
     ...typography.button,
     color: colors.white,
   },

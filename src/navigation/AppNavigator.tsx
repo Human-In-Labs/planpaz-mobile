@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingScreen from '../features/onboarding';
 import LoginScreen from '../features/auth/login';
 import RegisterScreen from '../features/auth/register';
+import RegisterStep2Screen from '../features/auth/register/RegisterStep2';
 import ForgotPasswordScreen from '../features/auth/forgot-password';
 import MainTabNavigator from './MainTabNavigator';
 import { RootStackParamList } from './types';
@@ -33,6 +34,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="Register"
                     component={RegisterScreen}
+                />
+
+                <Stack.Screen
+                    name="RegisterStep2"
+                    component={RegisterStep2Screen}
                 />
 
                 <Stack.Screen
