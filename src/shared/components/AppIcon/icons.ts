@@ -65,6 +65,9 @@ import X from '../../../assets/icons/x.svg';
 
 import Plus from '../../../assets/icons/plus.svg';
 
+import Eye from '../../../assets/icons/eye.svg';
+import EyeSlash from '../../../assets/icons/eye-slash.svg';
+
 import { SvgProps } from 'react-native-svg';
 
 type SvgIcon = React.FC<SvgProps>;
@@ -136,6 +139,9 @@ export const icons = {
     x: X,
 
     plus: Plus,
+
+    eye: Eye,
+    eyeSlash: EyeSlash,
 } satisfies Record<string, SvgIcon>;
 
 export type IconName = keyof typeof icons;

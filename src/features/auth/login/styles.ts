@@ -1,6 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import { colors, radius, shadows, spacing, typography} from '../../../shared/theme';
-import { scale, verticalScale } from '../../../shared/theme/scale';
+import { verticalScale } from '../../../shared/theme/scale';
 
 const { width } = Dimensions.get('window');
 
@@ -58,13 +58,28 @@ export const styles = StyleSheet.create({
     paddingStart: spacing.md,
   },
 
-  inputPassword: {
+  passwordContainer: {
     height: verticalScale(72),
-    backgroundColor: colors.white, 
+    backgroundColor: colors.white,
     borderRadius: radius.xl,
     ...shadows.medium,
     marginTop: spacing.xs,
-    paddingStart: scale(spacing.md),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingStart: spacing.md,
+    paddingEnd: spacing.sm,
+  },
+
+  inputPassword: {
+    flex: 1,
+    height: '100%',
+    color: colors.black,
+  },
+
+  iconButton: {
+    padding: spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   footer: {

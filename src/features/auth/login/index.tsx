@@ -8,6 +8,7 @@ import React from 'react'
 import { colors } from '../../../shared/theme'
 import { login } from '../../../shared/api';
 import { saveToken, getToken } from '../../../shared/services/storage';
+import AppIcon from '../../../shared/components/AppIcon';
 
 
 type LoginScreenNavigationProp =
@@ -17,6 +18,7 @@ export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const handleLogin = async () => {
     try {
       console.log('[LOGIN] Botão pressionado');
@@ -61,21 +63,33 @@ export default function LoginScreen() {
             onChangeText={setEmail}
           />
 
-          <TextInput
-            style={styles.inputPassword}
-            placeholder="Password"
-            placeholderTextColor={colors.black}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.inputPassword}
+              placeholder="Password"
+              placeholderTextColor={colors.black}
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowPassword(prev => !prev)}
+            >
+              <AppIcon
+                icon={showPassword ? 'eye' : 'eyeSlash'}
+                size={22}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity style={styles.forgotPasswordButton}
             onPress={() => {
               navigation.navigate('ForgotPassword');
             }}
           >
-            <Text style={styles.forgotPasswordButtonText}>Esqueceu a senha?</Text>
+            <Text style={styles.forgotPasswordButtonText}>Esqueci minha senha</Text>
           </TouchableOpacity>
         </View>
 
@@ -85,7 +99,7 @@ export default function LoginScreen() {
               navigation.navigate('Register');
             }}
           >
-            <Text style={styles.registerButtonText}>Não tem uma conta?</Text>
+            <Text style={styles.registerButtonText}>Não tenho uma conta</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.loginButton}
             onPress={handleLogin}
