@@ -5,6 +5,8 @@ import LoginScreen from '../features/auth/login';
 import RegisterScreen from '../features/auth/register';
 import RegisterStep2Screen from '../features/auth/register/RegisterStep2';
 import ForgotPasswordScreen from '../features/auth/forgot-password';
+import ValidateCodeScreen from '../features/auth/validate-code';
+import ResetPasswordScreen from '../features/auth/reset-password';
 import MainTabNavigator from './MainTabNavigator';
 import { RootStackParamList } from './types';
 import LibraryScreen from '../features/library';
@@ -44,6 +46,16 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="ForgotPassword"
                     component={ForgotPasswordScreen}
+                />
+
+                <Stack.Screen
+                    name="ValidateCode"
+                    component={ValidateCodeScreen}
+                />
+
+                <Stack.Screen
+                    name="ResetPassword"
+                    component={ResetPasswordScreen}
                 />
 
                 <Stack.Screen

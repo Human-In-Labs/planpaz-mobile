@@ -6,14 +6,18 @@ import { RootStackParamList } from '../../../navigation/types';
 import { colors } from '../../../shared/theme';
 import { styles } from './styles';
 
-type ForgotPasswordNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPassword'>;
+type ValidateCodeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ValidateCode'>;
 
-export default function ForgotPasswordScreen() {
-  const navigation = useNavigation<ForgotPasswordNavigationProp>();
-  const [email, setEmail] = useState('');
+export default function ValidateCodeScreen() {
+  const navigation = useNavigation<ValidateCodeNavigationProp>();
+  const [code, setCode] = useState('');
 
-  const handleContinue = () => {
-    navigation.navigate('ValidateCode');
+  const handleValidateCode = () => {
+    navigation.navigate('ResetPassword');
+  };
+
+  const handleResendCode = () => {
+    // Ação de reenvio sem inventar endpoints
   };
 
   return (
@@ -28,18 +32,18 @@ export default function ForgotPasswordScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
-          <Text style={styles.title}>Email</Text>
+          <Text style={styles.title}>Validar</Text>
           <Text style={styles.subtitle}>
-            Digite seu Email para receber um código de redefinição de sua senha
+            Digite o código enviado por Email
           </Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="Código"
             placeholderTextColor={colors.black}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
+            value={code}
+            onChangeText={setCode}
+            keyboardType="number-pad"
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -47,17 +51,17 @@ export default function ForgotPasswordScreen() {
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            style={styles.resendButton}
+            onPress={handleResendCode}
           >
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.resendButtonText}>Reenviar Código</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
+            style={styles.validateButton}
+            onPress={handleValidateCode}
           >
-            <Text style={styles.continueButtonText}>Continuar</Text>
+            <Text style={styles.validateButtonText}>Validar código</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -60,20 +60,20 @@ export const styles = StyleSheet.create({
     gap: spacing.xs,
   },
 
-  backButton: {
+  resendButton: {
     flex: 1,
     height: verticalScale(spacing.xxxl),
     justifyContent: 'center',
     alignItems: 'center',
   },
 
-  backButtonText: {
+  resendButtonText: {
     ...typography.button,
     color: colors.primary,
     textDecorationLine: 'underline',
   },
 
-  continueButton: {
+  validateButton: {
     flex: 1,
     height: verticalScale(spacing.xxxl),
     backgroundColor: colors.primary,
@@ -82,7 +82,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  continueButtonText: {
+  validateButtonText: {
     ...typography.button,
     color: colors.white,
   },

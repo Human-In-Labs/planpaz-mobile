@@ -5,6 +5,7 @@ import { verticalScale } from '../../../shared/theme/scale';
 const { width } = Dimensions.get('window');
 
 const bannerHeight = width * (248 / 390);
+const buttonWidth = (width - spacing.md * 2 - spacing.xs) / 2;
 
 export const styles = StyleSheet.create({
   container: {
@@ -43,38 +44,40 @@ export const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
-  input: {
+  inputContainer: {
     height: verticalScale(72),
     backgroundColor: colors.white,
     borderRadius: radius.xl,
     ...shadows.medium,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+  },
+
+  input: {
+    flex: 1,
+    height: '100%',
     ...typography.bodyStrong,
+    color: colors.black,
+  },
+
+  iconButton: {
+    padding: spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   footer: {
     marginTop: 'auto',
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingBottom: verticalScale(spacing.lg),
-    gap: spacing.xs,
   },
 
-  backButton: {
-    flex: 1,
-    height: verticalScale(spacing.xxxl),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  backButtonText: {
-    ...typography.button,
-    color: colors.primary,
-    textDecorationLine: 'underline',
-  },
-
-  continueButton: {
-    flex: 1,
+  saveButton: {
+    width: buttonWidth,
     height: verticalScale(spacing.xxxl),
     backgroundColor: colors.primary,
     borderRadius: radius.lg,
@@ -82,7 +85,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  continueButtonText: {
+  saveButtonText: {
     ...typography.button,
     color: colors.white,
   },
