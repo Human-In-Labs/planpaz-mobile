@@ -3,14 +3,15 @@ import { styles } from './styles'
 import AppHeader from '../../shared/components/AppHeader';
 import WeatherSection from './WeatherSection';
 import ReminderSection from './ReminderSection';
-import { ScrollView } from 'react-native';
+import { Animated, View } from 'react-native';
 import ActivitySection from './ActivitySection';
 import LocationOverlay from './overlays/Location';
 import NotificationOverlay from './overlays/Notification';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getToken } from '../../shared/services/storage';
+import { LocationData } from '../../shared/types/location';
 
-const location = {
+const initialLocation: LocationData = {
     id: '1',
     neighborhood: 'Água Chata',
     state: 'SP',
@@ -19,9 +20,12 @@ const location = {
 const hasUnreadNotifications = true;
 
 export default function HomeScreen() {
+    const [location, setLocation] = useState<LocationData>(initialLocation);
     const [activeOverlay, setActiveOverlay] = useState<
         'location' | 'notification' | null
     >(null);
+
+    const scrollY = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         const testarToken = async () => {
@@ -33,14 +37,12 @@ export default function HomeScreen() {
     }, []);
 
     return (
-        <SafeAreaView edges={['top']} style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
+        <View style={styles.container}>
+            <SafeAreaView edges={['top']} style={styles.safeArea}>
                 <AppHeader
                     title=""
                     userName="Matheus"
+                    scrollY={scrollY}
                     hasNotifications={
                         hasUnreadNotifications &&
                         activeOverlay === null
@@ -54,31 +56,43 @@ export default function HomeScreen() {
                     }
                 />
 
-                <WeatherSection
-                    location={location}
-                    locationVisible={activeOverlay === 'location'}
-                    onLocationPress={() =>
-                        setActiveOverlay(prev =>
-                            prev === 'location'
-                                ? null
-                                : 'location'
-                        )
-                    }
-                />
+                <Animated.ScrollView
+                    contentContainerStyle={styles.content}
+                    showsVerticalScrollIndicator={false}
+                    scrollEventThrottle={16}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: false }
+                    )}
+                >
+                    <WeatherSection
+                        location={location}
+                        locationVisible={activeOverlay === 'location'}
+                        onLocationPress={() =>
+                            setActiveOverlay(prev =>
+                                prev === 'location'
+                                    ? null
+                                    : 'location'
+                            )
+                        }
+                    />
 
-                <ReminderSection />
+                    <ReminderSection />
 
-                <ActivitySection />
-            </ScrollView>
+                    <ActivitySection />
+                </Animated.ScrollView>
+            </SafeAreaView>
+
             <LocationOverlay
                 visible={activeOverlay === 'location'}
                 onClose={() => setActiveOverlay(null)}
+                onSelect={setLocation}
             />
 
             <NotificationOverlay
                 visible={activeOverlay === 'notification'}
                 onClose={() => setActiveOverlay(null)}
             />
-        </SafeAreaView>
-    )
+        </View>
+    );
 }

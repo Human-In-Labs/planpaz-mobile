@@ -13,6 +13,7 @@ export default function SearchBar({
     value,
     onChangeText,
     placeholder = 'Pesquisar...',
+    placeholderTextColor = colors.textLight,
     style,
 }: SearchBarProps) {
 
@@ -21,7 +22,7 @@ export default function SearchBar({
 
             <AppIcon
                 icon={AppIcons.SEARCH}
-                size={24}
+                size={20}
                 color={colors.black}
             />
 
@@ -29,7 +30,7 @@ export default function SearchBar({
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor={colors.textLight}
+                placeholderTextColor={placeholderTextColor}
                 style={styles.input}
             />
 

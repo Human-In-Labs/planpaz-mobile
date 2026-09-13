@@ -34,7 +34,7 @@ export default function BottomTabBar({
                     route.name === 'Social'
                         ? 'Social'
                         : route.name === 'Home'
-                        ? 'Home'
+                        ? 'Início'
                         : route.name === 'Garden'
                         ? 'Jardim'
                         : 'Perfil';

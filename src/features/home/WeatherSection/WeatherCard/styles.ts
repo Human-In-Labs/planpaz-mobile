@@ -6,17 +6,12 @@ import {
     spacing,
     typography,
 } from '../../../../shared/theme';
-import { verticalScale } from '../../../../shared/theme/scale';
-import { calculateItemWidth } from '../../../../shared/theme/layout';
-
-const CARD_WIDTH = calculateItemWidth({
-    visibleItems: 4.5,
-});
+import { scale, verticalScale } from '../../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
-        width: CARD_WIDTH,
-        height: verticalScale(165),
+        width: scale(65),
+        height: verticalScale(166),
         borderRadius: radius.lg,
         paddingVertical: verticalScale(spacing.xs),
         alignItems: 'center',
@@ -41,7 +36,7 @@ export const styles = StyleSheet.create({
     },
 
     icon: {
-        width: CARD_WIDTH * 0.62,
+        width: scale(40),
         height: verticalScale(40),
         marginBottom: verticalScale(spacing.xxs),
     },
@@ -58,7 +53,7 @@ export const styles = StyleSheet.create({
     },
 
     condition: {
-        ...typography.captionRegular,
+        ...typography.captionStrong,
         textAlign: 'center',
     },
 });

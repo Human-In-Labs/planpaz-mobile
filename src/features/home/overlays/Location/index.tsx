@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, Text, } from 'react-native';
+import { View, FlatList, Text, Pressable } from 'react-native';
 import Overlay from '../../../../shared/components/Overlay';
 import { styles } from './styles';
 import { LocationSearchData } from '../../../../shared/types/locationSearch';
@@ -9,6 +9,7 @@ import SearchBar from '../../../../shared/components/SearchBar';
 interface Props {
     visible: boolean;
     onClose: () => void;
+    onSelect?: (location: LocationSearchData) => void;
 }
 
 function splitHighlight(text: string, search: string) {
@@ -36,7 +37,7 @@ function splitHighlight(text: string, search: string) {
     };
 }
 
-export default function LocationOverlay({ visible, onClose, }: Props) {
+export default function LocationOverlay({ visible, onClose, onSelect }: Props) {
 
     const [search, setSearch] = useState('');
     const [locations, setLocations] = useState<LocationSearchData[]>([]);
@@ -59,20 +60,25 @@ export default function LocationOverlay({ visible, onClose, }: Props) {
 
     }, [search]);
 
+    const hasResults = locations.length > 0;
+    const containerStyle = hasResults ? styles.expandedContainer : styles.compactContainer;
+
     return (
         <Overlay
             visible={visible}
             onClose={onClose}
+            containerStyle={containerStyle}
         >
             <View style={styles.header}>
                 <SearchBar
                     value={search}
                     onChangeText={setSearch}
-                    placeholder="Pesquisar cidade..."
-                    style={{ width: '100%' }}
+                    placeholder="Pesquisar uma cidade ou região"
+                    placeholderTextColor="rgba(17, 86, 52, 0.5)"
+                    style={styles.searchBar}
                 />
             </View>
-            {locations.length > 0 && (
+            {hasResults && (
                 <FlatList
                     data={locations}
                     keyExtractor={(item) => item.id}
@@ -82,31 +88,33 @@ export default function LocationOverlay({ visible, onClose, }: Props) {
                         const state = splitHighlight(item.state, search);
 
                         return (
-                            <View style={styles.item}>
-                                <Text>
+                            <Pressable
+                                style={styles.item}
+                                onPress={() => {
+                                    onSelect?.(item);
+                                    onClose();
+                                }}
+                            >
+                                <Text style={styles.itemText}>
                                     {neighborhood.before}
                                     <Text style={styles.highlight}>
                                         {neighborhood.match}
                                     </Text>
-
                                     {neighborhood.after}
                                     {', '}
                                     {city.before}
-
                                     <Text style={styles.highlight}>
                                         {city.match}
                                     </Text>
-
                                     {city.after}
                                     {' - '}
                                     {state.before}
-
                                     <Text style={styles.highlight}>
                                         {state.match}
                                     </Text>
                                     {state.after}
                                 </Text>
-                            </View>
+                            </Pressable>
                         );
                     }}
                     style={styles.list}

@@ -52,7 +52,7 @@ export const styles = StyleSheet.create({
     },
 
     separator: {
-        width: scale(spacing.sm),
+        width: scale(spacing.md),
     },
 
     summaryContainer: {
@@ -66,12 +66,12 @@ export const styles = StyleSheet.create({
     summaryCard: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         width: scale(78),
         height: verticalScale(28),
         paddingHorizontal: scale(spacing.xxs),
         borderRadius: radius.sm,
         backgroundColor: colors.surface,
-        ...shadows.small,
     },
 
     summaryCardContent: {

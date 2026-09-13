@@ -18,6 +18,7 @@ export default function Overlay({
     visible,
     onClose,
     children,
+    containerStyle,
 }: OverlayProps) {
 
     if (!visible) return null;
@@ -37,7 +38,7 @@ export default function Overlay({
                     >
                         <AppIcon
                             icon={AppIcons.X}
-                            size={22}
+                            size={16}
                             color={colors.primary}
                         />
                     </TouchableOpacity>
@@ -45,7 +46,7 @@ export default function Overlay({
 
                 <TouchableWithoutFeedback>
 
-                    <View style={styles.container}>
+                    <View style={[styles.container, containerStyle]}>
                         {children}
                     </View>
 

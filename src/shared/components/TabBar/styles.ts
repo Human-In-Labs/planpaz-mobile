@@ -13,16 +13,17 @@ container: {
 
     height: verticalScale(66),
 
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     backgroundColor: colors.primaryDark,
 
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: scale(24),
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    zIndex: 3,
 },
 
 tab: {
-    flex: 1,
+    width: scale(48),
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: verticalScale(8),

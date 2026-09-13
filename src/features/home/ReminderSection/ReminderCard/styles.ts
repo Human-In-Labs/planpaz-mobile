@@ -2,13 +2,16 @@ import { StyleSheet } from 'react-native';
 import { colors, radius, shadows, spacing, typography } from '../../../../shared/theme';
 import { scale, verticalScale } from '../../../../shared/theme/scale';
 
+const cardPadding = scale(spacing.xxs);
+const buttonBottomRadius = radius.xl - cardPadding;
+
 export const styles = StyleSheet.create({
 
     container: {
         width: scale(130),
         height: verticalScale(233),
         borderRadius: radius.xl,
-        padding: scale(spacing.xxs),
+        padding: cardPadding,
         ...shadows.medium,
         backgroundColor: colors.white,
     },
@@ -16,13 +19,14 @@ export const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: verticalScale(137),
-        borderTopLeftRadius: radius.xl,
-        borderTopRightRadius: radius.xl,
+        borderTopLeftRadius: radius.xl - cardPadding,
+        borderTopRightRadius: radius.xl - cardPadding,
     },
 
     infoContainer: {
         flex: 1,
         marginTop: verticalScale(spacing.xs),
+        paddingHorizontal: scale(spacing.xxs),
     },
 
     firstRow: {
@@ -40,34 +44,38 @@ export const styles = StyleSheet.create({
 
     plantName: {
         ...typography.label,
-    },
-
-    cultivatedDays: {
-        ...typography.success,
         color: colors.black,
+        flex: 1,
     },
 
-    reminderLabel: {
-        ...typography.error,
+    dueTime: {
+        ...typography.captionStrong,
+        marginLeft: scale(spacing.xxs),
     },
 
-    reminderValue: {
-        ...typography.error,
+    action: {
+        ...typography.captionStrong,
+        flex: 1,
+    },
+
+    referenceDay: {
+        ...typography.captionStrong,
+        marginLeft: scale(spacing.xxs),
     },
 
     button: {
         width: '100%',
         height: verticalScale(34),
         marginTop: 'auto',
-        //verificar visualmente se o raio de canto está igual ao do card
-        borderBottomLeftRadius: radius.xl,
-        borderBottomRightRadius: radius.xl,
-        backgroundColor: colors.primary,
+        borderBottomLeftRadius: buttonBottomRadius,
+        borderBottomRightRadius: buttonBottomRadius,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         justifyContent: 'center',
         alignItems: 'center',
     },
 
     buttonText: {
-        ...typography.body,
+        ...typography.button,
     },
 });

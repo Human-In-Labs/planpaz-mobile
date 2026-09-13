@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     },
 
     title: {
-        ...typography.h2,
+        ...typography.h3,
     },
 
     icon: {

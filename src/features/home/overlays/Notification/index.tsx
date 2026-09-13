@@ -43,6 +43,7 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
         <Overlay
             visible={visible}
             onClose={onClose}
+            containerStyle={styles.container}
         >
             <View style={styles.header}>
                 <TouchableOpacity

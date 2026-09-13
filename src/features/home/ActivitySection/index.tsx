@@ -30,7 +30,7 @@ export default function ActivitySection() {
         <View style={styles.container}>
 
             <SectionHeader
-                title="Atividades recentes"
+                title="Atividade recente"
                 onPress={() => {}}
             />
 

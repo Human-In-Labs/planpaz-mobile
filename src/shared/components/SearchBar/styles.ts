@@ -17,5 +17,6 @@ export const styles = StyleSheet.create({
         flex: 1,
         marginLeft: scale(12),
         ...typography.bodyMedium,
+        color: colors.black,
     },
 });

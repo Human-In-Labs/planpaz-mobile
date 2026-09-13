@@ -3,18 +3,12 @@ import { colors, radius, shadows, spacing, typography, } from '../../../../share
 import { scale, verticalScale, } from '../../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
-    closeButton: {
-        position: 'absolute',
-        top: verticalScale(spacing.lg),
-        right: scale(spacing.md),
-        width: scale(37),
-        height: verticalScale(37),
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: radius.sm,
-        backgroundColor: colors.white,
-        ...shadows.small,
-        zIndex: 20,
+    container: {
+        width: scale(358),
+        height: verticalScale(372),
+        borderRadius: radius.xxl,
+        backgroundColor: colors.background,
+        overflow: 'hidden',
     },
 
     header: {

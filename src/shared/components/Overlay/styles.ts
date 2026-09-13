@@ -10,24 +10,23 @@ export const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.18)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         alignItems: 'center',
+        zIndex: 2,
     },
 
     topBar: {
         height: verticalScale(56),
         width: '100%',
         paddingHorizontal: scale(spacing.md),
-        justifyContent: 'center',
-        alignItems: 'flex-end',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
     },
 
     closeButton: {
-        position: 'absolute',
-        top: verticalScale(spacing.lg),
-        right: scale(spacing.md),
         width: scale(37),
-        height: verticalScale(37),
+        height: scale(37),
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: radius.sm,
@@ -37,7 +36,7 @@ export const styles = StyleSheet.create({
 
     container: {
         width: scale(358),
-        marginTop: verticalScale(spacing.xxl),
+        marginTop: verticalScale(spacing.xs),
         borderRadius: radius.xl,
         backgroundColor: colors.background,
         ...shadows.medium,

@@ -87,7 +87,7 @@ export default function WeatherSection({
                     >
                         <AppIcon
                             icon={item.icon}
-                            size={24}
+                            size={16}
                             color={colors.black}
                         />
 

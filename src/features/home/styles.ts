@@ -8,6 +8,10 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
 
+    safeArea: {
+        flex: 1,
+    },
+
     content: {
         paddingBottom: verticalScale(88),
     },

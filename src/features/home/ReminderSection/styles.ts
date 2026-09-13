@@ -12,6 +12,6 @@ export const styles = StyleSheet.create({
     },
 
     separator: {
-        width: scale(spacing.sm),
+        width: scale(spacing.md),
     },
 });

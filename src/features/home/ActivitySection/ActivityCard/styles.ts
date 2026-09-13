@@ -67,7 +67,8 @@ export const styles = StyleSheet.create({
     date: {
         textAlign: 'center',
         ...typography.captionStrong,
-        color: colors.textLight,
+        color: colors.primary,
+        opacity: 0.5,
     },
 
     image: {

@@ -2,13 +2,19 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { styles } from './styles';
 import { ReminderCardProps } from './types';
+import { colors } from '../../../../shared/theme';
 
 export default function ReminderCard({
     reminder,
 }: ReminderCardProps) {
+    const isOverdue = !!reminder.isOverdue;
+    const statusColor = isOverdue ? colors.warning : colors.primary;
+
+    const actionText = reminder.action || reminder.reminderLabel;
+    const dueTimeText = reminder.dueTime || reminder.reminderValue;
+    const referenceDayText = reminder.referenceDay;
 
     return (
-
         <View style={styles.container}>
             <Image
                 source={reminder.image}
@@ -17,27 +23,37 @@ export default function ReminderCard({
             />
 
             <View style={styles.infoContainer}>
+                {/* 1ª linha: Nome da planta (esquerda) + Horário de vencimento (direita) */}
                 <View style={styles.firstRow}>
-                    <Text style={styles.plantName}>
+                    <Text style={styles.plantName} numberOfLines={1}>
                         {reminder.plantName}
                     </Text>
 
-                    <Text style={styles.cultivatedDays}>
-                        {reminder.cultivatedDays}d
-                    </Text>
+                    {dueTimeText ? (
+                        <Text style={[styles.dueTime, { color: statusColor }]}>
+                            {dueTimeText}
+                        </Text>
+                    ) : null}
                 </View>
 
+                {/* 2ª linha: Ação (esquerda) + Dia de referência (direita) */}
                 <View style={styles.secondRow}>
-                    <Text style={styles.reminderLabel}>
-                        {reminder.reminderLabel}
+                    <Text style={[styles.action, { color: statusColor }]} numberOfLines={1}>
+                        {actionText}
                     </Text>
 
-                    <Text style={styles.reminderValue}>
-                        {reminder.reminderValue}
-                    </Text>
+                    {referenceDayText ? (
+                        <Text style={[styles.referenceDay, { color: statusColor }]}>
+                            {referenceDayText}
+                        </Text>
+                    ) : null}
                 </View>
             </View>
-            <TouchableOpacity style={styles.button}>
+
+            <TouchableOpacity
+                style={[styles.button, { backgroundColor: statusColor }]}
+                activeOpacity={0.8}
+            >
                 <Text style={styles.buttonText}>
                     {reminder.buttonText}
                 </Text>
