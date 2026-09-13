@@ -10,6 +10,7 @@ import { AppIcons } from '../../../shared/constants/appIcons';
 export default function AchievementsSection({
     achievements,
     onPress,
+    onAchievementPress,
 }: AchievementsSectionProps) {
 
     return (
@@ -41,6 +42,7 @@ export default function AchievementsSection({
                         icon={item.icon}
                         level={item.level}
                         title={item.title}
+                        onPress={() => onAchievementPress?.(item)}
                     />
                 )}
             />

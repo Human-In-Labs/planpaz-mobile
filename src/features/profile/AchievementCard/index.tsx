@@ -1,7 +1,7 @@
 import React from 'react';
-import { Text, View, } from 'react-native';
+import { Text, TouchableOpacity, View, } from 'react-native';
 import AppIcon from '../../../shared/components/AppIcon';
-import { colors } from '../../../shared/theme';
+import { AppIcons } from '../../../shared/constants/appIcons';
 import { AchievementCardProps } from './types';
 import { styles } from './styles';
 
@@ -9,20 +9,32 @@ export default function AchievementCard({
     icon,
     level,
     title,
+    onPress,
 }: AchievementCardProps) {
-    return (
+    const isGlobe = icon === 'globe' || title.toLowerCase() === 'planpaz';
+
+    const content = (
         <View style={styles.container}>
             <View style={styles.card}>
-                <AppIcon
-                    icon={icon}
-                    size={32}
-                    color={colors.primary}
-                />
-
-                {level && (
-                    <Text style={styles.level}>
-                        {level}
-                    </Text>
+                {isGlobe ? (
+                    <AppIcon
+                        icon={AppIcons.GLOBE}
+                        size={32}
+                        color="#03624C"
+                    />
+                ) : (
+                    <View style={styles.leafContainer}>
+                        <AppIcon
+                            icon={AppIcons.LEAF_FILL}
+                            size={28}
+                            color="#03624C"
+                        />
+                        {level && (
+                            <Text style={styles.level}>
+                                {level}
+                            </Text>
+                        )}
+                    </View>
                 )}
             </View>
 
@@ -34,4 +46,17 @@ export default function AchievementCard({
             </Text>
         </View>
     );
+
+    if (onPress) {
+        return (
+            <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={onPress}
+            >
+                {content}
+            </TouchableOpacity>
+        );
+    }
+
+    return content;
 }

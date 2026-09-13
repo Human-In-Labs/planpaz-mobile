@@ -1,7 +1,6 @@
-import { IconName } from '../../../shared/constants/appIcons';
-
 export interface AchievementCardProps {
-    icon: IconName;
+    icon?: string;
     level?: string;
     title: string;
+    onPress?: () => void;
 }

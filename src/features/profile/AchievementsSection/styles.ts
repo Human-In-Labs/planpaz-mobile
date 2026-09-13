@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { spacing, typography, } from '../../../shared/theme';
-import { scale, verticalScale, } from '../../../shared/theme/scale';
+import { colors, fonts, spacing } from '../../../shared/theme';
+import { scale, verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
@@ -14,11 +14,15 @@ export const styles = StyleSheet.create({
     },
 
     title: {
-        ...typography.h2,
+        fontSize: 20,
+        fontFamily: fonts.poppinsBold,
+        color: colors.black,
+        marginRight: scale(6),
     },
 
     list: {
         marginTop: verticalScale(12),
-        columnGap: scale(30),
+        justifyContent: 'space-between',
+        width: '100%',
     },
 });

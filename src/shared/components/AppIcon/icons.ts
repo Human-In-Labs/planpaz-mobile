@@ -68,6 +68,14 @@ import Plus from '../../../assets/icons/plus.svg';
 import Eye from '../../../assets/icons/eye.svg';
 import EyeSlash from '../../../assets/icons/eye-slash.svg';
 
+import ArrowLeft from '../../../assets/icons/arrow-left.svg';
+import CalendarDots from '../../../assets/icons/calendar-dots.svg';
+import ChatTeardrop from '../../../assets/icons/chat-teardrop.svg';
+import CrosshairSimple from '../../../assets/icons/crosshair-simple.svg';
+import DotsThreeVertical from '../../../assets/icons/dots-three-vertical.svg';
+import GlobeHemisphereWest from '../../../assets/icons/globe-hemisphere-west.svg';
+import Tree from '../../../assets/icons/tree.svg';
+
 import { SvgProps } from 'react-native-svg';
 
 type SvgIcon = React.FC<SvgProps>;
@@ -142,6 +150,14 @@ export const icons = {
 
     eye: Eye,
     eyeSlash: EyeSlash,
+
+    arrowLeft: ArrowLeft,
+    calendarDots: CalendarDots,
+    chatTeardrop: ChatTeardrop,
+    crosshairSimple: CrosshairSimple,
+    dotsThreeVertical: DotsThreeVertical,
+    globeHemisphereWest: GlobeHemisphereWest,
+    tree: Tree,
 } satisfies Record<string, SvgIcon>;
 
 export type IconName = keyof typeof icons;

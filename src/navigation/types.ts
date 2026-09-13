@@ -10,3 +10,9 @@ export type RootStackParamList = {
     Library: undefined;
     SpeciesDetails: { speciesId: string; };
 };
+
+export type ProfileStackParamList = {
+    ProfileMain: undefined;
+    Configuracoes: undefined;
+    Achievements: undefined;
+};

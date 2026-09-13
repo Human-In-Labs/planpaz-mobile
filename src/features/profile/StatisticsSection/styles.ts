@@ -1,11 +1,12 @@
 import { StyleSheet } from 'react-native';
-import { spacing, typography, } from '../../../shared/theme';
-import { scale, verticalScale, } from '../../../shared/theme/scale';
+import { colors, fonts, spacing } from '../../../shared/theme';
+import { scale, verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
         marginTop: verticalScale(26),
         paddingHorizontal: scale(spacing.md),
+        paddingBottom: verticalScale(24),
     },
 
     header: {
@@ -14,15 +15,16 @@ export const styles = StyleSheet.create({
     },
 
     title: {
-        ...typography.h2,
+        fontSize: 20,
+        fontFamily: fonts.poppinsBold,
+        color: colors.black,
     },
 
-    list: {
-        marginTop: verticalScale(12),
-        rowGap: verticalScale(10),
-    },
-
-    row: {
-        justifyContent: 'space-between',
+    cardsGrid: {
+        marginTop: verticalScale(14),
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        rowGap: verticalScale(16),
+        columnGap: scale(17),
     },
 });

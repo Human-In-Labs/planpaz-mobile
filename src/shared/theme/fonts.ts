@@ -6,6 +6,11 @@ export const fonts = {
   poppinsBold: 'Poppins-Bold',
   poppinsExtraBold: 'Poppins-ExtraBold',
 
+  interLight: Platform.select({
+    ios: 'Inter18pt-Light',
+    android: 'Inter_18pt-Light',
+    default: 'Inter_18pt-Light',
+  }) as string,
   interRegular: Platform.select({
     ios: 'Inter18pt-Regular',
     android: 'Inter_18pt-Regular',

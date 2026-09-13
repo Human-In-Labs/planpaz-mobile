@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, shadows, typography, } from '../../../shared/theme';
-import { scale, verticalScale, } from '../../../shared/theme/scale';
+import { colors, fonts, radius, shadows } from '../../../shared/theme';
+import { scale, verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
@@ -18,16 +18,23 @@ export const styles = StyleSheet.create({
         ...shadows.small,
     },
 
+    leafContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
     level: {
-        marginTop: verticalScale(6),
-        ...typography.caption,
-        ...typography.caption,
-        color: colors.primary,
+        marginTop: verticalScale(1),
+        fontSize: 10,
+        fontFamily: fonts.poppinsBold,
+        color: '#03624C',
     },
 
     title: {
-        marginTop: verticalScale(4),
+        marginTop: verticalScale(6),
         textAlign: 'center',
-        ...typography.captionRegular,
+        fontSize: 11,
+        fontFamily: fonts.interRegular,
+        color: colors.black,
     },
 });

@@ -1,13 +1,15 @@
-import { IconName } from '../../../shared/constants/appIcons';
 
 export interface Achievement {
     id: string;
-    icon: IconName;
+    icon?: string;
     title: string;
     level?: string;
+    date?: string;
+    description?: string;
 }
 
 export interface AchievementsSectionProps {
     achievements: Achievement[];
     onPress: () => void;
+    onAchievementPress?: (achievement: Achievement) => void;
 }

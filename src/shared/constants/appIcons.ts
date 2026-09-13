@@ -2,8 +2,9 @@ export const AppIcons = {
 
     // Navigation
 
-    ARROW_LEFT: 'caretLeft',
-    ARROW_LEFT_FILL: 'caretLeftFill',
+    ARROW_LEFT: 'arrowLeft',
+    CARET_LEFT: 'caretLeft',
+    CARET_LEFT_FILL: 'caretLeftFill',
 
     ARROW_RIGHT: 'arrowUpRight',
     ARROW_RIGHT_FILL: 'arrowUpRightFill',
@@ -36,6 +37,9 @@ export const AppIcons = {
     LEAF: 'leaf',
     LEAF_FILL: 'leafFill',
 
+    TREE: 'tree',
+    GLOBE: 'globeHemisphereWest',
+
     // Community
 
     USER: 'user',
@@ -46,6 +50,9 @@ export const AppIcons = {
 
     USERS_THREE: 'usersThree',
     USERS_THREE_FILL: 'usersThreeFill',
+
+    CHAT: 'chatTeardrop',
+    DOTS_THREE_VERTICAL: 'dotsThreeVertical',
 
     // Search & Filters
 
@@ -75,6 +82,9 @@ export const AppIcons = {
 
     WIND: 'wind',
     WIND_FILL: 'windFill',
+
+    CALENDAR_DOTS: 'calendarDots',
+    CROSSHAIR: 'crosshairSimple',
 
 } as const;
 

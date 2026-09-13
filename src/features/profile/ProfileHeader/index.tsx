@@ -10,61 +10,62 @@ export default function ProfileHeader({
     followers,
     following,
     isOwnProfile = true,
+    followersLabel = `${followers} Seguidores`,
+    followingLabel = `${following} seguidores`,
+    actionLabel,
     onFollowersPress,
     onFollowingPress,
     onActionPress,
 }: ProfileHeaderProps) {
 
+    const resolvedActionLabel = actionLabel || (isOwnProfile ? 'Configurações' : 'Seguir');
+
     return (
         <View style={styles.container}>
             <View style={styles.infoRow}>
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                >
-                    <Image
-                        source={avatar}
-                        style={styles.avatar}
-                    />
-                </TouchableOpacity>
+                <Image
+                    source={avatar}
+                    style={styles.avatar}
+                />
 
-                <View style={styles.info}>
-                    <Text style={styles.name}>
+                <View style={styles.headerInfo}>
+                    <Text style={styles.name} numberOfLines={1}>
                         {name}
                     </Text>
 
-                    <Text style={styles.bio}>
-                        {bio}
-                    </Text>
-
-                    <View style={styles.links}>
+                    <View style={styles.linksRow}>
                         <TouchableOpacity
+                            activeOpacity={0.7}
                             onPress={onFollowersPress}
                         >
-                            <Text style={styles.link}>
-                                {followers} seguidores
+                            <Text style={styles.linkText}>
+                                {followersLabel}
                             </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
+                            activeOpacity={0.7}
                             onPress={onFollowingPress}
                         >
-                            <Text style={styles.link}>
-                                {following} seguindo
+                            <Text style={styles.linkText}>
+                                {followingLabel}
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
 
+            <Text style={styles.bioText}>
+                {bio}
+            </Text>
+
             <TouchableOpacity
-                style={styles.button}
+                style={styles.actionButton}
                 activeOpacity={0.8}
                 onPress={onActionPress}
             >
-                <Text style={styles.buttonText}>
-                    {isOwnProfile
-                        ? 'Editar perfil'
-                        : 'Seguir'}
+                <Text style={styles.actionButtonText}>
+                    {resolvedActionLabel}
                 </Text>
             </TouchableOpacity>
         </View>
