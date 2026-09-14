@@ -3,12 +3,16 @@ import { FlatList, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { GardenStackParamList } from '../../navigation/types';
 import { styles } from './styles';
 import { Species } from './types';
+
 import AppHeader from '../../shared/components/AppHeader';
 import FilterSection from './FilterSection';
+import PlantFilters from './PlantFilters';
 import SpeciesCard from './SpeciesCard';
+
 import { listarPlants } from '../../shared/api';
 
 const DEFAULT_SPECIES: Species[] = [
@@ -18,7 +22,12 @@ const DEFAULT_SPECIES: Species[] = [
         commonName: 'Jibóia',
         scientificName: 'Epipremnum aureum',
         isRecommended: true,
-        tags: ['Ornamental', 'Pequena', 'Baixa', 'Média', 'Difícil'],
+        type: 'Ornamental',
+        experience: 'Iniciante',
+        temperature: 'Média',
+        light: 'Baixa',
+        water: 'Frequente',
+        tags: ['Ornamental', 'Pequena', 'Baixa', 'Média', 'Frequente'],
         description:
             'Planta herbácea com comportamento pendente ou ascendente, possui folhagem extremamente ornamental, muito conhecida e cultivada em ambientes internos, por crescer com pouca luz e não demandar muitos cuidados. Também conhecida como hera do diabo, a planta jiboia é uma herbácea trepadeira, muito vista',
         careGuide: {
@@ -32,7 +41,12 @@ const DEFAULT_SPECIES: Species[] = [
         commonName: 'Mini Coroa de Cristo',
         scientificName: 'Euphorbia milii',
         isRecommended: true,
-        tags: ['Ornamental', 'Pequena', 'Baixa', 'Média', 'Difícil'],
+        type: 'Ornamental',
+        experience: 'Intermediário',
+        temperature: 'Alta',
+        light: 'Intensa',
+        water: 'Esporádica',
+        tags: ['Ornamental', 'Pequena', 'Intensa', 'Alta', 'Esporádica'],
         description:
             'Arbusto suculento e espinhoso, originário de Madagascar, com inflorescências vistosas de brácteas vermelhas ou rosadas, muito resistente ao sol.',
         careGuide: {
@@ -46,7 +60,12 @@ const DEFAULT_SPECIES: Species[] = [
         commonName: 'Espada de São Jorge',
         scientificName: 'Sansevieria trifasciata',
         isRecommended: false,
-        tags: ['Ornamental', 'Média', 'Baixa', 'Pouca', 'Fácil'],
+        type: 'Ornamental',
+        experience: 'Iniciante',
+        temperature: 'Média',
+        light: 'Baixa',
+        water: 'Esporádica',
+        tags: ['Ornamental', 'Média', 'Baixa', 'Média', 'Esporádica'],
         description:
             'Planta de folhas eretas e coriáceas, altamente resistente à seca e à baixa luminosidade, excelente purificadora de ar.',
         careGuide: {
@@ -58,18 +77,30 @@ const DEFAULT_SPECIES: Species[] = [
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
-type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'Library'>;
+type NavigationProp = NativeStackNavigationProp<
+    GardenStackParamList,
+    'Library'
+>;
+
+type SelectedFilters = Record<string, string>;
 
 export default function LibraryScreen() {
     const navigation = useNavigation<NavigationProp>();
+
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState(['Média', 'Luminosidade Alta']);
-    const [species, setSpecies] = useState<Species[]>(DEFAULT_SPECIES);
+    const [selectedFilters, setSelectedFilters] =
+        useState<SelectedFilters>({});
+    const [filterVisible, setFilterVisible] = useState(false);
+
+    const [species, setSpecies] =
+        useState<Species[]>(DEFAULT_SPECIES);
+
     const [loading, setLoading] = useState(false);
 
     const carregarPlantas = useCallback(async () => {
         try {
             setLoading(true);
+
             const plants = await listarPlants();
 
             if (plants && plants.length > 0) {
@@ -79,20 +110,29 @@ export default function LibraryScreen() {
                     commonName: plant.name,
                     scientificName: plant.scientificName,
                     isRecommended: index < 2,
+
+                    type: plant.type,
+                    size: plant.size,
+                    light: plant.luminosityLevel,
+                    water: plant.wateringLevel,
+
                     tags: [
                         plant.type || 'Ornamental',
                         plant.size || 'Pequena',
                         plant.luminosityLevel || 'Baixa',
                         plant.wateringLevel || 'Média',
-                        'Difícil',
                     ],
-                    description: plant.description || DEFAULT_SPECIES[0].description,
+
+                    description:
+                        plant.description ||
+                        DEFAULT_SPECIES[0].description,
+
                     careGuide: DEFAULT_SPECIES[0].careGuide,
                 }));
+
                 setSpecies(data);
             }
         } catch {
-            // Em caso de erro de API, mantém os dados locais padrão da biblioteca
             console.log('Utilizando biblioteca padrão');
         } finally {
             setLoading(false);
@@ -105,12 +145,73 @@ export default function LibraryScreen() {
         }, [carregarPlantas])
     );
 
+    const handleFilterChange = useCallback(
+        (type: string, value: string) => {
+            setSelectedFilters(prev => ({
+                ...prev,
+                [type]: value,
+            }));
+        },
+        [],
+    );
+
+    const handleRemoveFilter = useCallback((filter: string) => {
+        setSelectedFilters(prev => {
+            const next = { ...prev };
+
+            const entry = Object.entries(next).find(
+                ([, value]) => value === filter,
+            );
+
+            if (entry) {
+                delete next[entry[0]];
+            }
+
+            return next;
+        });
+    }, []);
+
     const filteredSpecies = species.filter(item => {
         const searchText = search.toLowerCase().trim();
-        if (!searchText) return true;
+
+        if (
+            searchText &&
+            !item.commonName.toLowerCase().includes(searchText)
+        ) {
+            return false;
+        }
+
+        const matchesType =
+            !selectedFilters.type ||
+            selectedFilters.type === 'Todas' ||
+            item.type === selectedFilters.type;
+
+        const matchesExperience =
+            !selectedFilters.experience ||
+            selectedFilters.experience === 'Todas' ||
+            item.experience === selectedFilters.experience;
+
+        const matchesTemperature =
+            !selectedFilters.temperature ||
+            selectedFilters.temperature === 'Todas' ||
+            item.temperature === selectedFilters.temperature;
+
+        const matchesLuminosity =
+            !selectedFilters.luminosity ||
+            selectedFilters.luminosity === 'Todas' ||
+            item.light === selectedFilters.luminosity;
+
+        const matchesWatering =
+            !selectedFilters.watering ||
+            selectedFilters.watering === 'Todas' ||
+            item.water === selectedFilters.watering;
+
         return (
-            item.commonName.toLowerCase().includes(searchText) ||
-            item.scientificName?.toLowerCase().includes(searchText)
+            matchesType &&
+            matchesExperience &&
+            matchesTemperature &&
+            matchesLuminosity &&
+            matchesWatering
         );
     });
 
@@ -139,16 +240,10 @@ export default function LibraryScreen() {
                         <FilterSection
                             search={search}
                             onSearchChange={setSearch}
-                            filters={filters}
-                            onRemoveFilter={filter =>
-                                setFilters(prev =>
-                                    prev.filter(val => val !== filter)
-                                )
-                            }
-                            onFilterPress={() => {}}
-                            onSuggestionPress={() => {
-                                // Requisito: O link deve permanecer apenas como elemento visual nesta etapa
-                            }}
+                            filters={Object.values(selectedFilters).filter(value => value !== 'Todas',)}
+                            onRemoveFilter={handleRemoveFilter}
+                            onFilterPress={() => setFilterVisible(true)}
+                            onSuggestionPress={() => { }}
                         />
                     </>
                 }
@@ -171,6 +266,13 @@ export default function LibraryScreen() {
                         }
                     />
                 )}
+            />
+
+            <PlantFilters
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                selectedFilters={selectedFilters}
+                onFilterChange={handleFilterChange}
             />
         </SafeAreaView>
     );

@@ -7,6 +7,7 @@ export const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background,
     },
+
     scrollContent: {
         alignItems: 'center',
         paddingHorizontal: scale(16),
@@ -19,15 +20,22 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.xxl,
         padding: scale(12),
+        paddingBottom: 0,
         marginBottom: verticalScale(16),
         ...shadows.medium,
     },
+
+    heroCardExpanded: {
+        paddingBottom: 0,
+    },
+
     heroImage: {
         width: '100%',
         height: verticalScale(280),
         borderRadius: radius.xl,
         marginBottom: verticalScale(12),
     },
+
     tagsRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -35,6 +43,7 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: verticalScale(12),
     },
+
     tagBadge: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -44,30 +53,73 @@ export const styles = StyleSheet.create({
         paddingVertical: verticalScale(3),
         gap: scale(4),
     },
+
     tagText: {
-        fontSize: scale(10),
-        fontWeight: '600',
-        color: colors.black,
+        ...typography.captionRegular,
     },
+
     descriptionContainer: {
         marginTop: verticalScale(4),
         paddingLeft: scale(12),
     },
+
     descriptionTitle: {
-        ...typography.h3,
-        fontSize: scale(14),
-        color: colors.black,
+        ...typography.subtitle,
         marginBottom: verticalScale(4),
     },
-    descriptionText: {
-        fontFamily: 'Inter-Regular',
-        color: colors.text,
-        lineHeight: verticalScale(18),
-        fontSize: scale(12),
+
+    descriptionTextContainer: {
+        position: 'relative',
     },
-    expandIndicator: {
+
+    descriptionTextContainerCollapsed: {
+        height: verticalScale(80),
+        overflow: 'hidden',
+    },
+
+    descriptionText: {
+        ...typography.captionLight2,
+    },
+
+    descriptionFade: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: verticalScale(32),
+    },
+
+    descriptionFadeArea: {
+        height: verticalScale(26),
+    },
+
+    descriptionFadeSolid: {
+        height: verticalScale(6),
+        backgroundColor: colors.white,
+    },
+
+    expandArea: {
+        position: 'relative',
+        width: '100%',
+        height: verticalScale(32),
+        overflow: 'hidden',
+        borderBottomLeftRadius: radius.xxl,
+        borderBottomRightRadius: radius.xxl,
+    },
+
+    expandButton: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: verticalScale(24),
         alignItems: 'center',
-        marginTop: verticalScale(8),
+        justifyContent: 'flex-start',
+    },
+
+    expandButtonIcon: {
+        position: 'absolute',
+        bottom: verticalScale(8),
     },
 
     careGuideCard: {
@@ -78,24 +130,21 @@ export const styles = StyleSheet.create({
         marginBottom: verticalScale(20),
         ...shadows.medium,
     },
+
     sectionHeader: {
-        ...typography.h3,
-        fontSize: scale(14),
+        ...typography.h6,
         marginBottom: verticalScale(10),
     },
+
     guideItem: {
         marginBottom: verticalScale(8),
     },
+
     guideLabel: {
-        ...typography.textStrong,
-        fontSize: scale(12),
-        color: colors.black,
-        fontWeight: '600',
+        ...typography.textMedium,
     },
+
     guideText: {
-        ...typography.captionRegular,
-        fontSize: scale(12),
-        color: colors.text,
-        lineHeight: verticalScale(18),
+        ...typography.textLight2,
     },
 });
