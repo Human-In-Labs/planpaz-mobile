@@ -1,7 +1,10 @@
+import { ImageSourcePropType } from 'react-native';
+
 export interface SpeciesCardProps {
-    image: any;
+    image: ImageSourcePropType;
     commonName: string;
-    light: string;
-    water: string;
+    isRecommended?: boolean;
+    tags: string[];
     onPress?: () => void;
+    onAddPress?: () => void;
 }

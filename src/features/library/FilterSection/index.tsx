@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, TouchableOpacity, View, Text, } from 'react-native';
+import { FlatList, TouchableOpacity, View, Text } from 'react-native';
 import SearchBar from '../../../shared/components/SearchBar';
 import FilterChip from '../../../shared/components/FilterChip';
 import AppIcon from '../../../shared/components/AppIcon';
@@ -15,7 +15,6 @@ export default function FilterSection({
     onRemoveFilter,
     onFilterPress,
     onSuggestionPress,
-
 }: FilterSectionProps) {
     return (
         <View style={styles.container}>
@@ -23,7 +22,7 @@ export default function FilterSection({
                 <SearchBar
                     value={search}
                     onChangeText={onSearchChange}
-                    placeholder="Pesquisar planta..."
+                    placeholder="Nome da espécie"
                 />
             </View>
 
@@ -31,7 +30,7 @@ export default function FilterSection({
                 <FlatList
                     horizontal
                     data={filters}
-                    keyExtractor={(item) => item}
+                    keyExtractor={item => item}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filtersContent}
                     renderItem={({ item }) => (
@@ -45,11 +44,12 @@ export default function FilterSection({
 
                 <TouchableOpacity
                     style={styles.filterButton}
+                    activeOpacity={0.7}
                     onPress={onFilterPress}
                 >
                     <AppIcon
-                        icon={AppIcons.NOTE_PENCIL}
-                        size={20}
+                        icon={AppIcons.LIST_DASHES}
+                        size={18}
                         color={colors.primary}
                     />
                 </TouchableOpacity>
@@ -58,6 +58,7 @@ export default function FilterSection({
             <View style={styles.bottomRow}>
                 <TouchableOpacity
                     style={styles.suggestionButton}
+                    activeOpacity={0.7}
                     onPress={onSuggestionPress}
                 >
                     <Text style={styles.suggestionText}>
@@ -72,10 +73,6 @@ export default function FilterSection({
                         />
                     </View>
                 </TouchableOpacity>
-
-                <Text style={styles.counter}>
-                    42 results
-                </Text>
             </View>
         </View>
     );

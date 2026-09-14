@@ -1,7 +1,21 @@
+import { ImageSourcePropType } from 'react-native';
+
 export interface Species {
     id: string;
-    image: any;
+    image: ImageSourcePropType;
     commonName: string;
-    light: string;
-    water: string;
+    scientificName?: string;
+    isRecommended?: boolean;
+    tags: string[];
+    light?: string;
+    water?: string;
+    size?: string;
+    difficulty?: string;
+    type?: string;
+    description?: string;
+    careGuide?: {
+        solo: string;
+        rega: string;
+        poda?: string;
+    };
 }
