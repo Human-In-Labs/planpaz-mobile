@@ -9,23 +9,23 @@ type OnboardingScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
 //vetor com as páginas do onboarding
 const pages = [
-    {
-        title: 'Apresentação',
-        description: 'Bem-vindo ao PLANPAZ.',
-        image: require('../../assets/images/onboarding-1.png'),
-    },
+  {
+    title: 'Bem-vindo(a) ao Planpaz!',
+    description: 'O aplicativo para quem quer fazer a mudança no mundo, de semente em semente!',
+    image: require('../../assets/images/onboarding-1.png'),
+  },
 
-    {
-        title: 'Cultive suas plantas',
-        description: 'Aprenda a cuidar das espécies ideais para você.',
-        image: require('../../assets/images/onboarding-2.png'),
-    },
+  {
+    title: 'Cultive suas plantas',
+    description: 'Aprenda a cuidar das espécies ideais para você.',
+    image: require('../../assets/images/onboarding-2.png'),
+  },
 
-    {
-        title: 'Compartilhe experiências',
-        description: 'Conecte-se com pessoas que também cultivam plantas.',
-        image: require('../../assets/images/onboarding-2.png'),
-    },
+  {
+    title: 'Compartilhe experiências',
+    description: 'Conecte-se com pessoas que também cultivam plantas.',
+    image: require('../../assets/images/onboarding-3.png'),
+  },
 ];
 
 export default function OnboardingScreen() {
@@ -36,7 +36,7 @@ export default function OnboardingScreen() {
   const isFirstPage = currentPage === 0;
 
   return (
-    
+
     <View style={styles.container}>
       {/*exibe a imagem da página atual do onboarding*/}
       <View style={styles.header}>
@@ -44,18 +44,18 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.main}>
+        {/*Dots de paginação*/}
+        <View style={styles.pagination}>
+          {pages.map((_, index) => (
+            <View key={index} style={index === currentPage ? styles.paginationDotActive : styles.paginationDot} />
+          ))}
+        </View>
+
         <View style={styles.content}>
           <Text style={styles.title}>{pages[currentPage].title}</Text>
           <Text style={styles.text}>{pages[currentPage].description}</Text>
         </View>
 
-        {/*Dots de paginação*/}
-        <View style={styles.pagination}>
-          {pages.map((_, index) => (
-            <View key={index}  style={index === currentPage ? styles.paginationDotActive : styles.paginationDot}/>
-          ))}
-        </View>
-        
         {/*Botões de navegação e mudança de estado para mudar a página*/}
         <View style={styles.footer}>
           {currentPage > 0 ? (
@@ -66,7 +66,7 @@ export default function OnboardingScreen() {
                 }
               }}
             >
-              <Text style={styles.previousButtonText}>Anterior</Text>
+              <Text style={styles.previousButtonText}>Voltar</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.previousButton} />
@@ -76,7 +76,7 @@ export default function OnboardingScreen() {
             onPress={() => {
               if (isLastPage) {
                 navigation.replace('Login');
-              }else{
+              } else {
                 setCurrentPage(currentPage + 1);
               }
             }}

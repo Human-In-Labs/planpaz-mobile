@@ -4,7 +4,7 @@ import { scale, verticalScale } from '../../shared/theme/scale';
 
 const { width } = Dimensions.get('window');
 
-const bannerHeight = width * (496 / 390);
+const bannerHeight = width * (489 / 390);
 
 export const styles = StyleSheet.create({
   container: {
@@ -28,42 +28,42 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
 
-  title: {
-    ...typography.h2,
-    marginBottom: spacing.xl,
-  }, 
-
-  content: {
-    flex: 1,
-    paddingTop: verticalScale(76),
-  },
-
-  text: {
-    flex: 1,
-    ...typography.bodyStrong,
-  },
-
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: verticalScale(12),
+    gap: spacing.sm,
+    marginTop: verticalScale(spacing.xs),
+    marginBottom: verticalScale(60),
   },
 
   paginationDot: {
-    width: scale(10),
-    height: verticalScale(10),
-    borderRadius: 5,
+    width: scale(12),
+    height: verticalScale(12),
+    borderRadius: 6,
     borderWidth: scale(1),
     borderColor: colors.primary,
   },
 
   paginationDotActive: {
-    width: scale(10),
-    height: verticalScale(10),
-    borderRadius: 5,
+    width: scale(12),
+    height: verticalScale(12),
+    borderRadius: 6,
     backgroundColor: colors.primary,
+  },
+
+  content: {
+    flex: 1,
+  },
+
+  title: {
+    ...typography.h2,
+    marginBottom: spacing.xl,
+  }, 
+
+  text: {
+    flex: 1,
+    ...typography.bodyStrong,
   },
 
   footer: {
@@ -77,13 +77,14 @@ export const styles = StyleSheet.create({
     flex: 1,
     height: verticalScale(spacing.xxxl),
     backgroundColor: colors.primary,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   nextButtonText: {
     ...typography.button,
+    color: '#F1F7F6',
   },
 
   previousButton: {
