@@ -9,6 +9,7 @@ import { colors, radius, shadows, spacing, typography } from '../../../shared/th
 export const styles = StyleSheet.create({
 
     container: {
+        marginTop: verticalScale(16),
     },
 
     header: {
