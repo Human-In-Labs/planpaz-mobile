@@ -91,7 +91,8 @@ export const AppIcons = {
     LIST_DASHES: 'listDashes',
     RULER: 'ruler',
 
-} as const;
+    THERMOMETER_SIMPLE: 'thermometerSimple',
 
-export type IconName =
-    typeof AppIcons[keyof typeof AppIcons];
+    HOUSE_SIMPLE: 'houseSimple'
+
+} as const;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, } from 'react-native';
+import { TouchableOpacity, Text, View } from 'react-native';
 import AppIcon from '../AppIcon';
 import { colors } from '../../theme';
 import { styles } from './styles';
@@ -9,6 +9,7 @@ export default function FilterChip({
     label,
     removable = false,
     onRemove,
+    icon,
 }: FilterChipProps) {
     const Container = removable
         ? TouchableOpacity
@@ -24,6 +25,15 @@ export default function FilterChip({
                 }
                 : {})}
         >
+            {icon && (
+                <AppIcon
+                    icon={icon}
+                    size={14}
+                    color={colors.black}
+                    style={styles.filterIcon}
+                />
+            )}
+
             <Text style={styles.label}>
                 {label}
             </Text>

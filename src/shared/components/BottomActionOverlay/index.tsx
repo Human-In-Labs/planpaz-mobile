@@ -25,17 +25,32 @@ export default function BottomActionOverlay({
                 style={[styles.fadeContainer, style]}
                 pointerEvents="none"
             >
-                <Svg width="100%" height="100%">
-                    <Defs>
-                        <LinearGradient id="bottomActionFade" x1="0" y1="0" x2="0" y2="1">
-                            <Stop offset="0" stopColor="#FAFFFA" stopOpacity="0" />
-                            <Stop offset="0.45" stopColor="#FAFFFA" stopOpacity="0.85" />
-                            <Stop offset="0.75" stopColor="#FAFFFA" stopOpacity="1" />
-                            <Stop offset="1" stopColor="#FAFFFA" stopOpacity="1" />
-                        </LinearGradient>
-                    </Defs>
-                    <Rect x="0" y="0" width="100%" height="100%" fill="url(#bottomActionFade)" />
-                </Svg>
+                <View style={styles.fadeArea}>
+                    <Svg width="100%" height="100%">
+                        <Defs>
+                            <LinearGradient
+                                id="bottomActionFade"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <Stop offset="0" stopColor="#FAFFFA" stopOpacity="0" />
+                                <Stop offset="1" stopColor="#FAFFFA" stopOpacity="1" />
+                            </LinearGradient>
+                        </Defs>
+
+                        <Rect
+                            x="0"
+                            y="0"
+                            width="100%"
+                            height="100%"
+                            fill="url(#bottomActionFade)"
+                        />
+                    </Svg>
+                </View>
+
+                <View style={styles.solidArea} />
             </View>
 
             {/* Fixed Action Button 12pt above TabBar */}
