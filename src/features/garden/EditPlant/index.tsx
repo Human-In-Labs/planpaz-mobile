@@ -6,24 +6,18 @@ import {
     Image,
     ScrollView,
     TouchableOpacity,
-    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Svg, {
-    Defs,
-    LinearGradient,
-    Stop,
-    Rect,
-} from 'react-native-svg';
+import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
 import { GardenStackParamList } from '../../../navigation/types';
 import AppHeader from '../../../shared/components/AppHeader';
 import AppIcon from '../../../shared/components/AppIcon';
 import DropdownField from '../../profile/settings/components/DropdownField';
-import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
+import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { INITIAL_GARDEN_PLANTS } from '../mock/gardenMock';
 import { styles } from './styles';
 
@@ -83,6 +77,8 @@ export default function EditPlantScreen() {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
+                    overScrollMode="always"
+                    bounces={true}
                 >
                     <View style={styles.photoContainer}>
                         <Image
@@ -218,54 +214,20 @@ export default function EditPlantScreen() {
                 </ScrollView>
             </SafeAreaView>
 
-            <Animated.View
-                pointerEvents="none"
-                style={styles.bottomActionOverlay}
-            >
-                <Svg width="100%" height="100%">
-                    <Defs>
-                        <LinearGradient
-                            id="editPlantFade"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                        >
-                            <Stop
-                                offset="0"
-                                stopColor={colors.background}
-                                stopOpacity="0"
-                            />
-                            <Stop
-                                offset="0.55"
-                                stopColor={colors.background}
-                                stopOpacity="0.85"
-                            />
-                            <Stop
-                                offset="1"
-                                stopColor={colors.background}
-                                stopOpacity="1"
-                            />
-                        </LinearGradient>
-                    </Defs>
-
-                    <Rect
-                        x="0"
-                        y="0"
-                        width="100%"
-                        height="100%"
-                        fill="url(#editPlantFade)"
-                    />
-                </Svg>
-            </Animated.View>
-
-            <TouchableOpacity
-                style={styles.saveButton}
-                activeOpacity={0.8}
+            <BottomActionOverlay
+                title="Salvar alterações"
                 onPress={handleSave}
-            >
-                <Text style={styles.saveButtonText}>Salvar alterações</Text>
-            </TouchableOpacity>
+            />
+            <ChangePhotoOverlay
+                visible={changePhotoVisible}
+                onClose={() => setChangePhotoVisible(false)}
+                onSelectFromGallery={() => {
+                    setChangePhotoVisible(false);
+                }}
+                onTakePhoto={() => {
+                    setChangePhotoVisible(false);
+                }}
+            />
         </View>
     );
 }

@@ -202,7 +202,6 @@ export default function PlantDetailsScreen() {
                     </ScrollView>
                 </View>
 
-
                 {/* Plant Statistics Section */}
                 <View style={styles.statsCard}>
                     <Text style={styles.sectionHeader}>
@@ -369,4 +368,3 @@ export default function PlantDetailsScreen() {
         </SafeAreaView>
     );
 }
-

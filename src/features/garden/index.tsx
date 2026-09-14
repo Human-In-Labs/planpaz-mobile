@@ -16,15 +16,51 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { GardenStackParamList } from '../../navigation/types';
 import { INITIAL_GARDEN_PLANTS } from './mock/gardenMock';
 import { CultivatedPlant } from './types';
+import PlantFilters from './overlays/PlantFilters';
+import { IconName } from '../../shared/components/AppIcon/icons';
 
 type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'GardenMain'>;
+type GardenFilter = {
+    type: string;
+    label: string;
+    icon: IconName;
+};
 
 export default function GardenScreen() {
     const navigation = useNavigation<NavigationProp>();
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState(['Quintal', 'Manjericão']);
     const [plants] = useState<CultivatedPlant[]>(INITIAL_GARDEN_PLANTS);
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [filters, setFilters] = useState<GardenFilter[]>([
+        {
+            type: 'environment',
+            label: 'Quintal',
+            icon: AppIcons.HOUSE_SIMPLE,
+        },
+    ]);
+    const handleFilterChange = (
+        type: string,
+        label: string,
+        icon: IconName,
+    ) => {
+        setFilters(prev => {
+            const withoutCurrent = prev.filter(filter => filter.type !== type);
+
+            if (label === 'Todas') {
+                return withoutCurrent;
+            }
+
+            return [
+                ...withoutCurrent,
+                {
+                    type,
+                    label,
+                    icon,
+                },
+            ];
+        });
+    };
 
     const filteredPlants = plants.filter(plant => {
         const matchesSearch =
@@ -32,7 +68,15 @@ export default function GardenScreen() {
             plant.nickname.toLowerCase().includes(search.toLowerCase()) ||
             plant.species.toLowerCase().includes(search.toLowerCase());
 
-        return matchesSearch;
+        const selectedEnvironment = filters.find(
+            filter => filter.type === 'environment',
+        );
+
+        const matchesEnvironment =
+            !selectedEnvironment ||
+            plant.room === selectedEnvironment.label;
+
+        return matchesSearch && matchesEnvironment;
     });
 
     return (
@@ -48,7 +92,7 @@ export default function GardenScreen() {
                     <>
                         <AppHeader
                             title="Meu jardim"
-                            hasNotifications
+                            hasNotifications={!filterVisible}
                             onNotificationPress={() => setNotificationVisible(true)}
                         />
 
@@ -64,16 +108,17 @@ export default function GardenScreen() {
                             <FlatList
                                 horizontal
                                 data={filters}
-                                keyExtractor={item => item}
+                                keyExtractor={item => item.label}
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.filterList}
                                 renderItem={({ item }) => (
                                     <FilterChip
-                                        label={item}
+                                        label={item.label}
+                                        icon={item.icon}
                                         removable
                                         onRemove={() =>
                                             setFilters(prev =>
-                                                prev.filter(value => value !== item)
+                                                prev.filter(filter => filter.label !== item.label)
                                             )
                                         }
                                     />
@@ -83,6 +128,7 @@ export default function GardenScreen() {
                             <TouchableOpacity
                                 style={styles.filterButton}
                                 activeOpacity={0.7}
+                                onPress={() => setFilterVisible(true)}
                             >
                                 <AppIcon
                                     icon={AppIcons.LIST_DASHES}
@@ -119,6 +165,15 @@ export default function GardenScreen() {
                     />
                 </View>
             )}
+
+            <PlantFilters
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                selectedFilters={Object.fromEntries(
+                    filters.map(filter => [filter.type, filter.label])
+                )}
+                onFilterChange={handleFilterChange}
+            />
         </SafeAreaView>
     );
 }
