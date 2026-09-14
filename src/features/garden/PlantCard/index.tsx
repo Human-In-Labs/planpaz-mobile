@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Text, TouchableOpacity, View, } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { PlantCardProps } from './types';
 import { styles } from './styles';
 import AppIcon from '../../../shared/components/AppIcon';
@@ -8,9 +8,9 @@ import { AppIcons } from '../../../shared/constants/appIcons';
 
 export default function PlantCard({
     image,
-    commonName,
-    wateringDays,
-    action,
+    nickname,
+    species,
+    days,
     onPress,
 }: PlantCardProps) {
     return (
@@ -29,13 +29,13 @@ export default function PlantCard({
                 <View style={styles.firstRow}>
                     <Text
                         numberOfLines={1}
-                        style={styles.commonName}
+                        style={styles.nickname}
                     >
-                        {commonName}
+                        {nickname}
                     </Text>
 
                     <AppIcon
-                        icon={AppIcons.NOTE_PENCIL}
+                        icon={AppIcons.ARROW_RIGHT}
                         size={16}
                         color={colors.primary}
                     />
@@ -44,12 +44,12 @@ export default function PlantCard({
                 <View style={styles.secondRow}>
                     <Text
                         numberOfLines={1}
-                        style={styles.action}
+                        style={styles.species}
                     >
-                        {action}
+                        {species}
                     </Text>
-                    <Text style={styles.wateringDays}>
-                        {wateringDays}d
+                    <Text style={styles.days}>
+                        {days}d
                     </Text>
                 </View>
             </View>

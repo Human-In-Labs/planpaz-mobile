@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, FlatList, } from 'react-native';
+import { View, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from './styles';
@@ -13,77 +13,33 @@ import AppIcon from '../../shared/components/AppIcon';
 import { colors } from '../../shared/theme';
 import { AppIcons } from '../../shared/constants/appIcons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/types';
+import { GardenStackParamList } from '../../navigation/types';
+import { INITIAL_GARDEN_PLANTS } from './mock/gardenMock';
+import { CultivatedPlant } from './types';
+
+type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'GardenMain'>;
 
 export default function GardenScreen() {
+    const navigation = useNavigation<NavigationProp>();
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState(['Orquídeas', 'Interior',]);
-    const plants = [
-        {
-            id: '1',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Samambaia ',
-            scientificName: 'Monstera deliciosa',
-            wateringDays: 3,
-            nextWatering: 'Amanhã',
-        },
-        {
-            id: '2',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '3',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '4',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '5',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '6',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-    ];
-    type NavigationProp = NativeStackNavigationProp<
-        RootStackParamList,
-        'MainTabs'
-    >;
+    const [filters, setFilters] = useState(['Quintal', 'Manjericão']);
+    const [plants] = useState<CultivatedPlant[]>(INITIAL_GARDEN_PLANTS);
 
-    const navigation = useNavigation<NavigationProp>();
+    const filteredPlants = plants.filter(plant => {
+        const matchesSearch =
+            !search ||
+            plant.nickname.toLowerCase().includes(search.toLowerCase()) ||
+            plant.species.toLowerCase().includes(search.toLowerCase());
+
+        return matchesSearch;
+    });
 
     return (
-        <SafeAreaView
-            edges={['top']}
-            style={styles.container}
-        >
+        <SafeAreaView edges={['top']} style={styles.container}>
             <FlatList
-                data={plants}
-                keyExtractor={(item) => item.id}
+                data={filteredPlants}
+                keyExtractor={item => item.id}
                 numColumns={2}
                 showsVerticalScrollIndicator={false}
                 columnWrapperStyle={styles.gridRow}
@@ -91,18 +47,16 @@ export default function GardenScreen() {
                 ListHeaderComponent={
                     <>
                         <AppHeader
-                            title="Meu Jardim"
+                            title="Meu jardim"
                             hasNotifications
-                            onNotificationPress={() =>
-                                setNotificationVisible(true)
-                            }
+                            onNotificationPress={() => setNotificationVisible(true)}
                         />
 
                         <View style={styles.searchSection}>
                             <SearchBar
                                 value={search}
                                 onChangeText={setSearch}
-                                placeholder="Pesquisar planta..."
+                                placeholder="Nome da planta"
                             />
                         </View>
 
@@ -110,7 +64,7 @@ export default function GardenScreen() {
                             <FlatList
                                 horizontal
                                 data={filters}
-                                keyExtractor={(item) => item}
+                                keyExtractor={item => item}
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.filterList}
                                 renderItem={({ item }) => (
@@ -119,9 +73,7 @@ export default function GardenScreen() {
                                         removable
                                         onRemove={() =>
                                             setFilters(prev =>
-                                                prev.filter(
-                                                    value => value !== item,
-                                                ),
+                                                prev.filter(value => value !== item)
                                             )
                                         }
                                     />
@@ -130,33 +82,33 @@ export default function GardenScreen() {
 
                             <TouchableOpacity
                                 style={styles.filterButton}
+                                activeOpacity={0.7}
                             >
                                 <AppIcon
-                                    icon={AppIcons.FILTER}
-                                    size={20}
+                                    icon={AppIcons.LIST_DASHES}
+                                    size={18}
                                     color={colors.primary}
                                 />
                             </TouchableOpacity>
                         </View>
                     </>
-
                 }
                 renderItem={({ item }) => (
                     <PlantCard
                         image={item.image}
-                        commonName={item.commonName}
-                        wateringDays={item.wateringDays}
-                        action="Rega"
+                        nickname={item.nickname}
+                        species={item.species}
+                        days={item.daysCultivated}
+                        onPress={() =>
+                            navigation.navigate('PlantDetails', { plantId: item.id })
+                        }
                     />
-
                 )}
             />
 
             <NotificationOverlay
                 visible={notificationVisible}
-                onClose={() =>
-                    setNotificationVisible(false)
-                }
+                onClose={() => setNotificationVisible(false)}
             />
 
             {!notificationVisible && (

@@ -76,6 +76,11 @@ import DotsThreeVertical from '../../../assets/icons/dots-three-vertical.svg';
 import GlobeHemisphereWest from '../../../assets/icons/globe-hemisphere-west.svg';
 import Tree from '../../../assets/icons/tree.svg';
 
+import Briefcase from '../../../assets/icons/briefcase.svg';
+import ListDashes from '../../../assets/icons/list-dashes.svg';
+import Ruler from '../../../assets/icons/ruler.svg';
+import PencilSimple from '../../../assets/icons/pencil-simple.svg';
+
 import { SvgProps } from 'react-native-svg';
 
 type SvgIcon = React.FC<SvgProps>;
@@ -158,6 +163,11 @@ export const icons = {
     dotsThreeVertical: DotsThreeVertical,
     globeHemisphereWest: GlobeHemisphereWest,
     tree: Tree,
+
+    briefcase: Briefcase,
+    listDashes: ListDashes,
+    ruler: Ruler,
+    pencilSimple: PencilSimple,
 } satisfies Record<string, SvgIcon>;
 
 export type IconName = keyof typeof icons;

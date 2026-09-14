@@ -89,7 +89,13 @@ export const typography = {
   textLight: {
     fontFamily: fonts.interRegular,
     fontSize: 12,
-    color: colors.textLight,
+    color: colors.black,
+  },
+
+  textLight2: {
+    fontFamily: fonts.interLight,
+    fontSize: 12,
+    color: colors.black,
   },
 
   textStrong: {
@@ -102,6 +108,12 @@ export const typography = {
     fontFamily: fonts.interMedium,
     fontSize: 12,
     color: colors.warning,
+  },
+
+  h6: {
+    fontFamily: fonts.poppinsSemiBold,
+    fontSize: 10,
+    color: colors.black,
   },
 
   captionStrong: {
@@ -124,6 +136,12 @@ export const typography = {
 
   captionRegular: {
     fontFamily: fonts.interRegular,
+    fontSize: 10,
+    color: colors.text,
+  },
+
+  captionLight2: {
+    fontFamily: fonts.interLight,
     fontSize: 10,
     color: colors.text,
   },

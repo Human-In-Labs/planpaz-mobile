@@ -16,3 +16,12 @@ export type ProfileStackParamList = {
     Configuracoes: undefined;
     Achievements: undefined;
 };
+
+export type GardenStackParamList = {
+    GardenMain: undefined;
+    PlantDetails: { plantId: string; };
+    EditPlant: { plantId: string; };
+    Library: undefined;
+    SpeciesDetails: { speciesId: string; };
+    AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
+};

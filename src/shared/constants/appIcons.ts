@@ -25,6 +25,7 @@ export const AppIcons = {
 
     NOTE_PENCIL: 'notePencil',
     NOTE_PENCIL_FILL: 'notePencilFill',
+    PENCIL_SIMPLE: 'pencilSimple',
 
     // Garden
 
@@ -85,6 +86,10 @@ export const AppIcons = {
 
     CALENDAR_DOTS: 'calendarDots',
     CROSSHAIR: 'crosshairSimple',
+
+    BRIEFCASE: 'briefcase',
+    LIST_DASHES: 'listDashes',
+    RULER: 'ruler',
 
 } as const;
 
