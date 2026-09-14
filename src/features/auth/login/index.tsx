@@ -11,21 +11,59 @@ import { saveToken, getToken } from '../../../shared/services/storage';
 import AppIcon from '../../../shared/components/AppIcon';
 
 
+import { ErrorPopup } from '../errors';
+
 type LoginScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList, 'Login'>;
+
+const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
 export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleLogin = async () => {
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail && !password) {
+      setEmailError(true);
+      setPasswordError(true);
+      setErrorMessage('Preencha todos os campos');
+      return;
+    }
+
+    if (!cleanEmail) {
+      setEmailError(true);
+      setPasswordError(false);
+      setErrorMessage('Preencha o e-mail');
+      return;
+    }
+
+    if (!password) {
+      setEmailError(false);
+      setPasswordError(true);
+      setErrorMessage('Preencha a senha');
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setEmailError(true);
+      setPasswordError(false);
+      setErrorMessage('Formato de e-mail inválido');
+      return;
+    }
+
     try {
       console.log('[LOGIN] Botão pressionado');
-      console.log('[LOGIN] Email:', email);
+      console.log('[LOGIN] Email:', cleanEmail);
 
       const data = await login({
-        email,
+        email: cleanEmail,
         password,
       });
 
@@ -38,8 +76,17 @@ export default function LoginScreen() {
       console.log('[LOGIN] Login realizado:', data);
 
       navigation.navigate('MainTabs');
-    } catch (error) {
+    } catch (error: any) {
       console.log('[LOGIN] Erro no login:', error);
+      if (error?.response) {
+        setEmailError(true);
+        setPasswordError(true);
+        setErrorMessage('Credenciais inválidas');
+      } else {
+        setEmailError(false);
+        setPasswordError(false);
+        setErrorMessage('Não foi possível conectar ao servidor');
+      }
     }
   };
 
@@ -56,21 +103,34 @@ export default function LoginScreen() {
           <Text style={styles.title}>Entrar</Text>
 
           <TextInput
-            style={styles.inputEmail}
+            style={[styles.inputEmail, emailError && styles.inputError]}
             placeholder="Email"
             placeholderTextColor={colors.black}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (emailError) setEmailError(false);
+              if (errorMessage) setErrorMessage('');
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
           />
 
-          <View style={styles.passwordContainer}>
+          <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
             <TextInput
               style={styles.inputPassword}
               placeholder="Password"
-              placeholderTextColor={colors.black}
+              placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (passwordError) setPasswordError(false);
+                if (errorMessage) setErrorMessage('');
+              }}
+              autoCapitalize="none"
+              underlineColorAndroid="transparent"
             />
             <TouchableOpacity
               style={styles.iconButton}
@@ -79,7 +139,7 @@ export default function LoginScreen() {
               <AppIcon
                 icon={showPassword ? 'eye' : 'eyeSlash'}
                 size={22}
-                color={colors.primary}
+                color={passwordError ? colors.warning : colors.primary}
               />
             </TouchableOpacity>
           </View>
@@ -108,6 +168,8 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   )
 }

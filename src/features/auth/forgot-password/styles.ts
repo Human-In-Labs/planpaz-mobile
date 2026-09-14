@@ -50,6 +50,13 @@ export const styles = StyleSheet.create({
     ...shadows.medium,
     paddingHorizontal: spacing.md,
     ...typography.bodyStrong,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+
+  inputError: {
+    borderColor: colors.warning,
+    zIndex: 2,
   },
 
   footer: {

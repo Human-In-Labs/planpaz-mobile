@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { colors } from '../../../shared/theme';
+import { ErrorPopup } from '../errors';
 import { styles } from './styles';
 
 type ValidateCodeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ValidateCode'>;
@@ -11,8 +12,18 @@ type ValidateCodeNavigationProp = NativeStackNavigationProp<RootStackParamList, 
 export default function ValidateCodeScreen() {
   const navigation = useNavigation<ValidateCodeNavigationProp>();
   const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleValidateCode = () => {
+    const cleanCode = code.trim();
+
+    if (!cleanCode) {
+      setCodeError(true);
+      setErrorMessage('Preencha o código');
+      return;
+    }
+
     navigation.navigate('ResetPassword');
   };
 
@@ -38,11 +49,15 @@ export default function ValidateCodeScreen() {
           </Text>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, codeError && styles.inputError]}
             placeholder="Código"
             placeholderTextColor={colors.black}
             value={code}
-            onChangeText={setCode}
+            onChangeText={(text) => {
+              setCode(text);
+              if (codeError) setCodeError(false);
+              if (errorMessage) setErrorMessage('');
+            }}
             keyboardType="number-pad"
             autoCapitalize="none"
             autoCorrect={false}
@@ -65,6 +80,8 @@ export default function ValidateCodeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   );
 }

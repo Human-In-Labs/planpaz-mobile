@@ -29,7 +29,7 @@ export const styles = StyleSheet.create({
   },
 
   content: {
-    paddingTop: verticalScale(56),
+    paddingTop: verticalScale(82),
   },
 
   title: {
@@ -46,6 +46,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     ...typography.bodyStrong,
     color: colors.black,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+
+  inputError: {
+    borderColor: colors.warning,
+    zIndex: 2,
   },
 
   passwordContainer: {
@@ -58,6 +65,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingStart: spacing.md,
     paddingEnd: spacing.sm,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
 
   inputPassword: {
@@ -65,6 +75,8 @@ export const styles = StyleSheet.create({
     height: '100%',
     ...typography.bodyStrong,
     color: colors.black,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
   },
 
   iconButton: {
@@ -102,6 +114,11 @@ export const styles = StyleSheet.create({
   criteriaCircleActive: {
     borderColor: colors.primary,
     backgroundColor: colors.primary,
+  },
+
+  criteriaCircleError: {
+    borderColor: colors.warning,
+    backgroundColor: colors.warning,
   },
 
   criteriaText: {

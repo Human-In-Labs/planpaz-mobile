@@ -29,7 +29,7 @@ export const styles = StyleSheet.create({
   },
 
   content: {
-    paddingTop: verticalScale(56),
+    paddingTop: verticalScale(82),
   },
 
   title: {
@@ -46,6 +46,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     ...typography.bodyStrong,
     color: colors.black,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+
+  inputError: {
+    borderColor: colors.warning,
+    zIndex: 2,
   },
 
   footer: {

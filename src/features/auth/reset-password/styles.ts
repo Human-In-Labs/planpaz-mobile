@@ -52,7 +52,15 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
+    paddingVertical: 1,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+
+  inputError: {
+    borderColor: colors.warning,
+    zIndex: 2,
   },
 
   input: {
@@ -60,12 +68,59 @@ export const styles = StyleSheet.create({
     height: '100%',
     ...typography.bodyStrong,
     color: colors.black,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
   },
 
   iconButton: {
     padding: spacing.xs,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  criteriaContainer: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+
+  criteriaTitle: {
+    ...typography.captionStrong,
+    color: colors.black,
+    marginBottom: spacing.xxs,
+  },
+
+  criteriaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: 3,
+  },
+
+  criteriaCircle: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: colors.text,
+  },
+
+  criteriaCircleActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+
+  criteriaCircleError: {
+    borderColor: colors.warning,
+    backgroundColor: colors.warning,
+  },
+
+  criteriaText: {
+    ...typography.captionRegular,
+    color: colors.text,
+  },
+
+  criteriaTextActive: {
+    color: colors.primary,
   },
 
   footer: {

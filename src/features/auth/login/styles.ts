@@ -1,10 +1,10 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { colors, radius, shadows, spacing, typography} from '../../../shared/theme';
+import { colors, radius, shadows, spacing, typography } from '../../../shared/theme';
 import { verticalScale } from '../../../shared/theme/scale';
 
 const { width } = Dimensions.get('window');
 
-const bannerHeight = width * (240 / 390);
+const bannerHeight = width * (248 / 390);
 
 export const styles = StyleSheet.create({
   container: {
@@ -31,11 +31,10 @@ export const styles = StyleSheet.create({
   title: {
     ...typography.h2,
     marginBottom: spacing.xl,
-    paddingStart: spacing.md,
   },
 
   content: {
-    paddingTop: verticalScale(76),
+    paddingTop: verticalScale(82),
   },
 
   forgotPasswordButton: {
@@ -56,6 +55,13 @@ export const styles = StyleSheet.create({
     ...shadows.medium,
     marginBottom: spacing.xs,
     paddingStart: spacing.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+
+  inputError: {
+    borderColor: colors.warning,
+    zIndex: 2,
   },
 
   passwordContainer: {
@@ -68,12 +74,17 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     paddingStart: spacing.md,
     paddingEnd: spacing.sm,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
 
   inputPassword: {
     flex: 1,
     height: '100%',
     color: colors.black,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
   },
 
   iconButton: {

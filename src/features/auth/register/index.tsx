@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { colors } from '../../../shared/theme';
 import AppIcon from '../../../shared/components/AppIcon';
+import { ErrorPopup } from '../errors';
 import { styles } from './styles';
 
 type RegisterNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
+
+const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterNavigationProp>();
@@ -17,6 +20,12 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+  const [passwordSubmittedError, setPasswordSubmittedError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
 
@@ -24,27 +33,38 @@ export default function RegisterScreen() {
     const cleanEmail = email.trim();
 
     if (!cleanEmail || !password || !confirmPassword) {
-      Alert.alert('Campos obrigatórios', 'Preencha todos os campos para continuar.');
+      setEmailError(!cleanEmail);
+      setPasswordError(!password);
+      setConfirmPasswordError(!confirmPassword);
+      setPasswordSubmittedError(!password && (!hasMinLength || !hasNumber));
+      setErrorMessage('Preencha todos os campos');
       return;
     }
 
-    if (!cleanEmail.includes('@')) {
-      Alert.alert('Email inválido', 'Digite um endereço de email válido.');
+    if (!isValidEmail(cleanEmail)) {
+      setEmailError(true);
+      setPasswordError(false);
+      setConfirmPasswordError(false);
+      setPasswordSubmittedError(false);
+      setErrorMessage('Formato de e-mail inválido');
       return;
     }
 
-    if (!hasMinLength) {
-      Alert.alert('Senha inválida', 'A senha deve possuir pelo menos 8 caracteres.');
-      return;
-    }
-
-    if (!hasNumber) {
-      Alert.alert('Senha inválida', 'A senha deve conter pelo menos um número.');
+    if (!hasMinLength || !hasNumber) {
+      setEmailError(false);
+      setPasswordError(true);
+      setPasswordSubmittedError(true);
+      setConfirmPasswordError(false);
+      setErrorMessage('A senha não atende aos requisitos');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Senhas diferentes', 'A senha e a confirmação de senha precisam ser iguais.');
+      setEmailError(false);
+      setPasswordError(true);
+      setConfirmPasswordError(true);
+      setPasswordSubmittedError(false);
+      setErrorMessage('As senhas não coincidem');
       return;
     }
 
@@ -69,25 +89,38 @@ export default function RegisterScreen() {
           <Text style={styles.title}>Cadastrar</Text>
 
           <TextInput
-            style={styles.inputEmail}
+            style={[styles.inputEmail, emailError && styles.inputError]}
             placeholder="Email"
             placeholderTextColor={colors.black}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (emailError) setEmailError(false);
+              if (errorMessage) setErrorMessage('');
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
           />
 
-          <View style={styles.passwordContainer}>
+          <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
             <TextInput
               style={styles.inputPassword}
               placeholder="Password"
-              placeholderTextColor={colors.black}
+              placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (passwordError) setPasswordError(false);
+                if (passwordSubmittedError) setPasswordSubmittedError(false);
+                if (errorMessage === 'As senhas não coincidem') {
+                  setConfirmPasswordError(false);
+                }
+                if (errorMessage) setErrorMessage('');
+              }}
               autoCapitalize="none"
+              underlineColorAndroid="transparent"
             />
             <TouchableOpacity
               style={styles.iconButton}
@@ -96,20 +129,28 @@ export default function RegisterScreen() {
               <AppIcon
                 icon={showPassword ? 'eye' : 'eyeSlash'}
                 size={22}
-                color={colors.primary}
+                color={passwordError ? colors.warning : colors.primary}
               />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.passwordContainer}>
+          <View style={[styles.passwordContainer, confirmPasswordError && styles.inputError]}>
             <TextInput
               style={styles.inputPassword}
               placeholder="Confirm password"
-              placeholderTextColor={colors.black}
+              placeholderTextColor={confirmPasswordError && !confirmPassword ? colors.warning : colors.black}
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                if (confirmPasswordError) setConfirmPasswordError(false);
+                if (errorMessage === 'As senhas não coincidem') {
+                  setPasswordError(false);
+                }
+                if (errorMessage) setErrorMessage('');
+              }}
               autoCapitalize="none"
+              underlineColorAndroid="transparent"
             />
             <TouchableOpacity
               style={styles.iconButton}
@@ -118,7 +159,7 @@ export default function RegisterScreen() {
               <AppIcon
                 icon={showConfirmPassword ? 'eye' : 'eyeSlash'}
                 size={22}
-                color={colors.primary}
+                color={confirmPasswordError ? colors.warning : colors.primary}
               />
             </TouchableOpacity>
           </View>
@@ -130,7 +171,11 @@ export default function RegisterScreen() {
               <View
                 style={[
                   styles.criteriaCircle,
-                  hasMinLength && styles.criteriaCircleActive,
+                  hasMinLength
+                    ? styles.criteriaCircleActive
+                    : passwordSubmittedError
+                    ? styles.criteriaCircleError
+                    : null,
                 ]}
               />
               <Text
@@ -147,7 +192,11 @@ export default function RegisterScreen() {
               <View
                 style={[
                   styles.criteriaCircle,
-                  hasNumber && styles.criteriaCircleActive,
+                  hasNumber
+                    ? styles.criteriaCircleActive
+                    : passwordSubmittedError
+                    ? styles.criteriaCircleError
+                    : null,
                 ]}
               />
               <Text
@@ -180,6 +229,8 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   );
 }

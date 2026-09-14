@@ -5,6 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../../navigation/types';
 import { colors } from '../../../../shared/theme';
 import { register } from '../../../../shared/api';
+import { ErrorPopup } from '../../errors';
 import { styles } from './styles';
 
 type RegisterStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterStep2'>;
@@ -17,19 +18,33 @@ export default function RegisterStep2Screen() {
 
   const [firstName, setFirstName] = useState('');
   const [username, setUsername] = useState('');
+  const [firstNameError, setFirstNameError] = useState(false);
+  const [usernameError, setUsernameError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     const cleanFirstName = firstName.trim();
     const cleanUsername = username.trim();
 
+    if (!cleanFirstName && !cleanUsername) {
+      setFirstNameError(true);
+      setUsernameError(true);
+      setErrorMessage('Preencha todos os campos');
+      return;
+    }
+
     if (!cleanFirstName) {
-      Alert.alert('Campo obrigatório', 'Informe seu primeiro nome.');
+      setFirstNameError(true);
+      setUsernameError(false);
+      setErrorMessage('Informe seu nome');
       return;
     }
 
     if (!cleanUsername) {
-      Alert.alert('Campo obrigatório', 'Informe seu nome de usuário.');
+      setFirstNameError(false);
+      setUsernameError(true);
+      setErrorMessage('Informe seu nome de usuário');
       return;
     }
 
@@ -53,9 +68,11 @@ export default function RegisterStep2Screen() {
       );
     } catch (error: any) {
       if (error?.response?.status === 400) {
-        Alert.alert('Cadastro não realizado', 'Este email já está cadastrado.');
+        setErrorMessage('Este email já está cadastrado');
+      } else if (error?.response) {
+        setErrorMessage('Não foi possível realizar o cadastro');
       } else {
-        Alert.alert('Erro', 'Não foi possível realizar o cadastro.');
+        setErrorMessage('Não foi possível conectar ao servidor');
       }
     } finally {
       setLoading(false);
@@ -77,21 +94,29 @@ export default function RegisterStep2Screen() {
           <Text style={styles.title}>Cadastrar</Text>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, firstNameError && styles.inputError]}
             placeholder="Primeiro nome"
             placeholderTextColor={colors.black}
             value={firstName}
-            onChangeText={setFirstName}
+            onChangeText={(text) => {
+              setFirstName(text);
+              if (firstNameError) setFirstNameError(false);
+              if (errorMessage) setErrorMessage('');
+            }}
             autoCapitalize="words"
             autoCorrect={false}
           />
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, usernameError && styles.inputError]}
             placeholder="Nome de usuário"
             placeholderTextColor={colors.black}
             value={username}
-            onChangeText={setUsername}
+            onChangeText={(text) => {
+              setUsername(text);
+              if (usernameError) setUsernameError(false);
+              if (errorMessage) setErrorMessage('');
+            }}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -117,6 +142,8 @@ export default function RegisterStep2Screen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   );
 }
