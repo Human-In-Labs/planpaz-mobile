@@ -22,6 +22,7 @@ interface FollowersOverlayProps {
     title?: string;
     users?: FollowerUser[];
     onOptionsPress?: (user: FollowerUser) => void;
+    onRemoveUser?: (user: FollowerUser) => void;
 }
 
 interface FollowerItemProps {
@@ -86,6 +87,7 @@ export default function FollowersOverlay({
     title = 'Meus seguidores',
     users = followersMock,
     onOptionsPress,
+    onRemoveUser,
 }: FollowersOverlayProps) {
     const containerRef = useRef<View>(null);
 
@@ -184,7 +186,10 @@ export default function FollowersOverlay({
                                 right: scale(21),
                             }}
                             onViewProfile={handleCloseSubpopup}
-                            onRemove={handleCloseSubpopup}
+                            onRemove={() => {
+                                onRemoveUser?.(activeUser);
+                                handleCloseSubpopup();
+                            }}
                             onReport={handleCloseSubpopup}
                         />
                     </>

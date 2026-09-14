@@ -1,4 +1,4 @@
-import { View, Text, Image, TextInput, TouchableOpacity, } from 'react-native'
+import { View, Text, Image, TextInput, TouchableOpacity, Alert, ActivityIndicator, } from 'react-native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/types';
 import { useNavigation } from '@react-navigation/native'
@@ -7,7 +7,7 @@ import { useState } from 'react'
 import React from 'react'
 import { colors } from '../../../shared/theme'
 import { login } from '../../../shared/api';
-import { saveToken, getToken } from '../../../shared/services/storage';
+import { useAuth } from '../../../shared/contexts/AuthContext';
 import AppIcon from '../../../shared/components/AppIcon';
 
 
@@ -16,30 +16,39 @@ type LoginScreenNavigationProp =
 
 export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const handleLogin = async () => {
-    try {
-      console.log('[LOGIN] Botão pressionado');
-      console.log('[LOGIN] Email:', email);
+  const [loading, setLoading] = useState(false);
 
-      const data = await login({
-        email,
+  const handleLogin = async () => {
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail || !password) {
+      Alert.alert('Campos obrigatórios', 'Preencha email e senha para continuar.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await login({
+        email: cleanEmail,
         password,
       });
 
-      await saveToken(data.token);
-
-      const tokenSalvo = await getToken();
-
-      console.log('[LOGIN] Token salvo:', tokenSalvo);
-
-      console.log('[LOGIN] Login realizado:', data);
+      await refreshUser();
 
       navigation.navigate('MainTabs');
-    } catch (error) {
-      console.log('[LOGIN] Erro no login:', error);
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        Alert.alert('Não foi possível entrar', 'Email ou senha incorretos.');
+      } else {
+        Alert.alert('Erro', error?.message || 'Não foi possível fazer login.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,8 +112,13 @@ export default function LoginScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.loginButton}
             onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>Entrar</Text>
+            {loading ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={styles.loginButtonText}>Entrar</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, FlatList, } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { Alert, View, TouchableOpacity, FlatList, RefreshControl, } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from './styles';
 import AppHeader from '../../shared/components/AppHeader';
@@ -14,61 +14,26 @@ import { colors } from '../../shared/theme';
 import { AppIcons } from '../../shared/constants/appIcons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
+import { listarJardim, regarPlanta, excluirPlantaDoJardim, GardenPlant } from '../../shared/api/garden';
+
+function diasDesde(dateString?: string): number {
+    if (!dateString) return 0;
+
+    const last = new Date(dateString).getTime();
+    const now = Date.now();
+    const diffMs = Math.max(0, now - last);
+
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
 
 export default function GardenScreen() {
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [search, setSearch] = useState('');
-    const [filters, setFilters] = useState(['Orquídeas', 'Interior',]);
-    const plants = [
-        {
-            id: '1',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Samambaia ',
-            scientificName: 'Monstera deliciosa',
-            wateringDays: 3,
-            nextWatering: 'Amanhã',
-        },
-        {
-            id: '2',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '3',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '4',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '5',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-        {
-            id: '6',
-            image: require('../../assets/images/auth-banner.png'),
-            commonName: 'Jiboia',
-            scientificName: 'Epipremnum aureum',
-            wateringDays: 5,
-            nextWatering: '25 Jul',
-        },
-    ];
+    const [plants, setPlants] = useState<GardenPlant[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [wateringId, setWateringId] = useState<string | null>(null);
+    const [filters, setFilters] = useState<string[]>([]);
+
     type NavigationProp = NativeStackNavigationProp<
         RootStackParamList,
         'MainTabs'
@@ -76,18 +41,84 @@ export default function GardenScreen() {
 
     const navigation = useNavigation<NavigationProp>();
 
+    const carregarJardim = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await listarJardim();
+            setPlants(data);
+        } catch (error: any) {
+            Alert.alert('Erro', error?.message || 'Não foi possível carregar o seu jardim.');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useFocusEffect(useCallback(() => { carregarJardim(); }, [carregarJardim]));
+
+    const handleWater = (plant: GardenPlant) => {
+        Alert.alert(
+            'Regar planta',
+            `Deseja registrar a rega de "${plant.nickname}" agora?`,
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Regar',
+                    onPress: async () => {
+                        try {
+                            setWateringId(plant.id);
+                            await regarPlanta(plant.id);
+                            await carregarJardim();
+                        } catch (error: any) {
+                            Alert.alert('Erro', error?.message || 'Não foi possível registrar a rega.');
+                        } finally {
+                            setWateringId(null);
+                        }
+                    },
+                },
+                {
+                    text: 'Remover do jardim',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await excluirPlantaDoJardim(plant.id);
+                            await carregarJardim();
+                        } catch (error: any) {
+                            Alert.alert('Erro', error?.message || 'Não foi possível remover a planta.');
+                        }
+                    },
+                },
+            ],
+        );
+    };
+
+    const filteredPlants = plants.filter(item => {
+        const searchText = search.toLowerCase().trim();
+
+        if (!searchText) {
+            return true;
+        }
+
+        return (
+            item.nickname.toLowerCase().includes(searchText) ||
+            item.plant?.name?.toLowerCase().includes(searchText)
+        );
+    });
+
     return (
         <SafeAreaView
             edges={['top']}
             style={styles.container}
         >
             <FlatList
-                data={plants}
+                data={filteredPlants}
                 keyExtractor={(item) => item.id}
                 numColumns={2}
                 showsVerticalScrollIndicator={false}
                 columnWrapperStyle={styles.gridRow}
                 contentContainerStyle={styles.content}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={carregarJardim} />
+                }
                 ListHeaderComponent={
                     <>
                         <AppHeader
@@ -106,47 +137,59 @@ export default function GardenScreen() {
                             />
                         </View>
 
-                        <View style={styles.filterSection}>
-                            <FlatList
-                                horizontal
-                                data={filters}
-                                keyExtractor={(item) => item}
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.filterList}
-                                renderItem={({ item }) => (
-                                    <FilterChip
-                                        label={item}
-                                        removable
-                                        onRemove={() =>
-                                            setFilters(prev =>
-                                                prev.filter(
-                                                    value => value !== item,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                )}
-                            />
-
-                            <TouchableOpacity
-                                style={styles.filterButton}
-                            >
-                                <AppIcon
-                                    icon={AppIcons.FILTER}
-                                    size={20}
-                                    color={colors.primary}
+                        {filters.length > 0 && (
+                            <View style={styles.filterSection}>
+                                <FlatList
+                                    horizontal
+                                    data={filters}
+                                    keyExtractor={(item) => item}
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.filterList}
+                                    renderItem={({ item }) => (
+                                        <FilterChip
+                                            label={item}
+                                            removable
+                                            onRemove={() =>
+                                                setFilters(prev =>
+                                                    prev.filter(
+                                                        value => value !== item,
+                                                    ),
+                                                )
+                                            }
+                                        />
+                                    )}
                                 />
-                            </TouchableOpacity>
-                        </View>
+
+                                <TouchableOpacity
+                                    style={styles.filterButton}
+                                >
+                                    <AppIcon
+                                        icon={AppIcons.FILTER}
+                                        size={20}
+                                        color={colors.primary}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </>
 
                 }
+                ListEmptyComponent={
+                    !loading ? <View /> : null
+                }
                 renderItem={({ item }) => (
                     <PlantCard
-                        image={item.image}
-                        commonName={item.commonName}
-                        wateringDays={item.wateringDays}
-                        action="Rega"
+                        image={
+                            item.imagePath
+                                ? { uri: item.imagePath }
+                                : require('../../assets/images/auth-banner.png')
+                        }
+                        commonName={item.nickname}
+                        wateringDays={diasDesde(item.lastWatering)}
+                        action={item.plant?.name ?? 'Planta'}
+                        onPress={() =>
+                            wateringId === item.id ? undefined : handleWater(item)
+                        }
                     />
 
                 )}

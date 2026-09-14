@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     Image,
     ScrollView,
     Text,
@@ -18,9 +20,28 @@ import HoursDropdown from './components/HoursDropdown';
 import OptionCard from './components/OptionCard';
 import ChangePhotoOverlay from '../overlays/ChangePhoto';
 import { styles } from './styles';
+import { useAuth } from '../../../shared/contexts/AuthContext';
+import { atualizarConfiguracoes } from '../../../shared/api/user';
 
 const GENDER_OPTIONS = ['Masculino', 'Feminino', 'Outro', 'Não informar'];
+const GENDER_TO_ENUM: Record<string, string> = {
+    Masculino: 'MALE',
+    Feminino: 'FEMALE',
+    Outro: 'OTHER',
+    'Não informar': 'PREFER_NOT_TO_SAY',
+};
+const ENUM_TO_GENDER: Record<string, string> = {
+    MALE: 'Masculino',
+    FEMALE: 'Feminino',
+    OTHER: 'Outro',
+    PREFER_NOT_TO_SAY: 'Não informar',
+};
 
+// Observação: as opções de "Meta" na UI (texto livre/placeholder) não
+// correspondem semanticamente ao enum MainGoal do backend
+// (DECORATION/ALIMENTATION/WELL_BEING/SUSTAINABILITY). Mantido apenas como
+// seleção local, sem envio para a API, até que o conteúdo da tela seja
+// alinhado com o domínio do backend.
 const GOAL_OPTIONS = [
     'Loren ipsun, loren ipsun, loren',
     'Cultivar 5 espécies diferentes',
@@ -29,37 +50,103 @@ const GOAL_OPTIONS = [
 ];
 
 const LUMINOSITY_OPTIONS = ['Baixa', 'Média', 'Intensa'];
+const LUMINOSITY_TO_ENUM: Record<string, string> = { Baixa: 'LOW', Média: 'MEDIUM', Intensa: 'INTENSE' };
+const ENUM_TO_LUMINOSITY: Record<string, string> = { LOW: 'Baixa', MEDIUM: 'Média', INTENSE: 'Intensa' };
+
 const SPACES_OPTIONS = ['Pequeno', 'Médio', 'Espaçoso'];
+const SPACES_TO_ENUM: Record<string, string> = { Pequeno: 'SMALL', Médio: 'MEDIUM', Espaçoso: 'LARGE' };
+const ENUM_TO_SPACES: Record<string, string> = { SMALL: 'Pequeno', MEDIUM: 'Médio', LARGE: 'Espaçoso' };
+
 const EXPERIENCE_OPTIONS = ['Iniciante', 'Intermediario', 'Avançado'];
+const EXPERIENCE_TO_ENUM: Record<string, string> = {
+    Iniciante: 'BEGINNER',
+    Intermediario: 'INTERMEDIATE',
+    Avançado: 'ADVANCED',
+};
+const ENUM_TO_EXPERIENCE: Record<string, string> = {
+    BEGINNER: 'Iniciante',
+    INTERMEDIATE: 'Intermediario',
+    ADVANCED: 'Avançado',
+};
+
+// "01/01/1999" <-> "1999-01-01"
+function birthdateParaISO(value: string): string | undefined {
+    const parts = value.trim().split('/');
+    if (parts.length !== 3) return undefined;
+    const [day, month, year] = parts;
+    if (!day || !month || !year) return undefined;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+function isoParaBirthdate(value?: string): string {
+    if (!value) return '';
+    const [year, month, day] = value.split('-');
+    if (!year || !month || !day) return value;
+    return `${day}/${month}/${year}`;
+}
+
+// "12:00h" <-> "12:00:00"
+function reminderParaHora(value: string): string | undefined {
+    const match = value.trim().match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return undefined;
+    return `${match[1].padStart(2, '0')}:${match[2]}:00`;
+}
+
+function horaParaReminder(value?: string): string {
+    if (!value) return '12:00h';
+    const [hour, minute] = value.split(':');
+    return `${hour}:${minute}h`;
+}
 
 export default function SettingsScreen() {
     const navigation = useNavigation();
+    const { user, isLoadingUser, refreshUser, logout } = useAuth();
+    const [saving, setSaving] = useState(false);
 
     // Profile form states
-    const [description, setDescription] = useState(
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet,'
-    );
-    const [username, setUsername] = useState('@nathan12');
-    const [birthDate, setBirthDate] = useState('01/01/1999');
-    const [fullName, setFullName] = useState('Matheus Pietro');
+    const [description, setDescription] = useState('');
+    const [username, setUsername] = useState('');
+    const [birthDate, setBirthDate] = useState('');
+    const [fullName, setFullName] = useState('');
 
     // Preferences states
-    const [gender, setGender] = useState('Masculino');
-    const [goal, setGoal] = useState('Loren ipsun, loren ipsun, loren');
+    const [gender, setGender] = useState(GENDER_OPTIONS[0]);
+    const [goal, setGoal] = useState(GOAL_OPTIONS[0]);
     const [reminderTime, setReminderTime] = useState('12:00h');
 
     // Multi-selection states
-    const [luminosity, setLuminosity] = useState<string[]>(['Baixa', 'Intensa']);
-    const [spaces, setSpaces] = useState<string[]>(['Médio']);
+    const [luminosity, setLuminosity] = useState<string[]>([]);
+    const [spaces, setSpaces] = useState<string[]>([]);
 
     // Single-selection state
-    const [experience, setExperience] = useState<string>('Iniciante');
+    const [experience, setExperience] = useState<string>(EXPERIENCE_OPTIONS[0]);
 
     // Active dropdown manager
     const [activeDropdown, setActiveDropdown] = useState<'gender' | 'goal' | 'reminders' | null>(null);
 
     // Modal state for ChangePhoto
     const [isChangePhotoOpen, setIsChangePhotoOpen] = useState(false);
+
+    // Carrega os dados reais do usuário autenticado assim que disponíveis
+    useEffect(() => {
+        if (!user) return;
+
+        setDescription(user.bio ?? '');
+        setUsername(user.username ? `@${user.username}` : '');
+        setBirthDate(isoParaBirthdate(user.birthdate));
+        setFullName(user.name ?? '');
+        setGender(user.gender ? ENUM_TO_GENDER[user.gender] ?? GENDER_OPTIONS[0] : GENDER_OPTIONS[0]);
+        setReminderTime(horaParaReminder(user.wateringTime));
+        setLuminosity(
+            (user.roomLuminosity ?? []).map(value => ENUM_TO_LUMINOSITY[value]).filter(Boolean) as string[],
+        );
+        setSpaces(
+            (user.spaceAvailability ?? []).map(value => ENUM_TO_SPACES[value]).filter(Boolean) as string[],
+        );
+        setExperience(
+            user.experienceLevel ? ENUM_TO_EXPERIENCE[user.experienceLevel] ?? EXPERIENCE_OPTIONS[0] : EXPERIENCE_OPTIONS[0],
+        );
+    }, [user]);
 
     function toggleMultiSelect(item: string, current: string[], setter: (val: string[]) => void) {
         setter(
@@ -369,7 +456,17 @@ export default function SettingsScreen() {
                                 <TouchableOpacity
                                     activeOpacity={0.7}
                                     onPress={() => {
-                                        // Sair da conta
+                                        Alert.alert('Sair da conta', 'Deseja realmente sair?', [
+                                            { text: 'Cancelar', style: 'cancel' },
+                                            {
+                                                text: 'Sair',
+                                                style: 'destructive',
+                                                onPress: async () => {
+                                                    await logout();
+                                                    navigation.getParent()?.getParent()?.navigate('Login' as never);
+                                                },
+                                            },
+                                        ]);
                                     }}
                                 >
                                     <Text style={styles.logoutText}>
@@ -381,14 +478,43 @@ export default function SettingsScreen() {
                             <TouchableOpacity
                                 style={styles.saveButton}
                                 activeOpacity={0.8}
-                                onPress={() => {
-                                    // Salvar alterações e retornar
-                                    navigation.goBack();
+                                disabled={saving}
+                                onPress={async () => {
+                                    if (!user) return;
+
+                                    try {
+                                        setSaving(true);
+
+                                        await atualizarConfiguracoes({
+                                            ...user,
+                                            name: fullName.trim(),
+                                            username: username.replace('@', '').trim(),
+                                            bio: description,
+                                            birthdate: birthdateParaISO(birthDate) ?? user.birthdate,
+                                            gender: GENDER_TO_ENUM[gender],
+                                            roomLuminosity: luminosity.map(item => LUMINOSITY_TO_ENUM[item]).filter(Boolean),
+                                            spaceAvailability: spaces.map(item => SPACES_TO_ENUM[item]).filter(Boolean),
+                                            experienceLevel: EXPERIENCE_TO_ENUM[experience],
+                                            wateringTime: reminderParaHora(reminderTime) ?? user.wateringTime,
+                                        });
+
+                                        await refreshUser();
+
+                                        navigation.goBack();
+                                    } catch (error: any) {
+                                        Alert.alert('Erro', error?.message || 'Não foi possível salvar as alterações.');
+                                    } finally {
+                                        setSaving(false);
+                                    }
                                 }}
                             >
-                                <Text style={styles.saveButtonText}>
-                                    Salvar alterações
-                                </Text>
+                                {saving ? (
+                                    <ActivityIndicator color="#FFFFFF" />
+                                ) : (
+                                    <Text style={styles.saveButtonText}>
+                                        Salvar alterações
+                                    </Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>

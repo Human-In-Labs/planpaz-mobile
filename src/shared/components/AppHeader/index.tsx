@@ -11,10 +11,11 @@ import { styles } from './styles';
 import { AppHeaderProps } from './types';
 
 import AppIcon from '../AppIcon';
-import { AppIcons } from '../../constants/appIcons';
+import { AppIcons } from '../../constants/appIcons'; // Importação direta do map de ícones
 import { colors } from '../../theme';
 import { scale, verticalScale } from '../../theme/scale';
-import PlanPazLogo from '../../../assets/images/planpaz-logo.svg';
+
+const PlanPazLogo = require('../../../assets/images/planpaz-logo.svg').default;
 
 export default function AppHeader({
     title,
@@ -80,22 +81,27 @@ export default function AppHeader({
         })
         : 0;
 
+    // Seleção segura do ícone com base no estado do botão de voltar
+// Seleção segura do ícone usando as chaves corretas do AppIcons
+    const selectedIcon = backButton ? AppIcons.ARROW_LEFT : AppIcons.BELL;
     return (
         <View style={styles.container}>
-            {/* Logo PlanPaz visível no estado de scroll */}
+            {/* Logo PlanPaz no Scroll */}
             {scrollY && (
                 <Animated.View
                     style={[styles.logoContainer, { opacity: scrolledOpacity }]}
                     pointerEvents="none"
                 >
-                    <PlanPazLogo
-                        width={scale(55)}
-                        height={verticalScale(64)}
-                    />
+                    {PlanPazLogo ? (
+                        <PlanPazLogo
+                            width={scale(55)}
+                            height={verticalScale(64)}
+                        />
+                    ) : null}
                 </Animated.View>
             )}
 
-            {/* Conteúdo normal: Greeting e Sino com fade out conjunto */}
+            {/* Conteúdo normal */}
             <Animated.View
                 style={[styles.innerContainer, { opacity: normalOpacity }]}
                 pointerEvents={isScrolled ? 'none' : 'auto'}
@@ -120,7 +126,7 @@ export default function AppHeader({
                     ]}
                     pointerEvents={isScrolled ? 'none' : 'auto'}
                 >
-                    <TouchableOpacity
+                   <TouchableOpacity
                         style={styles.notificationTouchable}
                         disabled={isScrolled}
                         onPress={
@@ -130,11 +136,7 @@ export default function AppHeader({
                         }
                     >
                         <AppIcon
-                            icon={
-                                backButton
-                                    ? AppIcons.ARROW_LEFT
-                                    : AppIcons.BELL
-                            }
+                            icon={backButton ? AppIcons.ARROW_LEFT : AppIcons.BELL}
                             size={16}
                             color={colors.primary}
                         />
@@ -146,7 +148,7 @@ export default function AppHeader({
                 </Animated.View>
             </Animated.View>
 
-            {/* Efeito de esmaecimento/fade inferior durante o scroll */}
+            {/* Efeito de esmaecimento inferior */}
             {scrollY && (
                 <Animated.View
                     style={[styles.fadeBottom, { opacity: scrolledOpacity }]}

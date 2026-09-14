@@ -11,6 +11,7 @@ import NotificationOverlay from '../home/overlays/Notification';
 import FilterSection from './FilterSection';
 import SpeciesCard from './SpeciesCard';
 import { listarPlants } from '../../shared/api';
+import { traduzirLuminosidade, traduzirRega } from '../../shared/utils/plant';
 
 const Separator = () => ( <View style={styles.separator}/> );
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -34,8 +35,8 @@ export default function LibraryScreen() {
                         id: plant.id,
                         image: require('../../assets/images/auth-banner.png'),
                         commonName: plant.name,
-                        light: plant.luminosityLevel,
-                        water: plant.wateringLevel,
+                        light: traduzirLuminosidade(plant.luminosityLevel),
+                        water: traduzirRega(plant.wateringLevel),
                     }));
 
                 setSpecies(data);
