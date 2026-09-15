@@ -91,7 +91,7 @@ export default function RegisterScreen() {
           <TextInput
             style={[styles.inputEmail, emailError && styles.inputError]}
             placeholder="Email"
-            placeholderTextColor={colors.black}
+            placeholderTextColor={emailError && !email ? colors.warning : colors.black}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -174,8 +174,8 @@ export default function RegisterScreen() {
                   hasMinLength
                     ? styles.criteriaCircleActive
                     : passwordSubmittedError
-                    ? styles.criteriaCircleError
-                    : null,
+                      ? styles.criteriaCircleError
+                      : null,
                 ]}
               />
               <Text
@@ -195,8 +195,8 @@ export default function RegisterScreen() {
                   hasNumber
                     ? styles.criteriaCircleActive
                     : passwordSubmittedError
-                    ? styles.criteriaCircleError
-                    : null,
+                      ? styles.criteriaCircleError
+                      : null,
                 ]}
               />
               <Text

@@ -82,6 +82,7 @@ import Ruler from '../../../assets/icons/ruler.svg';
 import PencilSimple from '../../../assets/icons/pencil-simple.svg';
 import ThermometerSimple from '../../../assets/icons/thermometer-simple.svg';
 import HouseSimple from '../../../assets/icons/house-simple.svg';
+import Warning from '../../../assets/icons/warning.svg';
 
 import { SvgProps } from 'react-native-svg';
 
@@ -172,6 +173,7 @@ export const icons = {
     pencilSimple: PencilSimple,
     thermometerSimple: ThermometerSimple,
     houseSimple: HouseSimple,
+    warning: Warning,
 } satisfies Record<string, SvgIcon>;
 
 export type IconName = keyof typeof icons;

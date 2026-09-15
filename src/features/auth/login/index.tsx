@@ -105,7 +105,7 @@ export default function LoginScreen() {
           <TextInput
             style={[styles.inputEmail, emailError && styles.inputError]}
             placeholder="Email"
-            placeholderTextColor={colors.black}
+            placeholderTextColor={emailError && !email ? colors.warning : colors.black}
             value={email}
             onChangeText={(text) => {
               setEmail(text);

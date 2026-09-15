@@ -97,7 +97,7 @@ export default function RegisterStep2Screen() {
           <TextInput
             style={[styles.input, firstNameError && styles.inputError]}
             placeholder="Primeiro nome"
-            placeholderTextColor={colors.black}
+            placeholderTextColor={firstNameError && !firstName ? colors.warning : colors.black}
             value={firstName}
             onChangeText={(text) => {
               setFirstName(text);
@@ -111,7 +111,7 @@ export default function RegisterStep2Screen() {
           <TextInput
             style={[styles.input, usernameError && styles.inputError]}
             placeholder="Nome de usuário"
-            placeholderTextColor={colors.black}
+            placeholderTextColor={usernameError && !username ? colors.warning : colors.black}
             value={username}
             onChangeText={(text) => {
               setUsername(text);
