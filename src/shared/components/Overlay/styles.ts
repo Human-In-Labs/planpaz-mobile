@@ -12,7 +12,8 @@ export const styles = StyleSheet.create({
         bottom: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         alignItems: 'center',
-        zIndex: 2,
+        zIndex: 999,
+        elevation: 999,
     },
 
     topBar: {

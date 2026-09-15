@@ -25,3 +25,9 @@ export type GardenStackParamList = {
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
 };
+
+export type SocialStackParamList = {
+    SocialMain: undefined;
+    PostIndividual: { postId: string; };
+    CreatePost: undefined;
+};

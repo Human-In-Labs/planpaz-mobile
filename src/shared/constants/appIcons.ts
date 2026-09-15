@@ -91,6 +91,13 @@ export const AppIcons = {
     LIST_DASHES: 'listDashes',
     RULER: 'ruler',
 
+    THUMBS_UP: 'thumbsUp',
+    THUMBS_UP_FILL: 'thumbsUpFill',
+    THUMBS_DOWN: 'thumbsDown',
+    SHARE: 'shareFat',
+    HASH: 'hash',
+    CHAT_CIRCLE: 'chatCircle',
+
 } as const;
 
 export type IconName =
