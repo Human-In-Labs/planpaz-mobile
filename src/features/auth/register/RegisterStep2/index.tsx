@@ -52,6 +52,7 @@ export default function RegisterStep2Screen() {
       setLoading(true);
       await register({
         name: cleanFirstName,
+        username: cleanUsername,
         email,
         password,
       });
