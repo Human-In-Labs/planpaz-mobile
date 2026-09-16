@@ -1,5 +1,12 @@
-import React, { useState } from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    View,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
+    ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,8 +14,20 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AppHeader from '../../../shared/components/AppHeader';
 import NotificationOverlay from '../../home/overlays/Notification';
 import { SocialStackParamList } from '../../../navigation/types';
-import { mockPosts, mockComments } from '../../../shared/mock/socialMock';
+import { mockPosts } from '../../../shared/mock/socialMock';
 import { PostComment } from '../../../shared/types/social';
+import {
+    listarComentarios,
+    criarComentario,
+    listarRespostas,
+    toggleCurtirPost,
+    obterQuantidadeLikesPost,
+    onPostLikeChanged,
+    CommentResponse,
+} from '../../../shared/api';
+import { getCurrentAuthorId } from '../../../shared/services/storage';
+import { formatRelativeTime } from '../../../shared/utils/date';
+import { colors } from '../../../shared/theme';
 import PostCard from '../PostCard';
 import CommentItem from '../CommentItem';
 import CommentInput from '../CommentInput';
@@ -20,21 +39,121 @@ type RouteType = RouteProp<SocialStackParamList, 'PostIndividual'>;
 
 const CURRENT_USER_AVATAR = require('../../../assets/images/user-avatar-sample.png');
 
+function mapCommentResponseToPostComment(
+    item: CommentResponse,
+    replies: PostComment[] = [],
+): PostComment {
+    const authorUsername = item.authorUsername
+        ? (item.authorUsername.startsWith('@') ? item.authorUsername : `@${item.authorUsername}`)
+        : '@usuario';
+
+    return {
+        id: item.id,
+        author: {
+            id: item.authorId,
+            name: item.authorName || 'Usuário',
+            username: authorUsername,
+            avatar: CURRENT_USER_AVATAR,
+        },
+        content: item.content,
+        likesCount: '0',
+        createdAt: formatRelativeTime(item.commentedAt),
+        parentId: item.parentCommentId || undefined,
+        replies,
+    };
+}
+
 export default function PostIndividualScreen() {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteType>();
     const postId = route.params?.postId || '1';
+    const routePost = route.params?.post;
 
-    // O post selecionado (com fallback para o primeiro)
-    const post = mockPosts.find(p => p.id === postId) || mockPosts[0];
+    // O post selecionado (utiliza o post repassado pela navegação ou busca no mock)
+    const post = routePost || mockPosts.find(p => p.id === postId) || mockPosts[0];
 
     // Estado local para comentários e respostas em tempo real
-    const [comments, setComments] = useState<PostComment[]>(() => [...mockComments]);
+    const [comments, setComments] = useState<PostComment[]>([]);
+    const [loadingComments, setLoadingComments] = useState(false);
     const [isCommentExpanded, setIsCommentExpanded] = useState(false);
     const [activeReplyCommentId, setActiveReplyCommentId] = useState<string | null>(null);
+    const initialIsLiked = route.params?.isLiked ?? routePost?.isLiked ?? false;
+    const [isPostLiked, setIsPostLiked] = useState(initialIsLiked);
+    const [likesCount, setLikesCount] = useState<number>(() => {
+        const parsed = parseInt(post.likesCount, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    });
     const [notificationVisible, setNotificationVisible] = useState(false);
-    const [isPostLiked, setIsPostLiked] = useState(false);
     const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+
+    useEffect(() => {
+        if (typeof route.params?.isLiked === 'boolean') {
+            setIsPostLiked(route.params.isLiked);
+        } else if (typeof routePost?.isLiked === 'boolean') {
+            setIsPostLiked(routePost.isLiked);
+        }
+    }, [route.params?.isLiked, routePost?.isLiked]);
+
+    useEffect(() => {
+        let isMounted = true;
+        if (post?.id) {
+            obterQuantidadeLikesPost(post.id)
+                .then(count => {
+                    if (isMounted && typeof count === 'number') {
+                        setLikesCount(count);
+                    }
+                })
+                .catch(err => console.log('[POST INDIVIDUAL] Erro ao carregar contagem de likes:', err));
+        }
+        return () => {
+            isMounted = false;
+        };
+    }, [post?.id]);
+
+    useEffect(() => {
+        const unsubscribe = onPostLikeChanged((likedPostId, liked, totalLikes) => {
+            if (likedPostId === post?.id) {
+                setIsPostLiked(liked);
+                setLikesCount(totalLikes);
+            }
+        });
+
+        return unsubscribe;
+    }, [post?.id]);
+
+    const carregarComentarios = useCallback(async () => {
+        if (!post?.id) return;
+        try {
+            setLoadingComments(true);
+            const data = await listarComentarios(post.id);
+            if (data?.content && Array.isArray(data.content)) {
+                const commentsWithReplies = await Promise.all(
+                    data.content.map(async (commentItem) => {
+                        try {
+                            const repliesData = await listarRespostas(post.id, commentItem.id);
+                            const replies = (repliesData?.content || []).map(r =>
+                                mapCommentResponseToPostComment(r)
+                            );
+                            return mapCommentResponseToPostComment(commentItem, replies);
+                        } catch {
+                            return mapCommentResponseToPostComment(commentItem, []);
+                        }
+                    })
+                );
+                setComments(commentsWithReplies);
+            } else {
+                setComments([]);
+            }
+        } catch (error) {
+            console.log('[POST INDIVIDUAL] Erro ao carregar comentários:', error);
+        } finally {
+            setLoadingComments(false);
+        }
+    }, [post?.id]);
+
+    useEffect(() => {
+        carregarComentarios();
+    }, [carregarComentarios]);
 
     const totalCommentsCount = comments.reduce(
         (acc, c) => acc + 1 + (c.replies?.length || 0),
@@ -45,8 +164,24 @@ export default function PostIndividualScreen() {
         setIsCommentExpanded(true);
     };
 
-    const handleLikePost = () => {
-        setIsPostLiked(prev => !prev);
+    const handleLikePost = async () => {
+        const previouslyLiked = isPostLiked;
+
+        // Atualização otimista imediata
+        setIsPostLiked(!previouslyLiked);
+        setLikesCount(prev => (previouslyLiked ? Math.max(0, prev - 1) : prev + 1));
+
+        try {
+            const authorId = await getCurrentAuthorId();
+            const response = await toggleCurtirPost(post.id, authorId);
+            setIsPostLiked(response.liked);
+            setLikesCount(response.totalLikes);
+        } catch (error) {
+            console.log('[POST INDIVIDUAL] Erro ao alternar curtida:', error);
+            // Reverte em caso de erro
+            setIsPostLiked(previouslyLiked);
+            setLikesCount(prev => (previouslyLiked ? prev + 1 : Math.max(0, prev - 1)));
+        }
     };
 
     const handleSharePost = () => {
@@ -57,53 +192,55 @@ export default function PostIndividualScreen() {
         setIsReportModalVisible(true);
     };
 
-    const handleSendComment = (text: string) => {
+    const handleSendComment = async (text: string) => {
         if (!text.trim()) return;
-        const newComment: PostComment = {
-            id: `c-${Date.now()}`,
-            author: {
-                id: 'u-current',
-                name: 'Nathan',
-                username: '@nathan12',
-                avatar: CURRENT_USER_AVATAR,
-            },
-            content: text.trim(),
-            likesCount: '0',
-            createdAt: 'Agora',
-            replies: [],
-        };
-        setComments(prev => [newComment, ...prev]);
-        setIsCommentExpanded(false);
+
+        try {
+            const authorId = await getCurrentAuthorId();
+            const response = await criarComentario(post.id, {
+                authorId,
+                content: text.trim(),
+                parentCommentId: null,
+            });
+
+            const newComment = mapCommentResponseToPostComment(response, []);
+            setComments(prev => [newComment, ...prev]);
+            setIsCommentExpanded(false);
+        } catch (error) {
+            console.log('[POST INDIVIDUAL] Erro ao criar comentário:', error);
+            Alert.alert('Erro ao comentar', 'Não foi possível registrar seu comentário. Tente novamente.');
+        }
     };
 
-    const handleSendReply = (commentId: string, text: string) => {
+    const handleSendReply = async (commentId: string, text: string) => {
         if (!text.trim()) return;
-        const newReply: PostComment = {
-            id: `r-${Date.now()}`,
-            parentId: commentId,
-            author: {
-                id: 'u-current',
-                name: 'Nathan',
-                username: '@nathan12',
-                avatar: CURRENT_USER_AVATAR,
-            },
-            content: text.trim(),
-            likesCount: '0',
-            createdAt: 'Agora',
-        };
 
-        setComments(prev =>
-            prev.map(c => {
-                if (c.id === commentId) {
-                    return {
-                        ...c,
-                        replies: [...(c.replies || []), newReply],
-                    };
-                }
-                return c;
-            })
-        );
-        setActiveReplyCommentId(null);
+        try {
+            const authorId = await getCurrentAuthorId();
+            const response = await criarComentario(post.id, {
+                authorId,
+                content: text.trim(),
+                parentCommentId: commentId,
+            });
+
+            const newReply = mapCommentResponseToPostComment(response);
+
+            setComments(prev =>
+                prev.map(c => {
+                    if (c.id === commentId) {
+                        return {
+                            ...c,
+                            replies: [...(c.replies || []), newReply],
+                        };
+                    }
+                    return c;
+                })
+            );
+            setActiveReplyCommentId(null);
+        } catch (error) {
+            console.log('[POST INDIVIDUAL] Erro ao enviar resposta:', error);
+            Alert.alert('Erro ao responder', 'Não foi possível registrar sua resposta. Tente novamente.');
+        }
     };
     return (
         <View style={styles.container}>
@@ -131,6 +268,7 @@ export default function PostIndividualScreen() {
                         <PostCard
                             post={{
                                 ...post,
+                                likesCount: String(likesCount),
                                 commentsCount: String(totalCommentsCount),
                             }}
                             isLiked={isPostLiked}
@@ -151,21 +289,29 @@ export default function PostIndividualScreen() {
                         />
 
                         {/* Seção de comentários dinâmicos */}
-                        <View style={styles.commentsContainer}>
-                            {comments.map(comment => (
-                                <CommentItem
-                                    key={comment.id}
-                                    comment={comment}
-                                    activeReplyCommentId={activeReplyCommentId}
-                                    onLikePress={id =>
-                                        console.log(`[COMENTÁRIOS] Like no comentário: ${id}`)
-                                    }
-                                    onReplyPress={(commentId) => setActiveReplyCommentId(commentId)}
-                                    onSendReply={handleSendReply}
-                                    onCancelReply={() => setActiveReplyCommentId(null)}
-                                />
-                            ))}
-                        </View>
+                        {loadingComments && comments.length === 0 ? (
+                            <ActivityIndicator
+                                size="small"
+                                color={colors.primary}
+                                style={{ marginVertical: 20 }}
+                            />
+                        ) : comments.length > 0 ? (
+                            <View style={styles.commentsContainer}>
+                                {comments.map(comment => (
+                                    <CommentItem
+                                        key={comment.id}
+                                        comment={comment}
+                                        activeReplyCommentId={activeReplyCommentId}
+                                        onLikePress={id =>
+                                            console.log(`[COMENTÁRIOS] Like no comentário: ${id}`)
+                                        }
+                                        onReplyPress={(commentId) => setActiveReplyCommentId(commentId)}
+                                        onSendReply={handleSendReply}
+                                        onCancelReply={() => setActiveReplyCommentId(null)}
+                                    />
+                                ))}
+                            </View>
+                        ) : null}
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>

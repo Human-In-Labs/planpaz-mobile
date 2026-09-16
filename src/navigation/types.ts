@@ -1,3 +1,5 @@
+import { Post } from '../shared/types/social';
+
 export type RootStackParamList = {
     Onboarding: undefined;
     Login: undefined;
@@ -28,6 +30,6 @@ export type GardenStackParamList = {
 
 export type SocialStackParamList = {
     SocialMain: undefined;
-    PostIndividual: { postId: string; };
+    PostIndividual: { postId: string; post?: Post; isLiked?: boolean; };
     CreatePost: undefined;
 };

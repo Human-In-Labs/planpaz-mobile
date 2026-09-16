@@ -18,7 +18,7 @@ export default function AppNavigator() {
     return (
         <NavigationContainer>
             <Stack.Navigator
-                initialRouteName="MainTabs"
+                initialRouteName="Onboarding"
                 screenOptions={{
                     headerShown: false,
                 }}

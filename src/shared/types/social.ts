@@ -27,6 +27,7 @@ export interface Post {
     sharesCount: string;
     tags: PostTag[];
     createdAt?: string;
+    isLiked?: boolean;
 }
 
 export interface PostComment {

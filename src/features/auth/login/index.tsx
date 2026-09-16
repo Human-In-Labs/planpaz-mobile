@@ -6,8 +6,8 @@ import { styles } from './styles'
 import { useState } from 'react'
 import React from 'react'
 import { colors } from '../../../shared/theme'
-import { login } from '../../../shared/api';
-import { saveToken, getToken } from '../../../shared/services/storage';
+import { login, getUserSettings } from '../../../shared/api';
+import { saveToken, getToken, saveUserId, isUUID } from '../../../shared/services/storage';
 import AppIcon from '../../../shared/components/AppIcon';
 
 
@@ -68,6 +68,16 @@ export default function LoginScreen() {
       });
 
       await saveToken(data.token);
+
+      try {
+        const userSettings = await getUserSettings();
+        if (userSettings?.id && isUUID(userSettings.id)) {
+          await saveUserId(userSettings.id);
+          console.log('[LOGIN] UserId salvo com sucesso:', userSettings.id);
+        }
+      } catch (userErr) {
+        console.log('[LOGIN] Aviso: erro ao buscar dados do usuário após login:', userErr);
+      }
 
       const tokenSalvo = await getToken();
 

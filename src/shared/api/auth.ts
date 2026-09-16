@@ -14,6 +14,8 @@ export interface RegisterRequest {
 export interface AuthResponse {
     name: string;
     token: string;
+    id?: string;
+    userId?: string;
 }
 
 export async function login(
@@ -21,7 +23,7 @@ export async function login(
 ): Promise<AuthResponse> {
 
     const response = await api.post<AuthResponse>(
-        '/auth/login',
+        '/api/auth/login',
         data,
     );
 
@@ -33,7 +35,7 @@ export async function register(
 ): Promise<AuthResponse> {
 
     const response = await api.post<AuthResponse>(
-        '/auth/register',
+        '/api/auth/register',
         data,
     );
 

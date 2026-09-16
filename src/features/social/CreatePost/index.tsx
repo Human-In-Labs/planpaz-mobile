@@ -20,7 +20,8 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
 import { SocialStackParamList } from '../../../navigation/types';
-import { mockPosts } from '../../../shared/mock/socialMock';
+import { criarPost } from '../../../shared/api';
+import { getCurrentAuthorId } from '../../../shared/services/storage';
 import HashtagInput from './HashtagInput';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { styles } from './styles';
@@ -39,48 +40,50 @@ export default function CreatePostScreen() {
     const [content, setContent] = useState('');
     const [selectedImage, setSelectedImage] = useState<ImageSourcePropType | null>(null);
     const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handlePublish = () => {
+    const handlePublish = async () => {
         if (!title.trim() && !content.trim()) {
             Alert.alert('Campos obrigatórios', 'Por favor, preencha o título ou o texto da publicação.');
             return;
         }
 
-        // Criar o novo post e adicionar no início da lista de publicações da comunidade
-        const newPost = {
-            id: String(Date.now()),
-            author: {
-                id: 'u-current',
-                name: 'Nathan',
-                username: '@nathan12',
-                avatar: DEFAULT_USER_AVATAR,
-            },
-            title: title.trim() || undefined,
-            description: content.trim() || undefined,
-            content: title.trim() || content.trim(),
-            image: selectedImage || undefined,
-            likesCount: '0',
-            commentsCount: '0',
-            sharesCount: '0',
-            tags: tags.map((tag, idx) => ({
-                id: `tag-${Date.now()}-${idx}`,
-                label: tag,
-                icon: AppIcons.HASH,
-            })),
-            createdAt: 'Agora',
-        };
+        if (isSubmitting) return;
 
-        mockPosts.unshift(newPost);
-        Alert.alert(
-            'Publicado com sucesso!',
-            'Sua publicação já está disponível para toda a comunidade.',
-            [
-                {
-                    text: 'OK',
-                    onPress: () => navigation.goBack(),
-                },
-            ]
-        );
+        try {
+            setIsSubmitting(true);
+            const authorId = await getCurrentAuthorId();
+
+            const formattedTags = tags.map(tag => (tag.startsWith('#') ? tag : `#${tag}`));
+            const mediaUrl = selectedImage ? 'https://meu-storage.com/posts/imagem1.jpg' : null;
+
+            await criarPost({
+                authorId,
+                title: title.trim() || undefined,
+                content: content.trim() || title.trim(),
+                media: mediaUrl,
+                tags: formattedTags,
+            });
+
+            Alert.alert(
+                'Publicado com sucesso!',
+                'Sua publicação já está disponível para toda a comunidade.',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => navigation.goBack(),
+                    },
+                ]
+            );
+        } catch (error: any) {
+            console.log('[CREATE POST] Erro ao criar post na API:', error);
+            Alert.alert(
+                'Erro ao publicar',
+                'Não foi possível conectar ao servidor para registrar sua publicação. Tente novamente.'
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -187,11 +190,14 @@ export default function CreatePostScreen() {
                     {/* Botão Publicar fixo no final da página, logo acima da tab bar */}
                     <View style={styles.footer}>
                         <TouchableOpacity
-                            style={styles.submitButton}
+                            style={[styles.submitButton, isSubmitting && { opacity: 0.6 }]}
                             activeOpacity={0.8}
                             onPress={handlePublish}
+                            disabled={isSubmitting}
                         >
-                            <Text style={styles.submitButtonText}>Publicar na Comunidade</Text>
+                            <Text style={styles.submitButtonText}>
+                                {isSubmitting ? 'Publicando...' : 'Publicar na Comunidade'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
