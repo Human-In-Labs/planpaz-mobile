@@ -40,7 +40,7 @@ export async function listarPosts(
     size?: number,
     authorId?: string,
 ): Promise<PageableResponse<PostResponse>> {
-    const response = await api.get<PageableResponse<PostResponse>>('/api/posts', {
+    const response = await api.get<PageableResponse<PostResponse>>('/posts', {
         params: { page, size, currentUserId: authorId },
     });
 
@@ -51,7 +51,7 @@ export async function obterPostPorId(
     id: string,
     currentUserId?: string,
 ): Promise<PostResponse> {
-    const response = await api.get<PostResponse>(`/api/posts/${id}`, {
+    const response = await api.get<PostResponse>(`/posts/${id}`, {
         params: { currentUserId },
     });
 
@@ -61,7 +61,7 @@ export async function obterPostPorId(
 export async function criarPost(
     data: CreatePostRequest,
 ): Promise<PostResponse> {
-    const response = await api.post<PostResponse>('/api/posts', data);
+    const response = await api.post<PostResponse>('/posts', data);
 
     return response.data;
 }
@@ -88,7 +88,7 @@ export async function listarComentarios(
     size?: number,
 ): Promise<PageableResponse<CommentResponse>> {
     const response = await api.get<PageableResponse<CommentResponse>>(
-        `/api/posts/${postId}/comments`,
+        `/posts/${postId}/comments`,
         {
             params: { page, size },
         },
@@ -102,7 +102,7 @@ export async function criarComentario(
     data: CreateCommentRequest,
 ): Promise<CommentResponse> {
     const response = await api.post<CommentResponse>(
-        `/api/posts/${postId}/comments`,
+        `/posts/${postId}/comments`,
         data,
     );
 
@@ -116,7 +116,7 @@ export async function listarRespostas(
     size?: number,
 ): Promise<PageableResponse<CommentResponse>> {
     const response = await api.get<PageableResponse<CommentResponse>>(
-        `/api/posts/${postId}/comments/${commentId}/replies`,
+        `/posts/${postId}/comments/${commentId}/replies`,
         {
             params: { page, size },
         },
@@ -134,7 +134,7 @@ export async function obterQuantidadeLikesPost(
     postId: string,
 ): Promise<number> {
     const response = await api.get<number>(
-        `/api/posts/${postId}/likes/count`,
+        `/posts/${postId}/likes/count`,
     );
 
     return response.data;
@@ -169,7 +169,7 @@ export async function toggleCurtirPost(
     authorId: string,
 ): Promise<ToggleLikePostResponse> {
     const response = await api.post<ToggleLikePostResponse>(
-        `/api/posts/${postId}/likes`,
+        `/posts/${postId}/likes`,
         { authorId },
     );
 

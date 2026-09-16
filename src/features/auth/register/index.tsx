@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
@@ -75,23 +84,32 @@ export default function RegisterScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={require('../../../assets/images/auth-banner.png')}
-          resizeMode="cover"
-          style={styles.banner}
-        />
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.header}>
+          <Image
+            source={require('../../../assets/images/auth-banner.png')}
+            resizeMode="cover"
+            style={styles.banner}
+          />
+        </View>
 
-      <View style={styles.main}>
+        <View style={styles.main}>
         <View style={styles.content}>
           <Text style={styles.title}>Cadastrar</Text>
 
           <TextInput
             style={[styles.inputEmail, emailError && styles.inputError]}
             placeholder="Email"
-            placeholderTextColor={colors.black}
+            placeholderTextColor={emailError && !email ? colors.warning : colors.black}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -174,8 +192,8 @@ export default function RegisterScreen() {
                   hasMinLength
                     ? styles.criteriaCircleActive
                     : passwordSubmittedError
-                    ? styles.criteriaCircleError
-                    : null,
+                      ? styles.criteriaCircleError
+                      : null,
                 ]}
               />
               <Text
@@ -195,8 +213,8 @@ export default function RegisterScreen() {
                   hasNumber
                     ? styles.criteriaCircleActive
                     : passwordSubmittedError
-                    ? styles.criteriaCircleError
-                    : null,
+                      ? styles.criteriaCircleError
+                      : null,
                 ]}
               />
               <Text
@@ -229,8 +247,9 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
 
       <ErrorPopup visible={!!errorMessage} message={errorMessage} />
-    </View>
+    </KeyboardAvoidingView>
   );
 }

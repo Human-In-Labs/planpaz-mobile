@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TOKEN_KEY = '@planpaz:token';
 const USER_ID_KEY = '@planpaz:user_id';
+const USER_KEY = '@planpaz:user';
 
 let memoryUserId: string | null = null;
 
@@ -17,6 +18,7 @@ export async function removeToken() {
   memoryUserId = null;
   await AsyncStorage.removeItem(TOKEN_KEY);
   await AsyncStorage.removeItem(USER_ID_KEY);
+  await AsyncStorage.removeItem(USER_KEY);
 }
 
 export async function saveUserId(userId: string) {
@@ -40,7 +42,27 @@ export async function removeUserId() {
   await AsyncStorage.removeItem(USER_ID_KEY);
 }
 
-function decodeBase64(input: string): string {
+// User persistence helpers (informações de exibição do usuário)
+export interface StoredUser {
+  id?: string;
+  name: string;
+  username: string;
+}
+
+export async function saveUser(user: StoredUser) {
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export async function getUser(): Promise<StoredUser | null> {
+  const json = await AsyncStorage.getItem(USER_KEY);
+  return json ? JSON.parse(json) : null;
+}
+
+export async function removeUser() {
+  await AsyncStorage.removeItem(USER_KEY);
+}
+
+export function decodeBase64(input: string): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
   const str = input.replace(/=+$/, '');
   let output = '';
@@ -114,13 +136,14 @@ export async function getCurrentAuthorId(): Promise<string> {
       }
     }
 
-    // 3. Busca o ID real do usuário logado via endpoint autenticado /api/user/settings
+    // 3. Busca o ID real do usuário logado via endpoint autenticado /user/settings
     // Importação dinâmica para evitar dependência circular com client.ts
-    const { getUserSettings } = require('../api/user');
-    const settings = await getUserSettings();
+    const { getUserSettings, getMinhasConfiguracoes } = require('../api/user');
+    const fetchSettings = getUserSettings || getMinhasConfiguracoes;
+    const settings = await fetchSettings();
     if (settings?.id && isUUID(settings.id)) {
       await saveUserId(settings.id);
-      console.log('[STORAGE] UserId obtido com sucesso via /api/user/settings:', settings.id);
+      console.log('[STORAGE] UserId obtido com sucesso via user settings:', settings.id);
       return settings.id;
     }
   } catch (error) {

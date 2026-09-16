@@ -9,9 +9,10 @@ export const styles = StyleSheet.create({
     },
 
     scrollContent: {
+        flexGrow: 1,
         paddingHorizontal: scale(16),
         paddingTop: verticalScale(8),
-        paddingBottom: verticalScale(120),
+        paddingBottom: verticalScale(258),
     },
 
     // Photo Box
@@ -92,33 +93,10 @@ export const styles = StyleSheet.create({
         ...shadows.small,
     },
 
-    // Fixed bottom action area
-    bottomActionOverlay: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: verticalScale(166),
-        zIndex: 2,
-    },
-
-    saveButton: {
-        position: 'absolute',
-        left: scale(16),
-        right: scale(16),
-        bottom: verticalScale(94),
-        height: verticalScale(48),
-        borderRadius: radius.lg,
-        backgroundColor: colors.primary,
-        justifyContent: 'center',
+    errorContainer: {
+        flex: 1,
         alignItems: 'center',
-        zIndex: 3,
-        ...shadows.medium,
-    },
-
-    saveButtonText: {
-        ...typography.button,
-        color: colors.white,
-        fontSize: scale(14),
+        justifyContent: 'center',
+        paddingHorizontal: scale(16),
     },
 });

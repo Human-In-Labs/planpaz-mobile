@@ -1,30 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
+    Alert,
     Image,
     ScrollView,
+    Text,
+    TextInput,
     TouchableOpacity,
-    Animated,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Svg, {
-    Defs,
-    LinearGradient,
-    Stop,
-    Rect,
-} from 'react-native-svg';
+import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
 import { GardenStackParamList } from '../../../navigation/types';
 import AppHeader from '../../../shared/components/AppHeader';
 import AppIcon from '../../../shared/components/AppIcon';
 import DropdownField from '../../profile/settings/components/DropdownField';
-import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
-import { INITIAL_GARDEN_PLANTS } from '../mock/gardenMock';
+import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
+import {
+    buscarPlantaDoJardim,
+    buscarStagesDaEspecie,
+    editarPlantaDoJardim,
+    PlantStage,
+    ROOM_ENUM_TO_LABEL,
+} from '../../../shared/api';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'EditPlant'>;
@@ -33,36 +34,180 @@ type RouteType = RouteProp<GardenStackParamList, 'EditPlant'>;
 export default function EditPlantScreen() {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteType>();
-    const plantId = route.params?.plantId || '1';
+    const plantId = route.params?.plantId;
 
-    const plant =
-        INITIAL_GARDEN_PLANTS.find(p => p.id === plantId) ||
-        INITIAL_GARDEN_PLANTS[0];
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(false);
+    const [saving, setSaving] = useState(false);
 
-    const [nickname, setNickname] = useState(plant.nickname);
-    const [stage, setStage] = useState(plant.stage);
-    const [species, setSpecies] = useState(plant.species);
-    const [room, setRoom] = useState(plant.room);
-    const [directRain, setDirectRain] = useState(plant.directRain);
-    const [reminders, setReminders] = useState(
-        plant.reminders ? 'Ativado' : 'Desativado'
+    const [nickname, setNickname] = useState('');
+    const [stage, setStage] = useState('');
+    const [selectedStageId, setSelectedStageId] = useState<string | undefined>(undefined);
+    const [stages, setStages] = useState<PlantStage[]>([]);
+    const [species, setSpecies] = useState('');
+    const [room, setRoom] = useState('Sala');
+    const [directRain, setDirectRain] = useState('Não');
+    const [reminders, setReminders] = useState('Desativado');
+    const [plantImage, setPlantImage] = useState<any>(
+        require('../../../assets/images/auth-banner.png')
     );
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [changePhotoVisible, setChangePhotoVisible] = useState(false);
 
-    const stageOptions = ['Muda', 'Adulta', 'Floração', 'Frutificação'];
     const roomOptions = ['Sala', 'Quarto', 'Varanda', 'Quintal', 'Cozinha'];
     const directRainOptions = ['Sim', 'Não'];
     const reminderOptions = ['Ativado', 'Desativado'];
+
+    useEffect(() => {
+        if (!plantId) {
+            setLoading(false);
+            setLoadError(true);
+            return;
+        }
+
+        let isMounted = true;
+
+        async function carregarPlanta() {
+            try {
+                setLoading(true);
+                setLoadError(false);
+                const gardenPlant = await buscarPlantaDoJardim(plantId);
+
+                if (!isMounted) return;
+
+                setNickname(gardenPlant.nickname || '');
+                setSpecies(gardenPlant.plant?.name || '');
+                setStage(gardenPlant.stage?.name || '');
+                setSelectedStageId(gardenPlant.stage?.id);
+
+                if (gardenPlant.room) {
+                    setRoom(ROOM_ENUM_TO_LABEL[gardenPlant.room] || gardenPlant.room);
+                }
+
+                setDirectRain(gardenPlant.directRain ? 'Sim' : 'Não');
+                setReminders(
+                    gardenPlant.wateringNotification ? 'Ativado' : 'Desativado'
+                );
+
+                if (gardenPlant.imagePath) {
+                    setPlantImage({ uri: gardenPlant.imagePath });
+                } else if (gardenPlant.plant?.imagePath) {
+                    setPlantImage({ uri: gardenPlant.plant.imagePath });
+                } else {
+                    setPlantImage(require('../../../assets/images/auth-banner.png'));
+                }
+
+                if (gardenPlant.plant?.id) {
+                    try {
+                        const speciesStages = await buscarStagesDaEspecie(
+                            gardenPlant.plant.id
+                        );
+                        if (isMounted && speciesStages && speciesStages.length > 0) {
+                            setStages(speciesStages);
+                        }
+                    } catch (e) {
+                        console.error('Erro ao buscar estágios da espécie:', e);
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao carregar dados da planta para edição:', err);
+                if (isMounted) {
+                    setLoadError(true);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        carregarPlanta();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [plantId]);
+
+    const stageOptions =
+        stages.length > 0
+            ? stages.map(s => s.name)
+            : stage
+                ? [stage]
+                : ['Muda', 'Adulta', 'Floração', 'Frutificação'];
 
     const toggleDropdown = (name: string) => {
         setActiveDropdown(prev => (prev === name ? null : name));
     };
 
-    const handleSave = () => {
-        navigation.goBack();
+    const handleSelectStage = (val: string) => {
+        setStage(val);
+        const matched = stages.find(s => s.name === val);
+        if (matched) {
+            setSelectedStageId(matched.id);
+        }
+        setActiveDropdown(null);
     };
+
+    const handleSave = async () => {
+        if (saving || !plantId) return;
+
+        if (!nickname.trim()) {
+            Alert.alert('Atenção', 'Informe um apelido para a planta.');
+            return;
+        }
+
+        try {
+            setSaving(true);
+            await editarPlantaDoJardim(plantId, {
+                nickname: nickname.trim(),
+                room: room,
+                directRain: directRain === 'Sim',
+                wateringNotification: reminders === 'Ativado',
+                stage: selectedStageId ? { id: selectedStageId } : undefined,
+            });
+
+            navigation.goBack();
+        } catch (error) {
+            console.error('Erro ao editar planta:', error);
+            Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <SafeAreaView edges={['top']} style={styles.container}>
+                    <AppHeader
+                        title="Editar planta"
+                        backButton
+                        onBackPress={() => navigation.goBack()}
+                    />
+                </SafeAreaView>
+            </View>
+        );
+    }
+
+    if (loadError) {
+        return (
+            <View style={styles.container}>
+                <SafeAreaView edges={['top']} style={styles.container}>
+                    <AppHeader
+                        title="Editar planta"
+                        backButton
+                        onBackPress={() => navigation.goBack()}
+                    />
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.fieldLabel}>
+                            Não foi possível carregar a planta.
+                        </Text>
+                    </View>
+                </SafeAreaView>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -83,10 +228,12 @@ export default function EditPlantScreen() {
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
+                    overScrollMode="always"
+                    bounces={true}
                 >
                     <View style={styles.photoContainer}>
                         <Image
-                            source={plant.image}
+                            source={plantImage}
                             style={styles.photo}
                             resizeMode="cover"
                         />
@@ -131,10 +278,7 @@ export default function EditPlantScreen() {
                                 options={stageOptions}
                                 isOpen={activeDropdown === 'stage'}
                                 onToggle={() => toggleDropdown('stage')}
-                                onSelect={val => {
-                                    setStage(val);
-                                    setActiveDropdown(null);
-                                }}
+                                onSelect={handleSelectStage}
                             />
                         </View>
                     </View>
@@ -152,7 +296,7 @@ export default function EditPlantScreen() {
 
                             <TextInput
                                 value={species}
-                                onChangeText={setSpecies}
+                                editable={false}
                                 style={styles.textInput}
                                 placeholder="Espécie"
                             />
@@ -218,54 +362,21 @@ export default function EditPlantScreen() {
                 </ScrollView>
             </SafeAreaView>
 
-            <Animated.View
-                pointerEvents="none"
-                style={styles.bottomActionOverlay}
-            >
-                <Svg width="100%" height="100%">
-                    <Defs>
-                        <LinearGradient
-                            id="editPlantFade"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                        >
-                            <Stop
-                                offset="0"
-                                stopColor={colors.background}
-                                stopOpacity="0"
-                            />
-                            <Stop
-                                offset="0.55"
-                                stopColor={colors.background}
-                                stopOpacity="0.85"
-                            />
-                            <Stop
-                                offset="1"
-                                stopColor={colors.background}
-                                stopOpacity="1"
-                            />
-                        </LinearGradient>
-                    </Defs>
-
-                    <Rect
-                        x="0"
-                        y="0"
-                        width="100%"
-                        height="100%"
-                        fill="url(#editPlantFade)"
-                    />
-                </Svg>
-            </Animated.View>
-
-            <TouchableOpacity
-                style={styles.saveButton}
-                activeOpacity={0.8}
+            <BottomActionOverlay
+                title={saving ? 'Salvando...' : 'Salvar alterações'}
+                disabled={saving}
                 onPress={handleSave}
-            >
-                <Text style={styles.saveButtonText}>Salvar alterações</Text>
-            </TouchableOpacity>
+            />
+            <ChangePhotoOverlay
+                visible={changePhotoVisible}
+                onClose={() => setChangePhotoVisible(false)}
+                onSelectFromGallery={() => {
+                    setChangePhotoVisible(false);
+                }}
+                onTakePhoto={() => {
+                    setChangePhotoVisible(false);
+                }}
+            />
         </View>
     );
 }

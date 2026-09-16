@@ -27,15 +27,15 @@ export const styles = StyleSheet.create({
         width: '100%',
         height: verticalScale(280),
         borderRadius: radius.xl,
-        marginBottom: verticalScale(12),
+        marginBottom: verticalScale(8),
     },
 
     tagsRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: scale(6),
+        gap: scale(4),
         justifyContent: 'center',
-        marginBottom: verticalScale(12),
+        marginBottom: verticalScale(16),
     },
 
     tagBadge: {
@@ -49,10 +49,7 @@ export const styles = StyleSheet.create({
     },
 
     tagText: {
-        ...typography.caption,
-        fontSize: scale(10),
-        color: colors.black,
-        fontWeight: '600',
+        ...typography.captionRegular
     },
 
     speciesLink: {
@@ -60,13 +57,11 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: verticalScale(12),
-        gap: scale(4),
+        gap: scale(2),
     },
 
     speciesName: {
-        ...typography.h3Primary,
-        fontSize: scale(18),
-        letterSpacing: scale(0.5),
+        ...typography.h3Primary
     },
 
     speciesSearchIcon: {
@@ -75,8 +70,8 @@ export const styles = StyleSheet.create({
     },
 
     descriptionContainer: {
-        marginVertical: verticalScale(8),
         paddingHorizontal: scale(24),
+        marginBottom: verticalScale(16),
     },
 
     descriptionTitle: {
@@ -152,8 +147,9 @@ export const styles = StyleSheet.create({
 
     stageTitle: {
         ...typography.textMedium,
+        alignSelf: 'stretch',
         textAlign: 'center',
-        marginBottom: verticalScale(2),
+        marginBottom: verticalScale(4),
     },
 
     stageDescription: {
@@ -166,13 +162,13 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.lg,
         padding: scale(16),
-        marginBottom: verticalScale(16),
+        marginBottom: verticalScale(12),
         ...shadows.medium,
     },
 
     sectionHeader: {
         ...typography.h6,
-        marginBottom: verticalScale(12),
+        marginBottom: verticalScale(8),
     },
 
     statsRow: {
@@ -194,7 +190,7 @@ export const styles = StyleSheet.create({
     },
 
     guideLabel: {
-        ...typography.textMedium
+        ...typography.textMedium,
     },
 
     guideText: {
@@ -249,13 +245,11 @@ export const styles = StyleSheet.create({
     },
 
     careTitle: {
-        fontSize: scale(11),
-        fontWeight: '600',
+        ...typography.textMedium
     },
 
     careStatus: {
-        fontSize: scale(11),
-        fontWeight: '600',
+        ...typography.textMedium
     },
 
     careButton: {
@@ -270,7 +264,7 @@ export const styles = StyleSheet.create({
     },
 
     careButtonText: {
-        ...typography.body
+        ...typography.button,
     },
 
     // Floating Edit Button
@@ -285,5 +279,12 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         ...shadows.medium,
+    },
+
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: scale(16),
     },
 });

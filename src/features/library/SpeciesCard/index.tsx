@@ -15,20 +15,32 @@ export default function SpeciesCard({
     onAddPress,
 }: SpeciesCardProps) {
     const getTagIcon = (tag: string) => {
-        const lower = tag.toLowerCase();
-        if (lower.includes('baixa') || lower.includes('sol') || lower.includes('luz')) {
-            return AppIcons.SUN;
+        switch (tag.toUpperCase()) {
+            case 'LOW':
+            case 'MEDIUM':
+            case 'INTENSE':
+            case 'ANY':
+                return AppIcons.SUN;
+
+            case 'DAILY':
+            case 'FREQUENT':
+            case 'WEEKLY':
+            case 'SPORADIC':
+                return AppIcons.DROPLET;
+
+            case 'SMALL':
+            case 'MEDIUM':
+            case 'LARGE':
+                return AppIcons.RULER;
+
+            case 'BEGINNER':
+            case 'INTERMEDIATE':
+            case 'ADVANCED':
+                return AppIcons.BRIEFCASE;
+
+            default:
+                return AppIcons.LEAF;
         }
-        if (lower.includes('média') || lower.includes('água') || lower.includes('rega')) {
-            return AppIcons.DROPLET;
-        }
-        if (lower.includes('pequena') || lower.includes('porte') || lower.includes('tamanho')) {
-            return AppIcons.RULER;
-        }
-        if (lower.includes('difícil') || lower.includes('fácil') || lower.includes('dificuldade')) {
-            return AppIcons.BRIEFCASE;
-        }
-        return AppIcons.LEAF;
     };
 
     return (

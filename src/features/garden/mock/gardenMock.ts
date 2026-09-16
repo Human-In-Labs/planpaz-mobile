@@ -85,7 +85,323 @@ export const INITIAL_GARDEN_PLANTS: CultivatedPlant[] = [
 
     {
         id: '2',
-        nickname: 'Apelido longo...',
+        nickname: 'Chefao 2...',
+        species: 'Manjericão',
+        scientificName: 'Ocimum basilicum',
+        image: require('../../../assets/images/auth-banner.png'),
+        daysCultivated: 52,
+        room: 'Manjericão',
+        stage: 'Muda',
+        directRain: 'Sim',
+        reminders: true,
+        plantingDate: '23/07/2026',
+        tags: ['Ornamental', 'Baixa', 'Média', 'Pequena'],
+        description:
+            'Planta aromática cultivada há milênios, ideal para cozinhas e ambientes iluminados.',
+        careGuide: {
+            solo: 'Solo leve e fértil.',
+            rega: 'Rega diária em dias quentes.',
+            poda: 'Retirar as flores para estimular novas folhas.',
+        },
+        stats: {
+            co2: 42000,
+            ecoScore: 98500,
+            cultivationDays: 52,
+        },
+        stages: [
+            {
+                id: 's1',
+                title: 'Estágio atual',
+                label: 'Estágio',
+                description:
+                    'Crescimento ativo de ramos e folhas novas.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's2',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Desenvolvimento das folhas e fortalecimento dos ramos.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's3',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Planta desenvolvida com crescimento contínuo.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+        ],
+        careActions: [
+            {
+                id: 'c1',
+                type: 'rega',
+                title: 'Rega',
+                status: 'Hoje',
+                isOverdue: false,
+                icon: 'shower',
+            },
+            {
+                id: 'c2',
+                type: 'poda',
+                title: 'Poda',
+                status: 'Amanhã',
+                isOverdue: false,
+                icon: 'scissors',
+            },
+            {
+                id: 'c3',
+                type: 'substrato',
+                title: 'Substrato',
+                status: 'Concluir',
+                isOverdue: false,
+                icon: 'plant',
+            },
+        ],
+    },
+
+    {
+        id: '3',
+        nickname: 'Chefao 3...',
+        species: 'Manjericão',
+        scientificName: 'Ocimum basilicum',
+        image: require('../../../assets/images/auth-banner.png'),
+        daysCultivated: 52,
+        room: 'Manjericão',
+        stage: 'Muda',
+        directRain: 'Sim',
+        reminders: true,
+        plantingDate: '23/07/2026',
+        tags: ['Ornamental', 'Baixa', 'Média', 'Pequena'],
+        description:
+            'Planta aromática cultivada há milênios, ideal para cozinhas e ambientes iluminados.',
+        careGuide: {
+            solo: 'Solo leve e fértil.',
+            rega: 'Rega diária em dias quentes.',
+            poda: 'Retirar as flores para estimular novas folhas.',
+        },
+        stats: {
+            co2: 42000,
+            ecoScore: 98500,
+            cultivationDays: 52,
+        },
+        stages: [
+            {
+                id: 's1',
+                title: 'Estágio atual',
+                label: 'Estágio',
+                description:
+                    'Crescimento ativo de ramos e folhas novas.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's2',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Desenvolvimento das folhas e fortalecimento dos ramos.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's3',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Planta desenvolvida com crescimento contínuo.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+        ],
+        careActions: [
+            {
+                id: 'c1',
+                type: 'rega',
+                title: 'Rega',
+                status: 'Hoje',
+                isOverdue: false,
+                icon: 'shower',
+            },
+            {
+                id: 'c2',
+                type: 'poda',
+                title: 'Poda',
+                status: 'Amanhã',
+                isOverdue: false,
+                icon: 'scissors',
+            },
+            {
+                id: 'c3',
+                type: 'substrato',
+                title: 'Substrato',
+                status: 'Concluir',
+                isOverdue: false,
+                icon: 'plant',
+            },
+        ],
+    },
+
+    {
+        id: '4',
+        nickname: 'Chefao 4...',
+        species: 'Manjericão',
+        scientificName: 'Ocimum basilicum',
+        image: require('../../../assets/images/auth-banner.png'),
+        daysCultivated: 52,
+        room: 'Manjericão',
+        stage: 'Muda',
+        directRain: 'Sim',
+        reminders: true,
+        plantingDate: '23/07/2026',
+        tags: ['Ornamental', 'Baixa', 'Média', 'Pequena'],
+        description:
+            'Planta aromática cultivada há milênios, ideal para cozinhas e ambientes iluminados.',
+        careGuide: {
+            solo: 'Solo leve e fértil.',
+            rega: 'Rega diária em dias quentes.',
+            poda: 'Retirar as flores para estimular novas folhas.',
+        },
+        stats: {
+            co2: 42000,
+            ecoScore: 98500,
+            cultivationDays: 52,
+        },
+        stages: [
+            {
+                id: 's1',
+                title: 'Estágio atual',
+                label: 'Estágio',
+                description:
+                    'Crescimento ativo de ramos e folhas novas.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's2',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Desenvolvimento das folhas e fortalecimento dos ramos.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's3',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Planta desenvolvida com crescimento contínuo.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+        ],
+        careActions: [
+            {
+                id: 'c1',
+                type: 'rega',
+                title: 'Rega',
+                status: 'Hoje',
+                isOverdue: false,
+                icon: 'shower',
+            },
+            {
+                id: 'c2',
+                type: 'poda',
+                title: 'Poda',
+                status: 'Amanhã',
+                isOverdue: false,
+                icon: 'scissors',
+            },
+            {
+                id: 'c3',
+                type: 'substrato',
+                title: 'Substrato',
+                status: 'Concluir',
+                isOverdue: false,
+                icon: 'plant',
+            },
+        ],
+    },
+
+    {
+        id: '5',
+        nickname: 'Chefao teste teste teste',
+        species: 'Manjericão',
+        scientificName: 'Ocimum basilicum',
+        image: require('../../../assets/images/auth-banner.png'),
+        daysCultivated: 52,
+        room: 'Manjericão',
+        stage: 'Muda',
+        directRain: 'Sim',
+        reminders: true,
+        plantingDate: '23/07/2026',
+        tags: ['Ornamental', 'Baixa', 'Média', 'Pequena'],
+        description:
+            'Planta aromática cultivada há milênios, ideal para cozinhas e ambientes iluminados.',
+        careGuide: {
+            solo: 'Solo leve e fértil.',
+            rega: 'Rega diária em dias quentes.',
+            poda: 'Retirar as flores para estimular novas folhas.',
+        },
+        stats: {
+            co2: 42000,
+            ecoScore: 98500,
+            cultivationDays: 52,
+        },
+        stages: [
+            {
+                id: 's1',
+                title: 'Estágio atual',
+                label: 'Estágio',
+                description:
+                    'Crescimento ativo de ramos e folhas novas.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's2',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Desenvolvimento das folhas e fortalecimento dos ramos.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+            {
+                id: 's3',
+                title: 'Estágio',
+                label: 'Estágio',
+                description:
+                    'Planta desenvolvida com crescimento contínuo.',
+                image: require('../../../assets/images/auth-banner.png'),
+            },
+        ],
+        careActions: [
+            {
+                id: 'c1',
+                type: 'rega',
+                title: 'Rega',
+                status: 'Hoje',
+                isOverdue: false,
+                icon: 'shower',
+            },
+            {
+                id: 'c2',
+                type: 'poda',
+                title: 'Poda',
+                status: 'Amanhã',
+                isOverdue: false,
+                icon: 'scissors',
+            },
+            {
+                id: 'c3',
+                type: 'substrato',
+                title: 'Substrato',
+                status: 'Concluir',
+                isOverdue: false,
+                icon: 'plant',
+            },
+        ],
+    },
+
+    {
+        id: '6',
+        nickname: 'Chefao 6',
         species: 'Manjericão',
         scientificName: 'Ocimum basilicum',
         image: require('../../../assets/images/auth-banner.png'),

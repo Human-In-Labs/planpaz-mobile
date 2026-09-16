@@ -1,4 +1,13 @@
-import { View, Text, Image, TextInput, TouchableOpacity, } from 'react-native'
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/types';
 import { useNavigation } from '@react-navigation/native'
@@ -103,83 +112,100 @@ export default function LoginScreen() {
 
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Image source={require('../../../assets/images/auth-banner.png')} resizeMode="cover" style={styles.banner} />
-      </View>
-
-      <View style={styles.main}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Entrar</Text>
-
-          <TextInput
-            style={[styles.inputEmail, emailError && styles.inputError]}
-            placeholder="Email"
-            placeholderTextColor={colors.black}
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (emailError) setEmailError(false);
-              if (errorMessage) setErrorMessage('');
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.header}>
+          <Image
+            source={require('../../../assets/images/auth-banner.png')}
+            resizeMode="cover"
+            style={styles.banner}
           />
+        </View>
 
-          <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
+        <View style={styles.main}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Entrar</Text>
+
             <TextInput
-              style={styles.inputPassword}
-              placeholder="Password"
-              placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
-              secureTextEntry={!showPassword}
-              value={password}
+              style={[styles.inputEmail, emailError && styles.inputError]}
+              placeholder="Email"
+              placeholderTextColor={emailError && !email ? colors.warning : colors.black}
+              value={email}
               onChangeText={(text) => {
-                setPassword(text);
-                if (passwordError) setPasswordError(false);
+                setEmail(text);
+                if (emailError) setEmailError(false);
                 if (errorMessage) setErrorMessage('');
               }}
+              keyboardType="email-address"
               autoCapitalize="none"
-              underlineColorAndroid="transparent"
+              autoCorrect={false}
             />
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => setShowPassword(prev => !prev)}
-            >
-              <AppIcon
-                icon={showPassword ? 'eye' : 'eyeSlash'}
-                size={22}
-                color={passwordError ? colors.warning : colors.primary}
+
+            <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
+              <TextInput
+                style={styles.inputPassword}
+                placeholder="Password"
+                placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (passwordError) setPasswordError(false);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                autoCapitalize="none"
+                underlineColorAndroid="transparent"
               />
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setShowPassword(prev => !prev)}
+              >
+                <AppIcon
+                  icon={showPassword ? 'eye' : 'eyeSlash'}
+                  size={22}
+                  color={passwordError ? colors.warning : colors.primary}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.forgotPasswordButton}
+              onPress={() => {
+                navigation.navigate('ForgotPassword');
+              }}
+            >
+              <Text style={styles.forgotPasswordButtonText}>Esqueci minha senha</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotPasswordButton}
-            onPress={() => {
-              navigation.navigate('ForgotPassword');
-            }}
-          >
-            <Text style={styles.forgotPasswordButtonText}>Esqueci minha senha</Text>
-          </TouchableOpacity>
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => {
+                navigation.navigate('Register');
+              }}
+            >
+              <Text style={styles.registerButtonText}>Não tenho uma conta</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+            >
+              <Text style={styles.loginButtonText}>Entrar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.registerButton}
-            onPress={() => {
-              navigation.navigate('Register');
-            }}
-          >
-            <Text style={styles.registerButtonText}>Não tenho uma conta</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.loginButton}
-            onPress={handleLogin}
-          >
-            <Text style={styles.loginButtonText}>Entrar</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
 
       <ErrorPopup visible={!!errorMessage} message={errorMessage} />
-    </View>
-  )
+    </KeyboardAvoidingView>
+  );
 }

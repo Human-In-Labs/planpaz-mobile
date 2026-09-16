@@ -21,4 +21,8 @@ export const styles = StyleSheet.create({
     icon: {
         marginLeft: scale(spacing.xs),
     },
+
+    filterIcon: {
+        marginRight: scale(spacing.xs),
+    },
 });

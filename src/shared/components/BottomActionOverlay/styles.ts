@@ -8,9 +8,19 @@ export const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: verticalScale(166),
+        height: verticalScale(210),
         zIndex: 1,
     },
+
+    fadeArea: {
+        height: verticalScale(68),
+    },
+
+    solidArea: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+
     button: {
         position: 'absolute',
         bottom: verticalScale(94),

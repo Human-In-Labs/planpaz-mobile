@@ -62,6 +62,12 @@ export const typography = {
     color: colors.white,
   },
 
+  bodyMedium2: {
+    fontFamily: fonts.interMedium,
+    fontSize: 14,
+    color: colors.black,
+  },
+
   bodyStrong: {
     fontFamily: fonts.interRegular,
     fontSize: 16,
@@ -92,6 +98,12 @@ export const typography = {
     color: colors.black,
   },
 
+  textSuccess: {
+    fontFamily: fonts.interMedium,
+    fontSize: 12,
+    color: colors.primary,
+  },
+
   textLight2: {
     fontFamily: fonts.interLight,
     fontSize: 12,
@@ -102,6 +114,12 @@ export const typography = {
     fontFamily: fonts.interSemiBold,
     fontSize: 12,
     color: colors.text,
+  },
+
+  textWhite: {
+    fontFamily: fonts.interSemiBold,
+    fontSize: 12,
+    color: colors.white,
   },
 
   error: {
