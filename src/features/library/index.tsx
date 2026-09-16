@@ -1,5 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { FlatList, RefreshControl, View } from 'react-native';
+import {
+    Animated,
+    FlatList,
+    RefreshControl,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,66 +20,6 @@ import SpeciesCard from './SpeciesCard';
 
 import { listarPlants } from '../../shared/api';
 
-const DEFAULT_SPECIES: Species[] = [
-    {
-        id: '1',
-        image: require('../../assets/images/auth-banner.png'),
-        commonName: 'Jibóia',
-        scientificName: 'Epipremnum aureum',
-        isRecommended: true,
-        type: 'Ornamental',
-        experience: 'Iniciante',
-        temperature: 'Média',
-        light: 'Baixa',
-        water: 'Frequente',
-        tags: ['Ornamental', 'Pequena', 'Baixa', 'Média', 'Frequente'],
-        description:
-            'Planta herbácea com comportamento pendente ou ascendente, possui folhagem extremamente ornamental, muito conhecida e cultivada em ambientes internos, por crescer com pouca luz e não demandar muitos cuidados. Também conhecida como hera do diabo, a planta jiboia é uma herbácea trepadeira, muito vista',
-        careGuide: {
-            solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com pH entre 6,0 e 7,5. O preparo adequado do solo garante um desenvolvimento vigoroso e uma maior produção de folhas saudáveis.',
-            rega: 'A planta se adapta bem a diferentes condições climáticas, mas cresce melhor em temperaturas entre 15 °C e 25 °C.',
-        },
-    },
-    {
-        id: '2',
-        image: require('../../assets/images/auth-banner.png'),
-        commonName: 'Mini Coroa de Cristo',
-        scientificName: 'Euphorbia milii',
-        isRecommended: true,
-        type: 'Ornamental',
-        experience: 'Intermediário',
-        temperature: 'Alta',
-        light: 'Intensa',
-        water: 'Esporádica',
-        tags: ['Ornamental', 'Pequena', 'Intensa', 'Alta', 'Esporádica'],
-        description:
-            'Arbusto suculento e espinhoso, originário de Madagascar, com inflorescências vistosas de brácteas vermelhas ou rosadas, muito resistente ao sol.',
-        careGuide: {
-            solo: 'Solo arenoso e bem drenado com regas moderadas.',
-            rega: 'Deixar o solo secar completamente entre as regas.',
-        },
-    },
-    {
-        id: '3',
-        image: require('../../assets/images/auth-banner.png'),
-        commonName: 'Espada de São Jorge',
-        scientificName: 'Sansevieria trifasciata',
-        isRecommended: false,
-        type: 'Ornamental',
-        experience: 'Iniciante',
-        temperature: 'Média',
-        light: 'Baixa',
-        water: 'Esporádica',
-        tags: ['Ornamental', 'Média', 'Baixa', 'Média', 'Esporádica'],
-        description:
-            'Planta de folhas eretas e coriáceas, altamente resistente à seca e à baixa luminosidade, excelente purificadora de ar.',
-        careGuide: {
-            solo: 'Substrato leve com boa drenagem.',
-            rega: 'Regar a cada 10 a 15 dias.',
-        },
-    },
-];
-
 const ItemSeparator = () => <View style={styles.separator} />;
 
 type NavigationProp = NativeStackNavigationProp<
@@ -87,14 +32,12 @@ type SelectedFilters = Record<string, string>;
 export default function LibraryScreen() {
     const navigation = useNavigation<NavigationProp>();
 
+    const [scrollY] = useState(() => new Animated.Value(0));
     const [search, setSearch] = useState('');
     const [selectedFilters, setSelectedFilters] =
         useState<SelectedFilters>({});
     const [filterVisible, setFilterVisible] = useState(false);
-
-    const [species, setSpecies] =
-        useState<Species[]>(DEFAULT_SPECIES);
-
+    const [species, setSpecies] = useState<Species[]>([]);
     const [loading, setLoading] = useState(false);
 
     const carregarPlantas = useCallback(async () => {
@@ -103,37 +46,38 @@ export default function LibraryScreen() {
 
             const plants = await listarPlants();
 
-            if (plants && plants.length > 0) {
-                const data: Species[] = plants.map((plant, index) => ({
+            const data: Species[] = (plants || []).map(
+                (plant, index) => ({
                     id: plant.id,
-                    image: require('../../assets/images/auth-banner.png'),
+                    image: plant.imagePath
+                        ? { uri: plant.imagePath }
+                        : require('../../assets/images/auth-banner.png'),
+
                     commonName: plant.name,
                     scientificName: plant.scientificName,
-                    isRecommended: index < 2,
+                    isRecommended: index < 1,
 
                     type: plant.type,
                     size: plant.size,
                     light: plant.luminosityLevel,
                     water: plant.wateringLevel,
+                    temperature: plant.temperatureLevel,
 
                     tags: [
-                        plant.type || 'Ornamental',
-                        plant.size || 'Pequena',
-                        plant.luminosityLevel || 'Baixa',
-                        plant.wateringLevel || 'Média',
-                    ],
+                        plant.type,
+                        plant.size,
+                        plant.luminosityLevel,
+                        plant.wateringLevel,
+                    ].filter(Boolean),
 
-                    description:
-                        plant.description ||
-                        DEFAULT_SPECIES[0].description,
+                    description: plant.description,
+                }),
+            );
 
-                    careGuide: DEFAULT_SPECIES[0].careGuide,
-                }));
-
-                setSpecies(data);
-            }
-        } catch {
-            console.log('Utilizando biblioteca padrão');
+            setSpecies(data);
+        } catch (error) {
+            console.error('Erro ao carregar biblioteca:', error);
+            setSpecies([]);
         } finally {
             setLoading(false);
         }
@@ -142,7 +86,7 @@ export default function LibraryScreen() {
     useFocusEffect(
         useCallback(() => {
             carregarPlantas();
-        }, [carregarPlantas])
+        }, [carregarPlantas]),
     );
 
     const handleFilterChange = useCallback(
@@ -176,7 +120,8 @@ export default function LibraryScreen() {
 
         if (
             searchText &&
-            !item.commonName.toLowerCase().includes(searchText)
+            !item.commonName.toLowerCase().includes(searchText) &&
+            !item.scientificName?.toLowerCase().includes(searchText)
         ) {
             return false;
         }
@@ -217,12 +162,24 @@ export default function LibraryScreen() {
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
-            <FlatList
+            <AppHeader
+                title="Biblioteca"
+                backButton
+                onBackPress={() => navigation.goBack()}
+                scrollY={scrollY}
+            />
+
+            <Animated.FlatList
                 data={filteredSpecies}
                 keyExtractor={item => item.id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.content}
                 ItemSeparatorComponent={ItemSeparator}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false },
+                )}
+                scrollEventThrottle={16}
                 refreshControl={
                     <RefreshControl
                         refreshing={loading}
@@ -230,22 +187,16 @@ export default function LibraryScreen() {
                     />
                 }
                 ListHeaderComponent={
-                    <>
-                        <AppHeader
-                            title="Biblioteca"
-                            backButton
-                            onBackPress={() => navigation.goBack()}
-                        />
-
-                        <FilterSection
-                            search={search}
-                            onSearchChange={setSearch}
-                            filters={Object.values(selectedFilters).filter(value => value !== 'Todas',)}
-                            onRemoveFilter={handleRemoveFilter}
-                            onFilterPress={() => setFilterVisible(true)}
-                            onSuggestionPress={() => { }}
-                        />
-                    </>
+                    <FilterSection
+                        search={search}
+                        onSearchChange={setSearch}
+                        filters={Object.values(selectedFilters).filter(
+                            value => value !== 'Todas',
+                        )}
+                        onRemoveFilter={handleRemoveFilter}
+                        onFilterPress={() => setFilterVisible(true)}
+                        onSuggestionPress={() => { }}
+                    />
                 }
                 renderItem={({ item }) => (
                     <SpeciesCard

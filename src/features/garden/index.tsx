@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, FlatList } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { View, TouchableOpacity, FlatList, Animated } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from './styles';
 import AppHeader from '../../shared/components/AppHeader';
@@ -14,12 +14,15 @@ import { colors } from '../../shared/theme';
 import { AppIcons } from '../../shared/constants/appIcons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { GardenStackParamList } from '../../navigation/types';
-import { INITIAL_GARDEN_PLANTS } from './mock/gardenMock';
-import { CultivatedPlant } from './types';
-import PlantFilters from './overlays/PlantFilters';
 import { IconName } from '../../shared/components/AppIcon/icons';
+import { listarJardim, GardenPlant } from '../../shared/api';
+import PlantFilters from './overlays/PlantFilters';
 
-type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'GardenMain'>;
+type NavigationProp = NativeStackNavigationProp<
+    GardenStackParamList,
+    'GardenMain'
+>;
+
 type GardenFilter = {
     type: string;
     label: string;
@@ -28,17 +31,30 @@ type GardenFilter = {
 
 export default function GardenScreen() {
     const navigation = useNavigation<NavigationProp>();
+
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [search, setSearch] = useState('');
-    const [plants] = useState<CultivatedPlant[]>(INITIAL_GARDEN_PLANTS);
+    const [plants, setPlants] = useState<GardenPlant[]>([]);
     const [filterVisible, setFilterVisible] = useState(false);
-    const [filters, setFilters] = useState<GardenFilter[]>([
-        {
-            type: 'environment',
-            label: 'Quintal',
-            icon: AppIcons.HOUSE_SIMPLE,
-        },
-    ]);
+    const [filters, setFilters] = useState<GardenFilter[]>([]);
+    const [scrollY] = useState(() => new Animated.Value(0));
+
+    const carregarJardim = useCallback(async () => {
+        try {
+            const data = await listarJardim();
+            setPlants(data || []);
+        } catch (error) {
+            console.error('Erro ao carregar jardim:', error);
+            setPlants([]);
+        }
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            carregarJardim();
+        }, [carregarJardim]),
+    );
+
     const handleFilterChange = (
         type: string,
         label: string,
@@ -63,10 +79,14 @@ export default function GardenScreen() {
     };
 
     const filteredPlants = plants.filter(plant => {
+        const nickname = plant.nickname?.toLowerCase() || '';
+        const species = plant.plant?.name?.toLowerCase() || '';
+        const searchText = search.toLowerCase().trim();
+
         const matchesSearch =
-            !search ||
-            plant.nickname.toLowerCase().includes(search.toLowerCase()) ||
-            plant.species.toLowerCase().includes(search.toLowerCase());
+            !searchText ||
+            nickname.includes(searchText) ||
+            species.includes(searchText);
 
         const selectedEnvironment = filters.find(
             filter => filter.type === 'environment',
@@ -81,21 +101,27 @@ export default function GardenScreen() {
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
-            <FlatList
+            <AppHeader
+                title="Meu jardim"
+                hasNotifications={!filterVisible}
+                onNotificationPress={() => setNotificationVisible(true)}
+                scrollY={scrollY}
+            />
+
+            <Animated.FlatList
                 data={filteredPlants}
                 keyExtractor={item => item.id}
                 numColumns={2}
                 showsVerticalScrollIndicator={false}
                 columnWrapperStyle={styles.gridRow}
                 contentContainerStyle={styles.content}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false },
+                )}
+                scrollEventThrottle={16}
                 ListHeaderComponent={
                     <>
-                        <AppHeader
-                            title="Meu jardim"
-                            hasNotifications={!filterVisible}
-                            onNotificationPress={() => setNotificationVisible(true)}
-                        />
-
                         <View style={styles.searchSection}>
                             <SearchBar
                                 value={search}
@@ -108,7 +134,7 @@ export default function GardenScreen() {
                             <FlatList
                                 horizontal
                                 data={filters}
-                                keyExtractor={item => item.label}
+                                keyExtractor={item => `${item.type}-${item.label}`}
                                 showsHorizontalScrollIndicator={false}
                                 contentContainerStyle={styles.filterList}
                                 renderItem={({ item }) => (
@@ -118,7 +144,11 @@ export default function GardenScreen() {
                                         removable
                                         onRemove={() =>
                                             setFilters(prev =>
-                                                prev.filter(filter => filter.label !== item.label)
+                                                prev.filter(
+                                                    filter =>
+                                                        filter.type !==
+                                                        item.type,
+                                                ),
                                             )
                                         }
                                     />
@@ -141,12 +171,29 @@ export default function GardenScreen() {
                 }
                 renderItem={({ item }) => (
                     <PlantCard
-                        image={item.image}
+                        image={
+                            item.imagePath
+                                ? { uri: item.imagePath }
+                                : item.plant.imagePath
+                                    ? { uri: item.plant.imagePath }
+                                    : require('../../assets/images/auth-banner.png')
+                        }
                         nickname={item.nickname}
-                        species={item.species}
-                        days={item.daysCultivated}
+                        species={item.plant.name}
+                        days={item.plantedAt
+                            ? Math.max(
+                                0,
+                                Math.floor(
+                                    (Date.now() -
+                                        new Date(item.plantedAt).getTime()) /
+                                    (1000 * 60 * 60 * 24),
+                                ),
+                            )
+                            : 0}
                         onPress={() =>
-                            navigation.navigate('PlantDetails', { plantId: item.id })
+                            navigation.navigate('PlantDetails', {
+                                plantId: item.id,
+                            })
                         }
                     />
                 )}
@@ -170,7 +217,7 @@ export default function GardenScreen() {
                 visible={filterVisible}
                 onClose={() => setFilterVisible(false)}
                 selectedFilters={Object.fromEntries(
-                    filters.map(filter => [filter.type, filter.label])
+                    filters.map(filter => [filter.type, filter.label]),
                 )}
                 onFilterChange={handleFilterChange}
             />

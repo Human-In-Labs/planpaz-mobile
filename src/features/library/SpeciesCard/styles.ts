@@ -94,9 +94,7 @@ export const styles = StyleSheet.create({
     },
 
     tagText: {
-        fontSize: scale(9),
-        fontWeight: '600',
-        color: colors.black,
+        ...typography.captionRegular,
     },
 
     addButton: {

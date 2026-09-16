@@ -76,7 +76,6 @@ export const styles = StyleSheet.create({
 
     descriptionTitle: {
         ...typography.subtitle,
-        marginBottom: verticalScale(8),
     },
 
     descriptionText: {

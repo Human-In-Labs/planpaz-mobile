@@ -15,87 +15,79 @@ import Svg, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { GardenStackParamList } from '../../../navigation/types';
 import AppHeader from '../../../shared/components/AppHeader';
 import AppIcon from '../../../shared/components/AppIcon';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
-import { buscarPlantPorId } from '../../../shared/api';
+import {
+    buscarPlantPorId,
+    Plant,
+} from '../../../shared/api';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
-import { Species } from '../types';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<
     GardenStackParamList,
     'SpeciesDetails'
 >;
-type RouteType = RouteProp<GardenStackParamList, 'SpeciesDetails'>;
+
+type RouteType = RouteProp<
+    GardenStackParamList,
+    'SpeciesDetails'
+>;
 
 const MAX_DESCRIPTION_LINES = 5;
 
-const FALLBACK_SPECIES: Record<string, Species> = {
-    '1': {
-        id: '1',
-        image: require('../../../assets/images/auth-banner.png'),
-        commonName: 'Jibóia',
-        scientificName: 'Epipremnum aureum',
-        tags: ['Ornamental', 'Baixa', 'Média', 'Pequena', 'Difícil'],
-        description:
-            'Planta herbácea com comportamento pendente ou ascendente, possui folhagem extremamente ornamental, muito conhecida e cultivada em ambientes internos, por crescer com pouca luz e não demandar muitos cuidados. Também conhecida como hera do diabo, a planta jiboia é uma herbácea trepadeira, muito vista. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat',
-        careGuide: {
-            solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com pH entre 6,0 e 7,5. O preparo adequado do solo garante um desenvolvimento vigoroso e uma maior produção de folhas saudáveis.',
-            rega: 'A planta se adapta bem a diferentes condições climáticas, mas cresce melhor em temperaturas entre 15 ºC e 25 ºC. Em regiões muito quentes, recomenda-se o sombreamento parcial para evitar estresse hídrico.',
-            poda: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-        },
-    },
-    '2': {
-        id: '2',
-        image: require('../../../assets/images/auth-banner.png'),
-        commonName: 'Mini Coroa de Cristo',
-        scientificName: 'Euphorbia milii',
-        tags: ['Ornamental', 'Baixa', 'Média', 'Pequena', 'Difícil'],
-        description:
-            'Arbusto suculento e espinhoso, originário de Madagascar, com inflorescências vistosas de brácteas vermelhas ou rosadas, muito resistente ao sol.',
-        careGuide: {
-            solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com pH entre 6,0 e 7,5. O preparo adequado do solo garante um desenvolvimento vigoroso e uma maior produção de folhas saudáveis.',
-            rega: 'A planta se adapta bem a diferentes condições climáticas, mas cresce melhor em temperaturas entre 15 ºC e 25 ºC. Em regiões muito quentes, recomenda-se o sombreamento parcial para evitar estresse hídrico.',
-            poda: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-        },
-    },
+const CARE_GUIDE = {
+    solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com boa retenção de umidade.',
+    rega: 'Regue quando a camada superficial do solo estiver seca, evitando o excesso de água.',
+    poda: 'Realize podas de limpeza e remova folhas secas ou danificadas quando necessário.',
 };
 
 export default function SpeciesDetailsScreen() {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteType>();
-    const speciesId = route.params?.speciesId || '1';
 
-    const [species, setSpecies] = useState<Species>(
-        FALLBACK_SPECIES[speciesId] || FALLBACK_SPECIES['1']
-    );
+    const speciesId = route.params?.speciesId;
 
-    const [descriptionExpanded, setDescriptionExpanded] = useState(false);
-    const [descriptionHasOverflow, setDescriptionHasOverflow] = useState(false);
+    const [species, setSpecies] = useState<Plant | null>(null);
+    const [descriptionExpanded, setDescriptionExpanded] =
+        useState(false);
+    const [descriptionHasOverflow, setDescriptionHasOverflow] =
+        useState(false);
+    const [descriptionWidth, setDescriptionWidth] = useState(0);
 
     useEffect(() => {
+        if (!speciesId) {
+            return;
+        }
+
         let isMounted = true;
 
+        const carregarEspecie = async () => {
+            try {
+                const data = await buscarPlantPorId(speciesId);
+
+                if (isMounted) {
+                    setSpecies(data);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar espécie:', error);
+
+                if (isMounted) {
+                    setSpecies(null);
+                }
+            }
+        };
+
+        setSpecies(null);
         setDescriptionExpanded(false);
         setDescriptionHasOverflow(false);
+        setDescriptionWidth(0);
 
-        buscarPlantPorId(speciesId)
-            .then(data => {
-                if (data && isMounted) {
-                    setSpecies(prev => ({
-                        ...prev,
-                        commonName: data.name || prev.commonName,
-                        scientificName: data.scientificName || prev.scientificName,
-                        description: data.description || prev.description,
-                    }));
-                }
-            })
-            .catch(() => {
-                // Utiliza os dados padrão
-            });
+        carregarEspecie();
 
         return () => {
             isMounted = false;
@@ -103,47 +95,72 @@ export default function SpeciesDetailsScreen() {
     }, [speciesId]);
 
     const getTagIcon = (tag: string) => {
-        const lower = tag.toLowerCase();
+        switch (tag.toUpperCase()) {
+            case 'LOW':
+            case 'MEDIUM':
+            case 'INTENSE':
+            case 'ANY':
+                return AppIcons.SUN;
 
-        if (
-            lower.includes('baixa') ||
-            lower.includes('sol') ||
-            lower.includes('luz')
-        ) {
-            return AppIcons.SUN;
+            case 'DAILY':
+            case 'FREQUENT':
+            case 'WEEKLY':
+            case 'SPORADIC':
+                return AppIcons.DROPLET;
+
+            case 'SMALL':
+            case 'LARGE':
+                return AppIcons.RULER;
+
+            case 'BEGINNER':
+            case 'INTERMEDIATE':
+            case 'ADVANCED':
+                return AppIcons.BRIEFCASE;
+
+            default:
+                return AppIcons.LEAF;
         }
-
-        if (
-            lower.includes('média') ||
-            lower.includes('água') ||
-            lower.includes('rega')
-        ) {
-            return AppIcons.DROPLET;
-        }
-
-        if (
-            lower.includes('pequena') ||
-            lower.includes('porte') ||
-            lower.includes('tamanho')
-        ) {
-            return AppIcons.RULER;
-        }
-
-        if (
-            lower.includes('difícil') ||
-            lower.includes('fácil') ||
-            lower.includes('dificuldade')
-        ) {
-            return AppIcons.BRIEFCASE;
-        }
-
-        return AppIcons.LEAF;
     };
+
+    if (!species) {
+        return (
+            <SafeAreaView edges={['top']} style={styles.container}>
+                <AppHeader
+                    title="Espécie"
+                    backButton
+                    onBackPress={() => navigation.goBack()}
+                />
+
+                <View
+                    style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    <Text style={styles.sectionHeader}>
+                        Não foi possível carregar a espécie.
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    const tags = [
+        species.type,
+        species.size,
+        species.luminosityLevel,
+        species.wateringLevel,
+    ].filter(Boolean);
+
+    const description =
+        species.description || 'Sem descrição disponível.';
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
             <AppHeader
-                title={species.commonName}
+                title={species.name}
                 backButton
                 onBackPress={() => navigation.goBack()}
             />
@@ -159,20 +176,29 @@ export default function SpeciesDetailsScreen() {
                     ]}
                 >
                     <Image
-                        source={species.image}
+                        source={
+                            species.imagePath
+                                ? { uri: species.imagePath }
+                                : require('../../../assets/images/auth-banner.png')
+                        }
                         style={styles.heroImage}
                         resizeMode="cover"
                     />
 
                     <View style={styles.tagsRow}>
-                        {species.tags.map((tag, idx) => (
-                            <View key={idx} style={styles.tagBadge}>
+                        {tags.map((tag, index) => (
+                            <View
+                                key={`${tag}-${index}`}
+                                style={styles.tagBadge}
+                            >
                                 <AppIcon
                                     icon={getTagIcon(tag)}
                                     size={10}
                                     color={colors.black}
                                 />
-                                <Text style={styles.tagText}>{tag}</Text>
+                                <Text style={styles.tagText}>
+                                    {tag}
+                                </Text>
                             </View>
                         ))}
                     </View>
@@ -189,25 +215,63 @@ export default function SpeciesDetailsScreen() {
                                 descriptionHasOverflow &&
                                 styles.descriptionTextContainerCollapsed,
                             ]}
+                            onLayout={event => {
+                                const width =
+                                    event.nativeEvent.layout.width;
+
+                                if (width !== descriptionWidth) {
+                                    setDescriptionWidth(width);
+                                }
+                            }}
                         >
                             <Text
                                 style={styles.descriptionText}
-                                onTextLayout={event => {
-                                    const hasOverflow =
-                                        event.nativeEvent.lines.length >
-                                        MAX_DESCRIPTION_LINES;
-
-                                    setDescriptionHasOverflow(hasOverflow);
-                                }}
+                                numberOfLines={
+                                    descriptionExpanded
+                                        ? undefined
+                                        : MAX_DESCRIPTION_LINES
+                                }
                             >
-                                {species.description}
+                                {description}
                             </Text>
+
+                            {descriptionWidth > 0 && (
+                                <Text
+                                    style={styles.descriptionMeasureText}
+                                    onTextLayout={event => {
+                                        const hasOverflow =
+                                            event.nativeEvent.lines.length >
+                                            MAX_DESCRIPTION_LINES;
+
+                                        if (
+                                            hasOverflow !==
+                                            descriptionHasOverflow
+                                        ) {
+                                            setDescriptionHasOverflow(
+                                                hasOverflow,
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {description}
+                                </Text>
+                            )}
 
                             {!descriptionExpanded &&
                                 descriptionHasOverflow && (
-                                    <View style={styles.descriptionFade} pointerEvents="none">
-                                        <View style={styles.descriptionFadeArea}>
-                                            <Svg width="100%" height="100%">
+                                    <View
+                                        style={styles.descriptionFade}
+                                        pointerEvents="none"
+                                    >
+                                        <View
+                                            style={
+                                                styles.descriptionFadeArea
+                                            }
+                                        >
+                                            <Svg
+                                                width="100%"
+                                                height="100%"
+                                            >
                                                 <Defs>
                                                     <LinearGradient
                                                         id="descriptionFadeGradient"
@@ -216,8 +280,20 @@ export default function SpeciesDetailsScreen() {
                                                         x2="0"
                                                         y2="1"
                                                     >
-                                                        <Stop offset="0" stopColor={colors.white} stopOpacity="0" />
-                                                        <Stop offset="1" stopColor={colors.white} stopOpacity="1" />
+                                                        <Stop
+                                                            offset="0"
+                                                            stopColor={
+                                                                colors.white
+                                                            }
+                                                            stopOpacity="0"
+                                                        />
+                                                        <Stop
+                                                            offset="1"
+                                                            stopColor={
+                                                                colors.white
+                                                            }
+                                                            stopOpacity="1"
+                                                        />
                                                     </LinearGradient>
                                                 </Defs>
 
@@ -231,7 +307,11 @@ export default function SpeciesDetailsScreen() {
                                             </Svg>
                                         </View>
 
-                                        <View style={styles.descriptionFadeSolid} />
+                                        <View
+                                            style={
+                                                styles.descriptionFadeSolid
+                                            }
+                                        />
                                     </View>
                                 )}
                         </View>
@@ -243,7 +323,9 @@ export default function SpeciesDetailsScreen() {
                                 style={styles.expandButton}
                                 activeOpacity={0.8}
                                 onPress={() =>
-                                    setDescriptionExpanded(prev => !prev)
+                                    setDescriptionExpanded(
+                                        previous => !previous,
+                                    )
                                 }
                             >
                                 <View style={styles.expandButtonIcon}>
@@ -262,42 +344,38 @@ export default function SpeciesDetailsScreen() {
                     )}
                 </View>
 
-                {species.careGuide && (
-                    <View style={styles.careGuideCard}>
-                        <Text style={styles.sectionHeader}>
-                            Guia de cuidados:
+                <View style={styles.careGuideCard}>
+                    <Text style={styles.sectionHeader}>
+                        Guia de cuidados:
+                    </Text>
+
+                    <View style={styles.guideItem}>
+                        <Text style={styles.guideText}>
+                            <Text style={styles.guideLabel}>
+                                Solo:{' '}
+                            </Text>
+                            {CARE_GUIDE.solo}
                         </Text>
-
-                        <View style={styles.guideItem}>
-                            <Text style={styles.guideText}>
-                                <Text style={styles.guideLabel}>
-                                    Solo:{' '}
-                                </Text>
-                                {species.careGuide.solo}
-                            </Text>
-                        </View>
-
-                        <View style={styles.guideItem}>
-                            <Text style={styles.guideText}>
-                                <Text style={styles.guideLabel}>
-                                    Rega:{' '}
-                                </Text>
-                                {species.careGuide.rega}
-                            </Text>
-                        </View>
-
-                        {species.careGuide.poda && (
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>
-                                        Poda:{' '}
-                                    </Text>
-                                    {species.careGuide.poda}
-                                </Text>
-                            </View>
-                        )}
                     </View>
-                )}
+
+                    <View style={styles.guideItem}>
+                        <Text style={styles.guideText}>
+                            <Text style={styles.guideLabel}>
+                                Rega:{' '}
+                            </Text>
+                            {CARE_GUIDE.rega}
+                        </Text>
+                    </View>
+
+                    <View style={styles.guideItem}>
+                        <Text style={styles.guideText}>
+                            <Text style={styles.guideLabel}>
+                                Poda:{' '}
+                            </Text>
+                            {CARE_GUIDE.poda}
+                        </Text>
+                    </View>
+                </View>
             </ScrollView>
 
             <BottomActionOverlay
@@ -305,7 +383,7 @@ export default function SpeciesDetailsScreen() {
                 onPress={() =>
                     navigation.navigate('AddPlant', {
                         speciesId: species.id,
-                        speciesName: species.commonName,
+                        speciesName: species.name,
                     })
                 }
             />

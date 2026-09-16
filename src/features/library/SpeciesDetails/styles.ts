@@ -70,6 +70,11 @@ export const styles = StyleSheet.create({
 
     descriptionTextContainer: {
         position: 'relative',
+        paddingBottom: verticalScale(16),
+    },
+
+    descriptionText: {
+        ...typography.captionLight2,
     },
 
     descriptionTextContainerCollapsed: {
@@ -77,8 +82,12 @@ export const styles = StyleSheet.create({
         overflow: 'hidden',
     },
 
-    descriptionText: {
-        ...typography.captionLight2,
+    descriptionMeasureText: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        opacity: 0,
+        pointerEvents: 'none',
     },
 
     descriptionFade: {
