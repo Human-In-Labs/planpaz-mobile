@@ -280,4 +280,11 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         ...shadows.medium,
     },
+
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: scale(16),
+    },
 });

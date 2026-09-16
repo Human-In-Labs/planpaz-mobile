@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AppHeader from '../../shared/components/AppHeader';
 import { ProfileStackParamList } from '../../navigation/types';
@@ -12,6 +12,9 @@ import StatisticsSection from './StatisticsSection';
 import FollowersOverlay from './overlays/Followers';
 import NotificationOverlay from '../home/overlays/Notification';
 import AchievementDetailsOverlay from './overlays/AchievementDetails';
+import { getMinhasConfiguracoes, getSeguidores, getSeguindo } from '../../shared/api/user';
+import { getUser } from '../../shared/services/storage';
+import { Profile } from './types';
 import { styles } from './styles';
 
 export default function ProfileScreen() {
@@ -22,14 +25,76 @@ export default function ProfileScreen() {
     const [followersTitle, setFollowersTitle] = useState('Meus seguidores');
     const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
 
-    const profile = {
-        username: 'nathan12',
-        name: 'Matheus Pietro',
-        bio: 'Entusiasta do cultivo sustentável, especialista em plantas de sombra, buscando sempre novas espécies para estudar.',
+    const [profile, setProfile] = useState<Profile>({
+        username: '',
+        name: '',
+        bio: '',
         avatar: require('../../assets/images/auth-banner.png'),
-        followers: 1235,
-        following: 1613,
-    };
+        followers: 0,
+        following: 0,
+    });
+
+    useFocusEffect(
+        useCallback(() => {
+            async function fetchUser() {
+                try {
+                    const settings = await getMinhasConfiguracoes();
+                    if (settings) {
+                        const cleanUsername = settings.username
+                            ? (settings.username.startsWith('@') ? settings.username.substring(1) : settings.username)
+                            : '';
+
+                        let followersCount = 0;
+                        let followingCount = 0;
+
+                        if (settings.id) {
+                            try {
+                                const seguidores = await getSeguidores(settings.id);
+                                if (Array.isArray(seguidores)) {
+                                    followersCount = seguidores.length;
+                                }
+                            } catch (err) {
+                                console.log('[PROFILE] Erro ao carregar seguidores:', err);
+                            }
+
+                            try {
+                                const seguindo = await getSeguindo(settings.id);
+                                if (Array.isArray(seguindo)) {
+                                    followingCount = seguindo.length;
+                                }
+                            } catch (err) {
+                                console.log('[PROFILE] Erro ao carregar seguindo:', err);
+                            }
+                        }
+
+                        setProfile(prev => ({
+                            ...prev,
+                            username: cleanUsername || prev.username,
+                            name: settings.name || prev.name,
+                            bio: settings.bio ?? prev.bio,
+                            followers: followersCount,
+                            following: followingCount,
+                        }));
+                    }
+                } catch (err) {
+                    console.log('[PROFILE] Erro ao carregar dados do usuário do backend:', err);
+                    const localUser = await getUser();
+                    if (localUser) {
+                        const cleanUsername = localUser.username
+                            ? (localUser.username.startsWith('@') ? localUser.username.substring(1) : localUser.username)
+                            : '';
+                        setProfile(prev => ({
+                            ...prev,
+                            username: cleanUsername || prev.username,
+                            name: localUser.name || prev.name,
+                        }));
+                    }
+                }
+            }
+
+            fetchUser();
+        }, [])
+    );
 
     const achievements: Achievement[] = [
         {

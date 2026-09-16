@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getToken, removeToken, removeUser } from '../services/storage';
 
 // Host da API – ajuste para o IP/porta da sua máquina de desenvolvimento.
-const API_HOST = 'http://192.168.18.67:8080'; // <--- altere se necessário
+const API_HOST = 'http://192.168.1.9:8080'; // <--- altere se necessário
 
 export const api = axios.create({
     baseURL: `${API_HOST}/api`,
@@ -35,4 +35,4 @@ api.interceptors.response.use(
             'Não foi possível completar a requisição. Verifique sua conexão.';
         return Promise.reject({ ...error, message });
     },
-);
+);

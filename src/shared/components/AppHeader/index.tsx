@@ -4,6 +4,7 @@ import {
     Text,
     TouchableOpacity,
     Animated,
+    ScrollView,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 
@@ -82,7 +83,6 @@ export default function AppHeader({
 
     return (
         <View style={styles.container}>
-            {/* Logo PlanPaz visível no estado de scroll */}
             {scrollY && (
                 <Animated.View
                     style={[styles.logoContainer, { opacity: scrolledOpacity }]}
@@ -95,17 +95,26 @@ export default function AppHeader({
                 </Animated.View>
             )}
 
-            {/* Conteúdo normal: Greeting e Sino com fade out conjunto */}
             <Animated.View
                 style={[styles.innerContainer, { opacity: normalOpacity }]}
                 pointerEvents={isScrolled ? 'none' : 'auto'}
             >
-                <View>
-                    <Text style={styles.title}>
-                        {userName
-                            ? `Olá, ${userName}!`
-                            : title}
-                    </Text>
+                <View style={styles.titleContainer}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        bounces={false}
+                        contentContainerStyle={styles.titleScrollContent}
+                    >
+                        <Text
+                            style={styles.title}
+                            numberOfLines={1}
+                        >
+                            {userName
+                                ? `Olá, ${userName}!`
+                                : title}
+                        </Text>
+                    </ScrollView>
                 </View>
 
                 <Animated.View
@@ -146,7 +155,6 @@ export default function AppHeader({
                 </Animated.View>
             </Animated.View>
 
-            {/* Efeito de esmaecimento/fade inferior durante o scroll */}
             {scrollY && (
                 <Animated.View
                     style={[styles.fadeBottom, { opacity: scrolledOpacity }]}
@@ -154,12 +162,33 @@ export default function AppHeader({
                 >
                     <Svg width="100%" height="100%">
                         <Defs>
-                            <LinearGradient id="headerFade" x1="0" y1="0" x2="0" y2="1">
-                                <Stop offset="0" stopColor={colors.background} stopOpacity="1" />
-                                <Stop offset="1" stopColor={colors.background} stopOpacity="0" />
+                            <LinearGradient
+                                id="headerFade"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <Stop
+                                    offset="0"
+                                    stopColor={colors.background}
+                                    stopOpacity="1"
+                                />
+                                <Stop
+                                    offset="1"
+                                    stopColor={colors.background}
+                                    stopOpacity="0"
+                                />
                             </LinearGradient>
                         </Defs>
-                        <Rect x="0" y="0" width="100%" height="100%" fill="url(#headerFade)" />
+
+                        <Rect
+                            x="0"
+                            y="0"
+                            width="100%"
+                            height="100%"
+                            fill="url(#headerFade)"
+                        />
                     </Svg>
                 </Animated.View>
             )}

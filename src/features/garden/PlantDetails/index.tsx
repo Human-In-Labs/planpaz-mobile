@@ -1,14 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    View,
-    Text,
+    Alert,
+    Dimensions,
     Image,
     ScrollView,
+    Text,
     TouchableOpacity,
-    Dimensions,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { GardenStackParamList } from '../../../navigation/types';
 import { scale, verticalScale } from '../../../shared/theme/scale';
@@ -20,8 +21,11 @@ import { AppIcons } from '../../../shared/constants/appIcons';
 import {
     buscarPlantaDoJardim,
     buscarStagesDaEspecie,
+    getProximasRegas,
+    regarPlanta,
     GardenPlant,
     PlantStage,
+    WateringReminder,
 } from '../../../shared/api';
 import { styles } from './styles';
 
@@ -31,6 +35,21 @@ type NavigationProp = NativeStackNavigationProp<
 >;
 
 type RouteType = RouteProp<GardenStackParamList, 'PlantDetails'>;
+
+const CARE_IMAGES: Record<string, any> = {
+    rega: require('../../../assets/images/shower.png'),
+    poda: require('../../../assets/images/scissor.png'),
+    substrato: require('../../../assets/images/grow-plant.png'),
+};
+
+interface CareActionItem {
+    id: string;
+    type: 'rega' | 'poda' | 'substrato';
+    title: string;
+    status: string;
+    isOverdue: boolean;
+    completed: boolean;
+}
 
 const CARE_GUIDE = {
     solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com boa retenção de umidade.',
@@ -44,6 +63,35 @@ const MOCK_STATS = {
     cultivationDays: 30,
 };
 
+const formatWateringStatus = (
+    reminders: WateringReminder[],
+    lastWatering?: string,
+) => {
+    if (reminders && reminders.length > 0) {
+        const next = reminders[0];
+        const statusText = next.time || next.date || 'Agendada';
+        const isOverdue =
+            next.status?.toLowerCase().includes('atrasad') ||
+            next.status?.toLowerCase().includes('overdue');
+        return { status: statusText, isOverdue };
+    }
+
+    if (lastWatering) {
+        const date = new Date(lastWatering);
+        if (!isNaN(date.getTime())) {
+            const isToday = date.toDateString() === new Date().toDateString();
+            return {
+                status: isToday
+                    ? 'Regado hoje!'
+                    : `Última: ${date.toLocaleDateString('pt-BR')}`,
+                isOverdue: false,
+            };
+        }
+    }
+
+    return { status: 'Agendada', isOverdue: false };
+};
+
 export default function PlantDetailsScreen() {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteType>();
@@ -54,6 +102,33 @@ export default function PlantDetailsScreen() {
 
     const [plant, setPlant] = useState<GardenPlant | null>(null);
     const [stages, setStages] = useState<PlantStage[]>([]);
+    const [isWatering, setIsWatering] = useState(false);
+    const [actions, setActions] = useState<CareActionItem[]>([
+        {
+            id: 'c1',
+            type: 'rega',
+            title: 'Rega regular',
+            status: 'Agendada',
+            isOverdue: false,
+            completed: false,
+        },
+        {
+            id: 'c2',
+            type: 'poda',
+            title: 'Poda de manutenção',
+            status: 'Hoje',
+            isOverdue: false,
+            completed: false,
+        },
+        {
+            id: 'c3',
+            type: 'substrato',
+            title: 'Adubação e substrato',
+            status: 'Em dia',
+            isOverdue: false,
+            completed: false,
+        },
+    ]);
 
     const screenWidth = Dimensions.get('window').width;
     const stageCardWidth = scale(179);
@@ -65,50 +140,130 @@ export default function PlantDetailsScreen() {
         (contentWidth - stageCardWidth) / 2,
     );
 
-    useEffect(() => {
+    const carregarDados = useCallback(async () => {
         if (!plantId) {
             return;
         }
 
-        let isMounted = true;
+        try {
+            const gardenPlant = await buscarPlantaDoJardim(plantId);
+            setPlant(gardenPlant);
 
-        const carregarDados = async () => {
+            if (gardenPlant.plant?.id) {
+                const plantStages = await buscarStagesDaEspecie(
+                    gardenPlant.plant.id,
+                );
+                setStages(plantStages || []);
+            } else {
+                setStages([]);
+            }
+
             try {
-                const gardenPlant = await buscarPlantaDoJardim(plantId);
+                const nextWaterings = await getProximasRegas(plantId);
+                const { status, isOverdue } = formatWateringStatus(
+                    nextWaterings,
+                    gardenPlant.lastWatering,
+                );
+                setActions(prev =>
+                    prev.map(a => {
+                        if (a.type === 'rega') {
+                            return {
+                                ...a,
+                                status,
+                                isOverdue,
+                                completed: status === 'Regado hoje!',
+                            };
+                        }
+                        return a;
+                    }),
+                );
+            } catch (err) {
+                console.error('Erro ao buscar próximas regas:', err);
+                const { status, isOverdue } = formatWateringStatus(
+                    [],
+                    gardenPlant.lastWatering,
+                );
+                setActions(prev =>
+                    prev.map(a => {
+                        if (a.type === 'rega') {
+                            return {
+                                ...a,
+                                status,
+                                isOverdue,
+                            };
+                        }
+                        return a;
+                    }),
+                );
+            }
+        } catch (error) {
+            console.error('Erro ao carregar planta:', error);
+            setPlant(null);
+            setStages([]);
+        }
+    }, [plantId]);
 
-                if (!isMounted) {
-                    return;
+    useFocusEffect(
+        useCallback(() => {
+            carregarDados();
+        }, [carregarDados]),
+    );
+
+    const handleToggleCareAction = async (actionId: string) => {
+        const targetAction = actions.find(a => a.id === actionId);
+        if (!targetAction) return;
+
+        if (targetAction.type === 'rega') {
+            if (isWatering || !plant?.id) return;
+
+            try {
+                setIsWatering(true);
+                await regarPlanta(plant.id);
+
+                setActions(prev =>
+                    prev.map(a => {
+                        if (a.id === actionId) {
+                            return {
+                                ...a,
+                                completed: true,
+                                status: 'Regado hoje!',
+                                isOverdue: false,
+                            };
+                        }
+                        return a;
+                    }),
+                );
+
+                const updatedPlant = await buscarPlantaDoJardim(plant.id);
+                if (updatedPlant) {
+                    setPlant(updatedPlant);
                 }
 
-                setPlant(gardenPlant);
-
-                if (gardenPlant.plant?.id) {
-                    const plantStages = await buscarStagesDaEspecie(
-                        gardenPlant.plant.id,
-                    );
-
-                    if (isMounted) {
-                        setStages(plantStages || []);
-                    }
-                } else {
-                    setStages([]);
+                try {
+                    await getProximasRegas(plant.id);
+                } catch (e) {
+                    console.error('Erro ao atualizar próximas regas:', e);
                 }
             } catch (error) {
-                console.error('Erro ao carregar planta:', error);
-
-                if (isMounted) {
-                    setPlant(null);
-                    setStages([]);
-                }
+                console.error('Erro ao regar planta:', error);
+                Alert.alert('Erro', 'Não foi possível registrar a rega.');
+            } finally {
+                setIsWatering(false);
             }
-        };
-
-        carregarDados();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [plantId]);
+        } else {
+            setActions(prev =>
+                prev.map(a => {
+                    if (a.id === actionId) {
+                        return {
+                            ...a,
+                            completed: !a.completed,
+                        };
+                    }
+                    return a;
+                }),
+            );
+        }
+    };
 
     useEffect(() => {
         if (!stages.length) {
@@ -172,14 +327,7 @@ export default function PlantDetailsScreen() {
                     onBackPress={() => navigation.goBack()}
                 />
 
-                <View
-                    style={{
-                        flex: 1,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        paddingHorizontal: scale(16),
-                    }}
-                >
+                <View style={styles.emptyContainer}>
                     <Text style={styles.sectionHeader}>
                         Não foi possível carregar a planta.
                     </Text>
@@ -422,6 +570,84 @@ export default function PlantDetailsScreen() {
                             {CARE_GUIDE.poda}
                         </Text>
                     </View>
+                </View>
+
+                <View style={styles.careActionsSection}>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.careActionsList}
+                    >
+                        {actions.map(action => {
+                            const isDone = action.completed;
+                            const btnColor = isDone
+                                ? '#D2E6DD'
+                                : action.isOverdue
+                                    ? '#8B0000'
+                                    : colors.primary;
+
+                            const textColor = action.isOverdue
+                                ? '#8B0000'
+                                : colors.primary;
+
+                            return (
+                                <View key={action.id} style={styles.careCard}>
+                                    <View style={styles.careIconContainer}>
+                                        <Image
+                                            source={
+                                                CARE_IMAGES[action.type] ||
+                                                CARE_IMAGES.substrato
+                                            }
+                                            style={styles.careIllustration}
+                                            resizeMode="contain"
+                                        />
+                                    </View>
+
+                                    <View style={styles.careInfoRow}>
+                                        <Text
+                                            style={[
+                                                styles.careTitle,
+                                                { color: textColor },
+                                            ]}
+                                        >
+                                            {action.title}
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.careStatus,
+                                                { color: colors.black },
+                                            ]}
+                                        >
+                                            {isDone ? 'Feito' : action.status}
+                                        </Text>
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.careButton,
+                                            { backgroundColor: btnColor },
+                                        ]}
+                                        activeOpacity={0.8}
+                                        disabled={action.type === 'rega' && isWatering}
+                                        onPress={() =>
+                                            handleToggleCareAction(action.id)
+                                        }
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.careButtonText,
+                                                isDone && {
+                                                    color: colors.primary,
+                                                },
+                                            ]}
+                                        >
+                                            {isDone ? 'Concluído' : 'Concluir'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
                 </View>
             </ScrollView>
 
