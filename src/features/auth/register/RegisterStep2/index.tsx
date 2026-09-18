@@ -1,0 +1,178 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../../../../navigation/types';
+import { colors } from '../../../../shared/theme';
+import { register } from '../../../../shared/api';
+import { ErrorPopup } from '../../errors';
+import { styles } from './styles';
+
+type RegisterStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'RegisterStep2'>;
+type RegisterStep2RouteProp = RouteProp<RootStackParamList, 'RegisterStep2'>;
+
+export default function RegisterStep2Screen() {
+  const navigation = useNavigation<RegisterStep2NavigationProp>();
+  const route = useRoute<RegisterStep2RouteProp>();
+  const { email, password } = route.params;
+
+  const [firstName, setFirstName] = useState('');
+  const [username, setUsername] = useState('');
+  const [firstNameError, setFirstNameError] = useState(false);
+  const [usernameError, setUsernameError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    const cleanFirstName = firstName.trim();
+    const cleanUsername = username.trim();
+
+    if (!cleanFirstName && !cleanUsername) {
+      setFirstNameError(true);
+      setUsernameError(true);
+      setErrorMessage('Preencha todos os campos');
+      return;
+    }
+
+    if (!cleanFirstName) {
+      setFirstNameError(true);
+      setUsernameError(false);
+      setErrorMessage('Informe seu nome');
+      return;
+    }
+
+    if (!cleanUsername) {
+      setFirstNameError(false);
+      setUsernameError(true);
+      setErrorMessage('Informe seu nome de usuário');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await register({
+        name: cleanFirstName,
+        username: cleanUsername,
+        email,
+        password,
+      });
+
+      Alert.alert(
+        'Cadastro realizado!',
+        'Sua conta foi criada com sucesso.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ],
+      );
+    } catch (error: any) {
+      console.log('[REGISTER] Erro completo no cadastro:', error);
+      if (error?.response) {
+        console.log('[REGISTER] Status de erro do servidor:', error.response.status, error.response.data);
+        const serverMsg =
+          error.response.data?.message ||
+          error.response.data?.error ||
+          (error.response.status === 400 ? 'Este e-mail ou usuário já está cadastrado' : 'Não foi possível realizar o cadastro');
+        setErrorMessage(serverMsg);
+      } else if (error?.request) {
+        console.log('[REGISTER] Sem resposta do servidor:', error.request);
+        setErrorMessage('Não foi possível conectar ao servidor. Verifique sua conexão ou se a API está online.');
+      } else {
+        console.log('[REGISTER] Erro de configuração:', error?.message);
+        setErrorMessage(error?.customMessage || error?.message || 'Não foi possível realizar o cadastro');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.header}>
+          <Image
+            source={require('../../../../assets/images/auth-banner.png')}
+            resizeMode="cover"
+            style={styles.banner}
+          />
+        </View>
+
+        <View style={styles.main}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Cadastrar</Text>
+
+            <TextInput
+              style={[styles.input, firstNameError && styles.inputError]}
+              placeholder="Primeiro nome"
+              placeholderTextColor={firstNameError && !firstName ? colors.warning : colors.black}
+              value={firstName}
+              onChangeText={(text) => {
+                setFirstName(text);
+                if (firstNameError) setFirstNameError(false);
+                if (errorMessage) setErrorMessage('');
+              }}
+              autoCapitalize="words"
+              autoCorrect={false}
+            />
+
+            <TextInput
+              style={[styles.input, usernameError && styles.inputError]}
+              placeholder="Nome de usuário"
+              placeholderTextColor={usernameError && !username ? colors.warning : colors.black}
+              value={username}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (usernameError) setUsernameError(false);
+                if (errorMessage) setErrorMessage('');
+              }}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              disabled={loading}
+            >
+              <Text style={styles.backButtonText}>Voltar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.registerButtonText}>
+                {loading ? 'Cadastrando...' : 'Cadastrar'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+
+      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
+    </KeyboardAvoidingView>
+  );
+}
