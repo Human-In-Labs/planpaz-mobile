@@ -4,7 +4,7 @@ import { scale, verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
-        width: scale(98),
+        width: scale(105),
         height: verticalScale(85),
         borderRadius: 16,
         borderWidth: 1,

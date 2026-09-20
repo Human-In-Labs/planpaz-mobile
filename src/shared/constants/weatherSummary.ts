@@ -5,11 +5,11 @@ export const WeatherSummary = {
         icon: AppIcons.DROPLET,
     },
 
-    UV: {
-        icon: AppIcons.SUN,
+    RAIN: {
+        icon: AppIcons.RAIN,
     },
 
-    WIND: {
-        icon: AppIcons.WIND,
+    TEMPERATURE: {
+        icon: AppIcons.TEMPERATURE,
     },
 } as const;

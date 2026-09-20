@@ -84,7 +84,7 @@ export default function AchievementsScreen() {
                     <LoadingSpinner />
                 ) : achievements.length === 0 ? (
                     <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-                        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                        <Text style={{ color: colors.primaryDark, fontSize: 14 }}>
                             Nenhuma conquista cadastrada.
                         </Text>
                     </View>

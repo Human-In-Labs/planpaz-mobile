@@ -52,12 +52,12 @@ export const weatherService = {
                 },
                 {
                     id: 'rainProb',
-                    icon: WeatherSummary.UV.icon,
-                    value: `${rainPercent}% Chuva`,
+                    icon: WeatherSummary.RAIN.icon,
+                    value: `${rainPercent}%`,
                 },
                 {
                     id: 'tempRange',
-                    icon: WeatherSummary.WIND.icon,
+                    icon: WeatherSummary.TEMPERATURE.icon,
                     value: `${Math.round(currentWeather.tempMin ?? 0)}° / ${Math.round(currentWeather.tempMax ?? 0)}°C`,
                 },
             ];

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getToken, removeToken, removeUser, removeUserId } from '../services/storage';
 
 // Host da API – ajuste para o IP/porta da sua máquina de desenvolvimento.
-const API_HOST = 'https://debunk-quail-revert.ngrok-free.dev';
+const API_HOST = 'http://localhost:8080';
 
 export const api = axios.create({
     baseURL: `${API_HOST}/api`,

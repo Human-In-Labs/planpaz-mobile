@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontFamily: fonts.poppinsBold,
         color: colors.black,
         marginRight: scale(6),

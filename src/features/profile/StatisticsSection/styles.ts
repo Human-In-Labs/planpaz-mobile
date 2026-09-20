@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
     },
 
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontFamily: fonts.poppinsBold,
         color: colors.black,
     },
@@ -26,5 +26,7 @@ export const styles = StyleSheet.create({
         flexWrap: 'wrap',
         rowGap: verticalScale(16),
         columnGap: scale(17),
+        width: scale(360),
+        alignSelf: 'center'
     },
 });

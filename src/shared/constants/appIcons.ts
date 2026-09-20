@@ -63,6 +63,8 @@ export const AppIcons = {
     BRIEFCASE: 'briefcase',
     LIST_DASHES: 'listDashes',
     RULER: 'ruler',
+    RAIN: 'cloud-rain',
+    TEMPERATURE: 'thermometer',
 
     // Social
     THUMBS_UP: 'thumbsUp',

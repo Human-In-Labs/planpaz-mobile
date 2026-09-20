@@ -48,13 +48,13 @@ export const weatherSummaryMock: WeatherSummaryCardData[] = [
         value: '68%',
     },
     {
-        id: 'uv',
-        icon: WeatherSummary.UV.icon,
-        value: '6 UV',
+        id: 'rain',
+        icon: WeatherSummary.RAIN.icon,
+        value: '10%',
     },
     {
-        id: 'wind',
-        icon: WeatherSummary.WIND.icon,
-        value: '14 km/h',
+        id: 'temperature',
+        icon: WeatherSummary.TEMPERATURE.icon,
+        value: '22° / 28°C',
     },
 ];

@@ -91,6 +91,7 @@ import ChatCircle from '../../../assets/icons/chat-circle.svg';
 import ThermometerSimple from '../../../assets/icons/thermometer-simple.svg';
 import HouseSimple from '../../../assets/icons/house-simple.svg';
 import Warning from '../../../assets/icons/warning.svg';
+import CloudRain from '../../../assets/icons/cloud-rain.svg';
 
 import { SvgProps } from 'react-native-svg';
 
@@ -188,6 +189,9 @@ export const icons = {
     chatCircle: ChatCircle,
 
     thermometerSimple: ThermometerSimple,
+    thermometer: ThermometerSimple,
+    cloudRain: CloudRain,
+    'cloud-rain': CloudRain,
     houseSimple: HouseSimple,
     warning: Warning,
 } satisfies Record<string, SvgIcon>;
