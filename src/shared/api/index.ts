@@ -6,3 +6,4 @@ export * from './garden';
 export * from './user';
 export * from './weather';
 export * from './achievement';
+export * from './location';

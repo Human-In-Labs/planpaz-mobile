@@ -50,6 +50,7 @@ export default function ProfileScreen() {
         following: 0,
     });
 
+
     useFocusEffect(
         useCallback(() => {
             async function fetchUser() {

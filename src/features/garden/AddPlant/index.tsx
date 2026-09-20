@@ -199,12 +199,12 @@ export default function AddPlantScreen() {
             if (res && res.message) {
                 Alert.alert('Sucesso', res.message);
             }
-            navigation.navigate('MainTabs', {
+            (navigation as any).navigate('MainTabs', {
                 screen: 'Garden',
                 params: {
                     screen: 'GardenMain',
                 },
-            } as any);
+            });
         } catch (error: any) {
             console.error(
                 'Erro ao adicionar planta ao jardim:',

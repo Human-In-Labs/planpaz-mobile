@@ -1,23 +1,36 @@
+import React, {
+    useCallback,
+    useRef,
+    useState,
+} from 'react';
+
+import {
+    Animated,
+    View,
+} from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+
 import { styles } from './styles';
 import AppHeader from '../../shared/components/AppHeader';
 import WeatherSection from './WeatherSection';
 import ReminderSection from './ReminderSection';
-import { Animated, View } from 'react-native';
 import ActivitySection from './ActivitySection';
+
 import LocationOverlay from './overlays/Location';
 import NotificationOverlay from './overlays/Notification';
-import React, { useRef, useState, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+
 import { getUserSettings } from '../../shared/api/user';
 import { getUser } from '../../shared/services/storage';
+
 import { LocationData } from '../../shared/types/location';
 import { LocationSearchData } from '../../shared/types/locationSearch';
 
 const initialLocation: LocationData = {
     id: '1',
-    city: 'São Paulo',
     neighborhood: 'Centro',
+    city: 'São Paulo',
     state: 'SP',
 };
 
@@ -47,8 +60,10 @@ export default function HomeScreen() {
             if (settings?.cityName && settings.cityName.trim()) {
                 setLocation(prev => ({
                     ...prev,
-                    city: settings.cityName!,
                     neighborhood: settings.cityName!,
+                    city: settings.cityName!,
+                    latitude: settings.latitude ?? prev.latitude,
+                    longitude: settings.longitude ?? prev.longitude,
                 }));
             }
         } catch (error) {
@@ -65,9 +80,12 @@ export default function HomeScreen() {
     const handleSelectLocation = (selected: LocationSearchData) => {
         setLocation({
             id: selected.id,
-            city: selected.city,
             neighborhood: selected.neighborhood || selected.city,
+            city: selected.city,
             state: selected.state || 'BR',
+            country: selected.country,
+            latitude: selected.latitude,
+            longitude: selected.longitude,
         });
     };
 
@@ -81,9 +99,7 @@ export default function HomeScreen() {
                     hasNotifications={activeOverlay === null}
                     onNotificationPress={() =>
                         setActiveOverlay(prev =>
-                            prev === 'notification'
-                                ? null
-                                : 'notification'
+                            prev === 'notification' ? null : 'notification',
                         )
                     }
                 />
@@ -93,8 +109,18 @@ export default function HomeScreen() {
                     showsVerticalScrollIndicator={false}
                     scrollEventThrottle={16}
                     onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
+                        [
+                            {
+                                nativeEvent: {
+                                    contentOffset: {
+                                        y: scrollY,
+                                    },
+                                },
+                            },
+                        ],
+                        {
+                            useNativeDriver: false,
+                        },
                     )}
                 >
                     <WeatherSection
@@ -102,9 +128,7 @@ export default function HomeScreen() {
                         locationVisible={activeOverlay === 'location'}
                         onLocationPress={() =>
                             setActiveOverlay(prev =>
-                                prev === 'location'
-                                    ? null
-                                    : 'location'
+                                prev === 'location' ? null : 'location',
                             )
                         }
                     />

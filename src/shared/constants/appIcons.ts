@@ -64,6 +64,7 @@ export const AppIcons = {
     LIST_DASHES: 'listDashes',
     RULER: 'ruler',
     RAIN: 'cloud-rain',
+    CLOUD_RAIN: 'cloudRain',
     TEMPERATURE: 'thermometer',
 
     // Social

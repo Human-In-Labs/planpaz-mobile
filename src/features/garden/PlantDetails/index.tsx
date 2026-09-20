@@ -35,6 +35,7 @@ type NavigationProp = NativeStackNavigationProp<
     'PlantDetails'
 >;
 
+
 type RouteType = RouteProp<GardenStackParamList, 'PlantDetails'>;
 
 const CARE_IMAGES: Record<string, any> = {
@@ -218,7 +219,6 @@ export default function PlantDetailsScreen() {
             if (isWatering || !plant?.id) return;
 
             try {
-                setIsWatering(true);
                 const res = await regarPlanta(plant.id);
 
                 if (res && res.message) {
@@ -296,16 +296,16 @@ export default function PlantDetailsScreen() {
 
     const getTagIcon = (tag: string) => {
         const upper = tag.toUpperCase();
-        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER'].includes(upper)) {
+        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER', 'SOL', 'LUZ'].some(k => upper.includes(k))) {
             return AppIcons.SUN;
         }
-        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE'].includes(upper)) {
+        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE', 'ÁGUA', 'REGA'].some(k => upper.includes(k))) {
             return AppIcons.DROPLET;
         }
-        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE'].includes(upper)) {
+        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE', 'PORTE', 'TAMANHO'].some(k => upper.includes(k))) {
             return AppIcons.RULER;
         }
-        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].includes(upper)) {
+        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].some(k => upper.includes(k))) {
             return AppIcons.BRIEFCASE;
         }
         return AppIcons.LEAF;

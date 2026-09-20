@@ -75,7 +75,9 @@ export default function LoginScreen() {
         password,
       });
 
-      await saveToken(data.token);
+      if (data?.token) {
+        await saveToken(data.token);
+      }
 
       try {
         const userSettings = await getUserSettings();
@@ -118,8 +120,6 @@ export default function LoginScreen() {
       }
     }
   };
-
-
 
   return (
     <KeyboardAvoidingView

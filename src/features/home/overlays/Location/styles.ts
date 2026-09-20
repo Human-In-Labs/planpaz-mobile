@@ -1,24 +1,40 @@
-import { StyleSheet } from 'react-native';
-import { colors, fonts, radius, spacing, } from '../../../../shared/theme';
-import { scale, verticalScale, } from '../../../../shared/theme/scale';
+import {
+    StyleSheet,
+} from 'react-native';
+
+import {
+    colors,
+    radius,
+    spacing,
+    typography,
+} from '../../../../shared/theme';
+
+import {
+    scale,
+    verticalScale,
+} from '../../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
+
     compactContainer: {
         height: verticalScale(73),
         borderRadius: radius.xl,
-        overflow: 'hidden',
     },
 
     expandedContainer: {
         height: verticalScale(369),
         borderRadius: radius.xxl,
-        overflow: 'hidden',
     },
 
     header: {
-        height: verticalScale(73),
-        paddingHorizontal: scale(spacing.md),
-        justifyContent: 'center',
+        paddingTop:
+            verticalScale(spacing.sm),
+
+        paddingHorizontal:
+            scale(spacing.sm),
+
+        paddingBottom:
+            verticalScale(spacing.sm),
     },
 
     searchBar: {
@@ -30,23 +46,28 @@ export const styles = StyleSheet.create({
     },
 
     listContent: {
-        paddingBottom: verticalScale(spacing.xs),
+        paddingHorizontal:
+            scale(spacing.xs),
+
+        paddingBottom:
+            verticalScale(spacing.sm),
     },
 
     item: {
-        height: verticalScale(43),
-        justifyContent: 'center',
-        paddingHorizontal: scale(26),
+        paddingHorizontal:
+            scale(spacing.md),
+
+        paddingVertical:
+            verticalScale(spacing.sm),
     },
 
     itemText: {
-        fontFamily: fonts.interRegular,
-        fontSize: 14,
+        ...typography.bodyMedium,
         color: colors.black,
     },
 
     highlight: {
         color: colors.primary,
-        fontFamily: fonts.interSemiBold,
+        fontWeight: '600',
     },
 });

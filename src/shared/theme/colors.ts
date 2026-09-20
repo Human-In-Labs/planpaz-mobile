@@ -6,6 +6,7 @@ export const colors = {
     warning: '#911000',
     text: '#000000',
     textLight: '#88AB9A',
+    textSecondary: '#88AB9A',
     white: '#FFFFFF',
     black: '#000000',
-}
+};

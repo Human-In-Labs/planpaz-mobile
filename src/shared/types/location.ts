@@ -1,16 +1,22 @@
 export interface LocationData {
     id: string;
+
     neighborhood: string;
+    city: string;
     state: string;
-    city?: string;
+
+    stateCode?: string;
     country?: string;
+    countryCode?: string;
+
     latitude?: number;
     longitude?: number;
 }
 
 export function formatLocation(location: LocationData): string {
-    const cityName = location.city || location.neighborhood;
-    const stateStr = location.state && location.state !== 'BR' ? `, ${location.state}` : '';
-    const countryStr = location.country ? ` • ${location.country}` : ' • BR';
-    return `${cityName}${stateStr}${countryStr}`;
+    if (location.neighborhood && location.neighborhood.trim()) {
+        return `${location.neighborhood} - ${location.stateCode ?? location.state}`;
+    }
+
+    return `${location.city} - ${location.stateCode ?? location.state}`;
 }

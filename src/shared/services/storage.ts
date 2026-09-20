@@ -38,7 +38,7 @@ async function safeRemoveItem(key: string): Promise<void> {
   memoryStore.delete(key);
 }
 
-export async function saveToken(token: string) {
+export async function saveToken(token: string): Promise<void> {
   await safeSetItem(TOKEN_KEY, token);
 }
 
@@ -46,14 +46,14 @@ export async function getToken(): Promise<string | null> {
   return safeGetItem(TOKEN_KEY);
 }
 
-export async function removeToken() {
+export async function removeToken(): Promise<void> {
   memoryUserId = null;
   await safeRemoveItem(TOKEN_KEY);
   await safeRemoveItem(USER_ID_KEY);
   await safeRemoveItem(USER_KEY);
 }
 
-export async function saveUserId(userId: string) {
+export async function saveUserId(userId: string): Promise<void> {
   memoryUserId = userId;
   await safeSetItem(USER_ID_KEY, userId);
 }
@@ -69,7 +69,7 @@ export async function getUserId(): Promise<string | null> {
   return stored;
 }
 
-export async function removeUserId() {
+export async function removeUserId(): Promise<void> {
   memoryUserId = null;
   await safeRemoveItem(USER_ID_KEY);
 }
@@ -79,19 +79,35 @@ export interface StoredUser {
   id?: string;
   name: string;
   username: string;
+  email?: string;
+  bio?: string;
 }
 
-export async function saveUser(user: StoredUser) {
+export async function saveUser(user: StoredUser): Promise<void> {
   await safeSetItem(USER_KEY, JSON.stringify(user));
 }
 
 export async function getUser(): Promise<StoredUser | null> {
   const json = await safeGetItem(USER_KEY);
-  return json ? JSON.parse(json) : null;
+  if (!json) {
+    return null;
+  }
+  try {
+    return JSON.parse(json) as StoredUser;
+  } catch {
+    await removeUser();
+    return null;
+  }
 }
 
-export async function removeUser() {
+export async function removeUser(): Promise<void> {
   await safeRemoveItem(USER_KEY);
+}
+
+export async function clearSession(): Promise<void> {
+  await removeToken();
+  await removeUser();
+  await removeUserId();
 }
 
 export function decodeBase64(input: string): string {
@@ -151,8 +167,9 @@ export async function getCurrentAuthorId(): Promise<string> {
           const potentialId =
             payload.id ||
             payload.userId ||
+            payload.user_id ||
             payload.authorId ||
-            payload.user_id;
+            payload.author_id;
 
           if (isUUID(potentialId)) {
             await saveUserId(potentialId);

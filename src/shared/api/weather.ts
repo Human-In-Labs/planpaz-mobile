@@ -7,14 +7,14 @@ export interface WeatherResponse {
     tempMin: number;
     tempMax: number;
     umidade: number;
-    probabilidadeChuva?: number;
+    probabilidadeChuva?: number | null;
     chovendo: boolean;
-    icone?: string;
+    icone: string | null;
     cidade: string;
     dataHora: string;
 }
 
-export interface ForecastResponse {
+export interface WeatherForecastResponse {
     dataHora?: string;
     horario?: string;
     descricao: string;
@@ -25,12 +25,20 @@ export interface ForecastResponse {
     umidade?: number;
     probabilidadeChuva?: number;
     chovendo?: boolean;
-    icone?: string;
+    icone: string | null;
 }
 
-export async function getCurrentWeather(cidade?: string, lat?: number, lng?: number): Promise<WeatherResponse> {
+// Alias para compatibilidade
+export type ForecastResponse = WeatherForecastResponse;
+
+export async function getCurrentWeather(
+    cidade?: string,
+    lat?: number,
+    lng?: number,
+): Promise<WeatherResponse> {
     const params: Record<string, any> = {};
-    if (lat !== undefined && lng !== undefined) {
+
+    if (typeof lat === 'number' && typeof lng === 'number') {
         params.latitude = lat;
         params.longitude = lng;
     } else if (cidade && cidade.trim().length > 0) {
@@ -43,9 +51,14 @@ export async function getCurrentWeather(cidade?: string, lat?: number, lng?: num
     return response.data;
 }
 
-export async function getWeatherForecast(cidade?: string, lat?: number, lng?: number): Promise<ForecastResponse[]> {
+export async function getWeatherForecast(
+    cidade?: string,
+    lat?: number,
+    lng?: number,
+): Promise<WeatherForecastResponse[]> {
     const params: Record<string, any> = {};
-    if (lat !== undefined && lng !== undefined) {
+
+    if (typeof lat === 'number' && typeof lng === 'number') {
         params.latitude = lat;
         params.longitude = lng;
     } else if (cidade && cidade.trim().length > 0) {
@@ -54,6 +67,6 @@ export async function getWeatherForecast(cidade?: string, lat?: number, lng?: nu
         params.cidade = 'São Paulo';
     }
 
-    const response = await api.get<ForecastResponse[]>('/clima/forecast', { params });
+    const response = await api.get<WeatherForecastResponse[]>('/clima/forecast', { params });
     return response.data || [];
 }
