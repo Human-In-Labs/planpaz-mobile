@@ -1,6 +1,15 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, shadows, typography } from '../../../shared/theme';
-import { scale, verticalScale } from '../../../shared/theme/scale';
+import {
+    colors,
+    radius,
+    shadows,
+    typography,
+} from '../../../shared/theme';
+
+import {
+    scale,
+    verticalScale,
+} from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
@@ -49,7 +58,7 @@ export const styles = StyleSheet.create({
     },
 
     tagText: {
-        ...typography.captionRegular
+        ...typography.captionRegular,
     },
 
     speciesLink: {
@@ -61,7 +70,7 @@ export const styles = StyleSheet.create({
     },
 
     speciesName: {
-        ...typography.h3Primary
+        ...typography.h3Primary,
     },
 
     speciesSearchIcon: {
@@ -172,8 +181,9 @@ export const styles = StyleSheet.create({
     },
 
     statsRow: {
+        width: '100%',
         flexDirection: 'row',
-        gap: scale(16),
+        justifyContent: 'space-between',
     },
 
     // Care Guide Section
@@ -237,7 +247,6 @@ export const styles = StyleSheet.create({
         width: '100%',
         height: verticalScale(13),
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         marginTop: verticalScale(12),
         marginBottom: verticalScale(8),
@@ -245,11 +254,15 @@ export const styles = StyleSheet.create({
     },
 
     careTitle: {
-        ...typography.textMedium
+        ...typography.textMedium,
+        flex: 1,
+        minWidth: 0,
+        marginRight: scale(4),
     },
 
     careStatus: {
-        ...typography.textMedium
+        ...typography.textMedium,
+        flexShrink: 0,
     },
 
     careButton: {

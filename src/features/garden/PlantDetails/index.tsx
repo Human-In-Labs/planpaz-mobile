@@ -610,6 +610,8 @@ export default function PlantDetailsScreen() {
                                                 styles.careTitle,
                                                 { color: textColor },
                                             ]}
+                                            numberOfLines={1}
+                                            ellipsizeMode="tail"
                                         >
                                             {action.title}
                                         </Text>
