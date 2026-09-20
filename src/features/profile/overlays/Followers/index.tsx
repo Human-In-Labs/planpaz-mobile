@@ -84,7 +84,7 @@ export default function FollowersOverlay({
     visible,
     onClose,
     title = 'Meus seguidores',
-    users = followersMock,
+    users = [],
     onOptionsPress,
 }: FollowersOverlayProps) {
     const containerRef = useRef<View>(null);
@@ -162,6 +162,13 @@ export default function FollowersOverlay({
                     style={styles.list}
                     contentContainerStyle={styles.listContent}
                     onScrollBeginDrag={handleCloseSubpopup}
+                    ListEmptyComponent={
+                        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                            <Text style={{ color: '#666666', fontSize: 14 }}>
+                                Nenhum usuário encontrado.
+                            </Text>
+                        </View>
+                    }
                     renderItem={({ item }) => (
                         <FollowerRow
                             item={item}

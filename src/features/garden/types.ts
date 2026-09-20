@@ -44,7 +44,7 @@ export interface CultivatedPlant {
     plantingDate: string;
     tags: string[];
     description: string;
-    careGuide: CareGuide;
+    careGuide: string | CareGuide;
     stats: PlantStats;
     stages: PlantStage[];
     careActions: CareAction[];

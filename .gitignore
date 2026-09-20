@@ -2,6 +2,10 @@
 #
 .DS_Store
 
+docs
+.agents
+scratch
+
 # Xcode
 #
 build/
@@ -73,3 +77,9 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+# Backend ignorado
+planpaz-api/
+
+# Expo & Logs
+.expo/
+*.log

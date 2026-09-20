@@ -80,8 +80,17 @@ import Briefcase from '../../../assets/icons/briefcase.svg';
 import ListDashes from '../../../assets/icons/list-dashes.svg';
 import Ruler from '../../../assets/icons/ruler.svg';
 import PencilSimple from '../../../assets/icons/pencil-simple.svg';
+
+import ThumbsUp from '../../../assets/icons/thumbs-up.svg';
+import ThumbsUpFill from '../../../assets/icons/thumbs-up-fill.svg';
+import ThumbsDown from '../../../assets/icons/thumbs-down.svg';
+import ShareFat from '../../../assets/icons/share-fat.svg';
+import Hash from '../../../assets/icons/hash.svg';
+import ChatCircle from '../../../assets/icons/chat-circle.svg';
+
 import ThermometerSimple from '../../../assets/icons/thermometer-simple.svg';
 import HouseSimple from '../../../assets/icons/house-simple.svg';
+import Warning from '../../../assets/icons/warning.svg';
 
 import { SvgProps } from 'react-native-svg';
 
@@ -170,8 +179,17 @@ export const icons = {
     listDashes: ListDashes,
     ruler: Ruler,
     pencilSimple: PencilSimple,
+
+    thumbsUp: ThumbsUp,
+    thumbsUpFill: ThumbsUpFill,
+    thumbsDown: ThumbsDown,
+    shareFat: ShareFat,
+    hash: Hash,
+    chatCircle: ChatCircle,
+
     thermometerSimple: ThermometerSimple,
     houseSimple: HouseSimple,
+    warning: Warning,
 } satisfies Record<string, SvgIcon>;
 
 export type IconName = keyof typeof icons;

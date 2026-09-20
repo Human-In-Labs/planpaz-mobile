@@ -9,32 +9,32 @@ import { styles } from './styles';
 const defaultStatistics: Statistic[] = [
     {
         id: '1',
-        value: 84984,
+        value: 0,
         label: 'CO² capturado',
         icon: <AppIcon icon={AppIcons.CROSSHAIR} size={22} color="#000000" />,
         isHighlighted: true,
     },
     {
         id: '2',
-        value: 132978,
+        value: 0,
         label: 'EcoScore',
         icon: <AppIcon icon={AppIcons.TREE} size={22} color="#000000" />,
     },
     {
         id: '3',
-        value: 111555,
+        value: 0,
         label: 'Dias no Planpaz',
         icon: <AppIcon icon={AppIcons.CALENDAR_DOTS} size={22} color="#000000" />,
     },
     {
         id: '4',
-        value: 12,
+        value: 0,
         label: 'Posts',
         icon: <AppIcon icon={AppIcons.CHAT} size={22} color="#000000" />,
     },
     {
         id: '5',
-        value: 132978,
+        value: 0,
         label: 'Plantas cultivadas',
         icon: <AppIcon icon={AppIcons.PLANT} size={22} color="#000000" />,
     },

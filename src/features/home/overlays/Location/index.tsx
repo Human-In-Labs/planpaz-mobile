@@ -5,6 +5,7 @@ import { styles } from './styles';
 import { LocationSearchData } from '../../../../shared/types/locationSearch';
 import { locationService } from '../../../../shared/services/locationService';
 import SearchBar from '../../../../shared/components/SearchBar';
+import { colors } from '../../../../shared/theme';
 
 interface Props {
     visible: boolean;
@@ -13,9 +14,10 @@ interface Props {
 }
 
 function splitHighlight(text: string, search: string) {
-    const index = text
-        .toLowerCase()
-        .indexOf(search.toLowerCase());
+    if (!search) {
+        return { before: text, match: '', after: '' };
+    }
+    const index = text.toLowerCase().indexOf(search.toLowerCase());
 
     if (index === -1) {
         return {
@@ -27,38 +29,31 @@ function splitHighlight(text: string, search: string) {
 
     return {
         before: text.substring(0, index),
-        match: text.substring(
-            index,
-            index + search.length,
-        ),
-        after: text.substring(
-            index + search.length,
-        ),
+        match: text.substring(index, index + search.length),
+        after: text.substring(index + search.length),
     };
 }
 
 export default function LocationOverlay({ visible, onClose, onSelect }: Props) {
-
     const [search, setSearch] = useState('');
     const [locations, setLocations] = useState<LocationSearchData[]>([]);
 
     useEffect(() => {
-
         async function loadLocations() {
-
             if (!search.trim()) {
-                setLocations([]);
+                const initialList = await locationService.getAll();
+                setLocations(initialList);
                 return;
             }
 
             const data = await locationService.search(search);
             setLocations(data);
-
         }
 
-        loadLocations();
-
-    }, [search]);
+        if (visible) {
+            loadLocations();
+        }
+    }, [search, visible]);
 
     const hasResults = locations.length > 0;
     const containerStyle = hasResults ? styles.expandedContainer : styles.compactContainer;
@@ -73,7 +68,7 @@ export default function LocationOverlay({ visible, onClose, onSelect }: Props) {
                 <SearchBar
                     value={search}
                     onChangeText={setSearch}
-                    placeholder="Pesquisar uma cidade ou região"
+                    placeholder="Ex: Curitiba, SP, Sobral..."
                     placeholderTextColor="rgba(17, 86, 52, 0.5)"
                     style={styles.searchBar}
                 />
@@ -83,9 +78,8 @@ export default function LocationOverlay({ visible, onClose, onSelect }: Props) {
                     data={locations}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => {
-                        const neighborhood = splitHighlight(item.neighborhood, search);
                         const city = splitHighlight(item.city, search);
-                        const state = splitHighlight(item.state, search);
+                        const stateStr = item.state ? item.state.toUpperCase() : 'BR';
 
                         return (
                             <Pressable
@@ -96,23 +90,20 @@ export default function LocationOverlay({ visible, onClose, onSelect }: Props) {
                                 }}
                             >
                                 <Text style={styles.itemText}>
-                                    {neighborhood.before}
-                                    <Text style={styles.highlight}>
-                                        {neighborhood.match}
-                                    </Text>
-                                    {neighborhood.after}
-                                    {', '}
                                     {city.before}
                                     <Text style={styles.highlight}>
                                         {city.match}
                                     </Text>
                                     {city.after}
-                                    {' - '}
-                                    {state.before}
-                                    <Text style={styles.highlight}>
-                                        {state.match}
+                                    {stateStr !== 'BR' ? (
+                                        <Text style={{ fontWeight: '700', color: colors.primary }}>
+                                            {`, ${stateStr}`}
+                                        </Text>
+                                    ) : null}
+                                    {' • '}
+                                    <Text style={{ color: 'rgba(0,0,0,0.5)', fontSize: 13 }}>
+                                        Brasil
                                     </Text>
-                                    {state.after}
                                 </Text>
                             </Pressable>
                         );

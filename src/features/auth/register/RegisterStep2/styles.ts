@@ -12,6 +12,10 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
 
+  scrollContent: {
+    flexGrow: 1,
+  },
+
   header: {
     overflow: 'hidden',
     borderBottomLeftRadius: radius.xxl,
@@ -29,7 +33,7 @@ export const styles = StyleSheet.create({
   },
 
   content: {
-    paddingTop: verticalScale(82),
+    paddingTop: verticalScale(36),
   },
 
   title: {

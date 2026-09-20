@@ -3,4 +3,5 @@ export interface LocationSearchData {
     neighborhood: string;
     city: string;
     state: string;
+    country?: string;
 }

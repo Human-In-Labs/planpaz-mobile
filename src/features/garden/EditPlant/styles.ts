@@ -92,4 +92,11 @@ export const styles = StyleSheet.create({
         color: colors.black,
         ...shadows.small,
     },
+
+    errorContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: scale(16),
+    },
 });

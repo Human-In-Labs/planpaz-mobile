@@ -29,7 +29,7 @@ export interface Species {
 
     description?: string;
 
-    careGuide?: {
+    careGuide?: string | {
         solo: string;
         rega: string;
         poda?: string;

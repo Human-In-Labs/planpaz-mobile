@@ -5,6 +5,7 @@ import { colors } from '../../../shared/theme';
 import { styles } from './styles';
 import { SpeciesCardProps } from './types';
 import { AppIcons } from '../../../shared/constants/appIcons';
+import { translateTagToPT } from '../../../shared/utils/tagMapper';
 
 export default function SpeciesCard({
     image,
@@ -15,17 +16,17 @@ export default function SpeciesCard({
     onAddPress,
 }: SpeciesCardProps) {
     const getTagIcon = (tag: string) => {
-        const lower = tag.toLowerCase();
-        if (lower.includes('baixa') || lower.includes('sol') || lower.includes('luz')) {
+        const upper = tag.toUpperCase();
+        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER'].includes(upper)) {
             return AppIcons.SUN;
         }
-        if (lower.includes('média') || lower.includes('água') || lower.includes('rega')) {
+        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE'].includes(upper)) {
             return AppIcons.DROPLET;
         }
-        if (lower.includes('pequena') || lower.includes('porte') || lower.includes('tamanho')) {
+        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE'].includes(upper)) {
             return AppIcons.RULER;
         }
-        if (lower.includes('difícil') || lower.includes('fácil') || lower.includes('dificuldade')) {
+        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].includes(upper)) {
             return AppIcons.BRIEFCASE;
         }
         return AppIcons.LEAF;
@@ -45,7 +46,7 @@ export default function SpeciesCard({
                 />
                 {isRecommended && (
                     <View style={styles.recommendedBadge}>
-                        <Text style={styles.recommendedText}>Recomendada</Text>
+                        <Text style={styles.recommendedText}>Recomendado para você</Text>
                     </View>
                 )}
             </View>
@@ -64,16 +65,19 @@ export default function SpeciesCard({
                 </View>
 
                 <View style={styles.tagsRow}>
-                    {tags.map((tag, idx) => (
-                        <View key={idx} style={styles.tagBadge}>
-                            <AppIcon
-                                icon={getTagIcon(tag)}
-                                size={10}
-                                color={colors.black}
-                            />
-                            <Text style={styles.tagText}>{tag}</Text>
-                        </View>
-                    ))}
+                    {tags.map((tag, idx) => {
+                        const labelPT = translateTagToPT(tag);
+                        return (
+                            <View key={`${tag}-${idx}`} style={styles.tagBadge}>
+                                <AppIcon
+                                    icon={getTagIcon(tag)}
+                                    size={10}
+                                    color={colors.black}
+                                />
+                                <Text style={styles.tagText}>{labelPT}</Text>
+                            </View>
+                        );
+                    })}
                 </View>
 
                 <TouchableOpacity

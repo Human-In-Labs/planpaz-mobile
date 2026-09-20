@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { styles } from './styles';
 import WeatherPreviewCard from './WeatherCard';
 import { WeatherSectionProps } from './types';
@@ -24,17 +24,38 @@ export default function WeatherSection({
 }: WeatherSectionProps) {
     const [weatherData, setWeatherData] = useState<WeatherCardData[]>([]);
     const [weatherSummary, setWeatherSummary] = useState<WeatherSummaryCardData[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [errorMsg, setErrorMsg] = useState<string>('');
+
+    const targetCity = location.city || location.neighborhood || 'São Paulo';
 
     useEffect(() => {
+        let isMounted = true;
         async function loadWeather() {
-            const forecast = await weatherService.getForecast();
-            const summary = await weatherService.getSummary();
+            setLoading(true);
+            setErrorMsg('');
+            try {
+                const forecast = await weatherService.getForecast(targetCity, location.latitude, location.longitude);
+                const { summaryCards } = await weatherService.getSummary(targetCity, location.latitude, location.longitude);
 
-            setWeatherData(forecast);
-            setWeatherSummary(summary);
+                if (isMounted) {
+                    setWeatherData(forecast);
+                    setWeatherSummary(summaryCards);
+                }
+            } catch (err: any) {
+                console.error('[WEATHER_SECTION] Erro:', err);
+                if (isMounted) {
+                    setErrorMsg('Erro ao carregar clima');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
         }
         loadWeather();
-    }, []);
+        return () => { isMounted = false; };
+    }, [targetCity, location.latitude, location.longitude]);
 
     return (
         <View style={styles.container}>
@@ -46,6 +67,7 @@ export default function WeatherSection({
                 <TouchableOpacity
                     style={styles.locationButton}
                     onPress={onLocationPress}
+                    activeOpacity={0.7}
                 >
                     <View style={styles.locationButtonContainer}>
                         <AppIcon
@@ -67,39 +89,52 @@ export default function WeatherSection({
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                horizontal
-                data={weatherData}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <WeatherPreviewCard weather={item} />
-                )}
-                ItemSeparatorComponent={Separator}
-                contentContainerStyle={styles.listContent}
-                showsHorizontalScrollIndicator={false}
-            />
-
-            <View style={styles.summaryContainer}>
-                {weatherSummary.map((item) => (
-                    <View
-                        key={item.id}
-                        style={styles.summaryCard}
-                    >
-                        <AppIcon
-                            icon={item.icon}
-                            size={16}
-                            color={colors.black}
+            {loading ? (
+                <View style={{ paddingVertical: 24, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+            ) : errorMsg ? (
+                <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+                    <Text style={{ color: colors.warning, fontSize: 14 }}>{errorMsg}</Text>
+                </View>
+            ) : (
+                <>
+                    {weatherData.length > 0 && (
+                        <FlatList
+                            horizontal
+                            data={weatherData}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <WeatherPreviewCard weather={item} />
+                            )}
+                            ItemSeparatorComponent={Separator}
+                            contentContainerStyle={styles.listContent}
+                            showsHorizontalScrollIndicator={false}
                         />
+                    )}
 
-                        <View style={styles.summaryCardContent}>
-                            <Text style={styles.summaryCardValue}>
-                                {item.value}
-                            </Text>
-                        </View>
+                    <View style={styles.summaryContainer}>
+                        {weatherSummary.map((item) => (
+                            <View
+                                key={item.id}
+                                style={styles.summaryCard}
+                            >
+                                <AppIcon
+                                    icon={item.icon}
+                                    size={16}
+                                    color={colors.black}
+                                />
+
+                                <View style={styles.summaryCardContent}>
+                                    <Text style={styles.summaryCardValue}>
+                                        {item.value}
+                                    </Text>
+                                </View>
+                            </View>
+                        ))}
                     </View>
-                ))}
-            </View>
-
+                </>
+            )}
         </View>
     );
 }

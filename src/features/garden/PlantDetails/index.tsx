@@ -1,14 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    View,
-    Text,
+    Alert,
+    Dimensions,
     Image,
     ScrollView,
+    Text,
     TouchableOpacity,
-    Dimensions,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { GardenStackParamList } from '../../../navigation/types';
 import { scale, verticalScale } from '../../../shared/theme/scale';
@@ -17,11 +18,23 @@ import AppIcon from '../../../shared/components/AppIcon';
 import StatisticCard from '../../profile/StatisticCard';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
-import { INITIAL_GARDEN_PLANTS } from '../mock/gardenMock';
-import { CultivatedPlant, CareAction } from '../types';
+import {
+    buscarPlantaDoJardim,
+    buscarStagesDaEspecie,
+    getProximasRegas,
+    regarPlanta,
+    GardenPlant,
+    PlantStage,
+    WateringReminder,
+} from '../../../shared/api';
 import { styles } from './styles';
+import { translateTagToPT } from '../../../shared/utils/tagMapper';
 
-type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'PlantDetails'>;
+type NavigationProp = NativeStackNavigationProp<
+    GardenStackParamList,
+    'PlantDetails'
+>;
+
 type RouteType = RouteProp<GardenStackParamList, 'PlantDetails'>;
 
 const CARE_IMAGES: Record<string, any> = {
@@ -30,27 +43,246 @@ const CARE_IMAGES: Record<string, any> = {
     substrato: require('../../../assets/images/grow-plant.png'),
 };
 
+interface CareActionItem {
+    id: string;
+    type: 'rega' | 'poda' | 'substrato';
+    title: string;
+    status: string;
+    isOverdue: boolean;
+    completed: boolean;
+}
+
+const CARE_GUIDE = {
+    solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com boa retenção de umidade.',
+    rega: 'Regue quando a camada superficial do solo estiver seca, evitando o excesso de água.',
+    poda: 'Realize podas de limpeza e remova folhas secas ou danificadas quando necessário.',
+};
+
+const MOCK_STATS = {
+    co2: 12,
+    ecoScore: 85,
+    cultivationDays: 30,
+};
+
+const formatWateringStatus = (
+    reminders: WateringReminder[],
+    lastWatering?: string,
+) => {
+    if (reminders && reminders.length > 0) {
+        const next = reminders[0];
+        const statusText = next.time || next.date || 'Agendada';
+        const isOverdue =
+            next.status?.toLowerCase().includes('atrasad') ||
+            next.status?.toLowerCase().includes('overdue');
+        return { status: statusText, isOverdue };
+    }
+
+    if (lastWatering) {
+        const date = new Date(lastWatering);
+        if (!isNaN(date.getTime())) {
+            const isToday = date.toDateString() === new Date().toDateString();
+            return {
+                status: isToday
+                    ? 'Regado hoje!'
+                    : `Última: ${date.toLocaleDateString('pt-BR')}`,
+                isOverdue: false,
+            };
+        }
+    }
+
+    return { status: 'Agendada', isOverdue: false };
+};
+
 export default function PlantDetailsScreen() {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteType>();
-    const plantId = route.params?.plantId || '1';
+
+    const plantId = route.params?.plantId;
+
     const stagesScrollRef = useRef<ScrollView>(null);
 
-    const [plant] = useState<CultivatedPlant>(
-        INITIAL_GARDEN_PLANTS.find(p => p.id === plantId) || INITIAL_GARDEN_PLANTS[0]
-    );
+    const [plant, setPlant] = useState<GardenPlant | null>(null);
+    const [stages, setStages] = useState<PlantStage[]>([]);
+    const [isWatering, setIsWatering] = useState(false);
+    const [actions, setActions] = useState<CareActionItem[]>([
+        {
+            id: 'c1',
+            type: 'rega',
+            title: 'Rega regular',
+            status: 'Agendada',
+            isOverdue: false,
+            completed: false,
+        },
+        {
+            id: 'c2',
+            type: 'poda',
+            title: 'Poda de manutenção',
+            status: 'Hoje',
+            isOverdue: false,
+            completed: false,
+        },
+        {
+            id: 'c3',
+            type: 'substrato',
+            title: 'Adubação e substrato',
+            status: 'Em dia',
+            isOverdue: false,
+            completed: false,
+        },
+    ]);
 
-    const [actions, setActions] = useState<CareAction[]>(plant.careActions);
-
-    const currentStageIndex = plant.stages.findIndex(s => s.title === 'Estágio atual');
-    const stageIndexToCenter = currentStageIndex >= 0 ? currentStageIndex : 0;
     const screenWidth = Dimensions.get('window').width;
     const stageCardWidth = scale(179);
     const stageGap = scale(16);
     const contentWidth = screenWidth - scale(32);
-    const stagesHorizontalPadding = Math.max(0, (contentWidth - stageCardWidth) / 2);
+
+    const stagesHorizontalPadding = Math.max(
+        0,
+        (contentWidth - stageCardWidth) / 2,
+    );
+
+    const carregarDados = useCallback(async () => {
+        if (!plantId) {
+            return;
+        }
+
+        try {
+            const gardenPlant = await buscarPlantaDoJardim(plantId);
+            setPlant(gardenPlant);
+
+            if (gardenPlant.plant?.id) {
+                const plantStages = await buscarStagesDaEspecie(
+                    gardenPlant.plant.id,
+                );
+                setStages(plantStages || []);
+            } else {
+                setStages([]);
+            }
+
+            try {
+                const nextWaterings = await getProximasRegas(plantId);
+                const { status, isOverdue } = formatWateringStatus(
+                    nextWaterings,
+                    gardenPlant.lastWatering,
+                );
+                setActions(prev =>
+                    prev.map(a => {
+                        if (a.type === 'rega') {
+                            return {
+                                ...a,
+                                status,
+                                isOverdue,
+                                completed: status === 'Regado hoje!',
+                            };
+                        }
+                        return a;
+                    }),
+                );
+            } catch (err) {
+                console.error('Erro ao buscar próximas regas:', err);
+                const { status, isOverdue } = formatWateringStatus(
+                    [],
+                    gardenPlant.lastWatering,
+                );
+                setActions(prev =>
+                    prev.map(a => {
+                        if (a.type === 'rega') {
+                            return {
+                                ...a,
+                                status,
+                                isOverdue,
+                            };
+                        }
+                        return a;
+                    }),
+                );
+            }
+        } catch (error) {
+            console.error('Erro ao carregar planta:', error);
+            setPlant(null);
+            setStages([]);
+        }
+    }, [plantId]);
+
+    useFocusEffect(
+        useCallback(() => {
+            carregarDados();
+        }, [carregarDados]),
+    );
+
+    const handleToggleCareAction = async (actionId: string) => {
+        const targetAction = actions.find(a => a.id === actionId);
+        if (!targetAction) return;
+
+        if (targetAction.type === 'rega') {
+            if (isWatering || !plant?.id) return;
+
+            try {
+                setIsWatering(true);
+                const res = await regarPlanta(plant.id);
+
+                if (res && res.message) {
+                    Alert.alert('Sucesso', res.message);
+                }
+
+                setActions(prev =>
+                    prev.map(a => {
+                        if (a.id === actionId) {
+                            return {
+                                ...a,
+                                completed: true,
+                                status: 'Regado hoje!',
+                                isOverdue: false,
+                            };
+                        }
+                        return a;
+                    }),
+                );
+
+                const updatedPlant = await buscarPlantaDoJardim(plant.id);
+                if (updatedPlant) {
+                    setPlant(updatedPlant);
+                }
+
+                try {
+                    await getProximasRegas(plant.id);
+                } catch (e) {
+                    console.error('Erro ao atualizar próximas regas:', e);
+                }
+            } catch (error: any) {
+                console.error('Erro ao regar planta:', error);
+                const backendMsg = error?.response?.data?.message || 'Não foi possível registrar a rega.';
+                Alert.alert('Aviso', backendMsg);
+            } finally {
+                setIsWatering(false);
+            }
+        } else {
+            setActions(prev =>
+                prev.map(a => {
+                    if (a.id === actionId) {
+                        return {
+                            ...a,
+                            completed: !a.completed,
+                        };
+                    }
+                    return a;
+                }),
+            );
+        }
+    };
 
     useEffect(() => {
+        if (!stages.length) {
+            return;
+        }
+
+        const currentStageIndex = stages.findIndex(
+            stage => stage.id === plant?.stage?.id,
+        );
+
+        const stageIndexToCenter =
+            currentStageIndex >= 0 ? currentStageIndex : 0;
+
         const offset =
             stageIndexToCenter * (stageCardWidth + stageGap);
 
@@ -60,40 +292,67 @@ export default function PlantDetailsScreen() {
                 animated: false,
             });
         });
-    }, [stageIndexToCenter, stageCardWidth, stageGap]);
-
-    const handleToggleCareAction = (actionId: string) => {
-        setActions(prev =>
-            prev.map(a => {
-                if (a.id === actionId) {
-                    return {
-                        ...a,
-                        completed: !a.completed,
-                    };
-                }
-                return a;
-            })
-        );
-    };
+    }, [stages, plant?.stage?.id, stageCardWidth, stageGap]);
 
     const getTagIcon = (tag: string) => {
-        const lower = tag.toLowerCase();
-        if (lower.includes('baixa') || lower.includes('sol') || lower.includes('luz')) {
+        const upper = tag.toUpperCase();
+        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER'].includes(upper)) {
             return AppIcons.SUN;
         }
-        if (lower.includes('média') || lower.includes('água') || lower.includes('rega')) {
+        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE'].includes(upper)) {
             return AppIcons.DROPLET;
         }
-        if (lower.includes('pequena') || lower.includes('porte') || lower.includes('tamanho')) {
+        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE'].includes(upper)) {
             return AppIcons.RULER;
+        }
+        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].includes(upper)) {
+            return AppIcons.BRIEFCASE;
         }
         return AppIcons.LEAF;
     };
 
+    if (!plant) {
+        return (
+            <SafeAreaView edges={['top']} style={styles.container}>
+                <AppHeader
+                    title="Planta"
+                    backButton
+                    onBackPress={() => navigation.goBack()}
+                />
+
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.sectionHeader}>
+                        Não foi possível carregar a planta.
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    const species = plant.plant;
+
+    const tags = [
+        species.type,
+        species.size,
+        species.luminosityLevel,
+        species.wateringLevel,
+    ].filter(Boolean);
+
+    const cultivationDays = plant.plantedAt
+        ? Math.max(
+            0,
+            Math.floor(
+                (Date.now() -
+                    new Date(plant.plantedAt).getTime()) /
+                (1000 * 60 * 60 * 24),
+            ),
+        )
+        : MOCK_STATS.cultivationDays;
+
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
             <AppHeader
-                title={plant.nickname}
+                title={plant.nickname || species.name}
                 backButton
                 onBackPress={() => navigation.goBack()}
             />
@@ -102,41 +361,48 @@ export default function PlantDetailsScreen() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {/* Hero Plant Card */}
                 <View style={styles.heroCard}>
                     <Image
-                        source={plant.image}
+                        source={
+                            plant.imagePath
+                                ? { uri: plant.imagePath }
+                                : species.imagePath
+                                    ? { uri: species.imagePath }
+                                    : require('../../../assets/images/auth-banner.png')
+                        }
                         style={styles.heroImage}
                         resizeMode="cover"
                     />
 
-                    {/* Characteristic Tags */}
                     <View style={styles.tagsRow}>
-                        {plant.tags.map((tag, idx) => (
-                            <View key={idx} style={styles.tagBadge}>
+                        {tags.map((tag, index) => (
+                            <View
+                                key={`${tag}-${index}`}
+                                style={styles.tagBadge}
+                            >
                                 <AppIcon
                                     icon={getTagIcon(tag)}
                                     size={12}
                                     color={colors.black}
                                 />
-                                <Text style={styles.tagText}>{tag}</Text>
+                                <Text style={styles.tagText}>{translateTagToPT(tag)}</Text>
                             </View>
                         ))}
                     </View>
 
-                    {/* Species Link with Elevated Search Icon */}
                     <TouchableOpacity
                         style={styles.speciesLink}
                         activeOpacity={0.7}
                         onPress={() =>
                             navigation.navigate('SpeciesDetails', {
-                                speciesId: plant.id,
+                                speciesId: species.id,
                             })
                         }
                     >
                         <Text style={styles.speciesName}>
-                            {plant.species.toUpperCase()}
+                            {species.name.toUpperCase()}
                         </Text>
+
                         <View style={styles.speciesSearchIcon}>
                             <AppIcon
                                 icon={AppIcons.SEARCH}
@@ -146,70 +412,95 @@ export default function PlantDetailsScreen() {
                         </View>
                     </TouchableOpacity>
 
-                    {/* Description */}
                     <View style={styles.descriptionContainer}>
-                        <Text style={styles.descriptionTitle}>Descrição:</Text>
+                        <Text style={styles.descriptionTitle}>
+                            Descrição:
+                        </Text>
+
                         <Text style={styles.descriptionText}>
-                            {plant.description}
+                            {species.description ||
+                                'Sem descrição disponível.'}
                         </Text>
                     </View>
                 </View>
 
-                {/* Stages Carousel - Centered on Current Stage */}
-                <View style={styles.stagesSection}>
-                    <ScrollView
-                        ref={stagesScrollRef}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={{ height: verticalScale(224) }}
-                        contentContainerStyle={[
-                            styles.stagesList,
-                            { paddingHorizontal: stagesHorizontalPadding },
-                        ]}
-                    >
-                        {plant.stages.map(item => (
-                            <View key={item.id} style={styles.stageCard}>
-                                <View style={styles.stageImageContainer}>
-                                    <Image
-                                        source={item.image}
-                                        style={styles.stageImage}
-                                        resizeMode="cover"
-                                    />
-
-                                    {item.title === 'Estágio atual' && (
-                                        <View style={styles.currentStageBadge}>
-                                            <Text style={styles.currentStageText}>
-                                                {item.title}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </View>
-
-                                <View style={styles.stageContent}>
-                                    <Text style={styles.stageTitle}>
-                                        {item.label}
-                                    </Text>
-
-                                    <Text
-                                        style={styles.stageDescription}
-                                        numberOfLines={2}
+                {stages.length > 0 && (
+                    <View style={styles.stagesSection}>
+                        <ScrollView
+                            ref={stagesScrollRef}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={{ height: verticalScale(224) }}
+                            contentContainerStyle={[
+                                styles.stagesList,
+                                {
+                                    paddingHorizontal:
+                                        stagesHorizontalPadding,
+                                },
+                            ]}
+                        >
+                            {stages.map(stage => (
+                                <View
+                                    key={stage.id}
+                                    style={styles.stageCard}
+                                >
+                                    <View
+                                        style={styles.stageImageContainer}
                                     >
-                                        {item.description}
-                                    </Text>
-                                </View>
-                            </View>
-                        ))}
-                    </ScrollView>
-                </View>
+                                        <Image
+                                            source={
+                                                stage.imagePath
+                                                    ? {
+                                                        uri: stage.imagePath,
+                                                    }
+                                                    : require('../../../assets/images/auth-banner.png')
+                                            }
+                                            style={styles.stageImage}
+                                            resizeMode="cover"
+                                        />
 
-                {/* Plant Statistics Section */}
+                                        {stage.id === plant.stage?.id && (
+                                            <View
+                                                style={styles.currentStageBadge}
+                                            >
+                                                <Text
+                                                    style={
+                                                        styles.currentStageText
+                                                    }
+                                                >
+                                                    Estágio atual
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    <View style={styles.stageContent}>
+                                        <Text style={styles.stageTitle}>
+                                            {stage.name}
+                                        </Text>
+
+                                        <Text
+                                            style={styles.stageDescription}
+                                            numberOfLines={2}
+                                        >
+                                            {stage.description ||
+                                                'Sem descrição disponível.'}
+                                        </Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+
                 <View style={styles.statsCard}>
                     <Text style={styles.sectionHeader}>
                         Estatísticas da sua planta
                     </Text>
+
                     <View style={styles.statsRow}>
                         <StatisticCard
-                            value={plant.stats.co2}
+                            value={MOCK_STATS.co2}
                             label="CO² capturado"
                             isHighlighted
                             icon={
@@ -220,8 +511,9 @@ export default function PlantDetailsScreen() {
                                 />
                             }
                         />
+
                         <StatisticCard
-                            value={plant.stats.ecoScore}
+                            value={MOCK_STATS.ecoScore}
                             label="EcoScore"
                             icon={
                                 <AppIcon
@@ -231,8 +523,9 @@ export default function PlantDetailsScreen() {
                                 />
                             }
                         />
+
                         <StatisticCard
-                            value={plant.stats.cultivationDays}
+                            value={cultivationDays}
                             label="Dias de cultivo"
                             icon={
                                 <AppIcon
@@ -245,37 +538,44 @@ export default function PlantDetailsScreen() {
                     </View>
                 </View>
 
-                {/* Care Guide Section */}
                 <View style={styles.careGuideCard}>
-                    <Text style={styles.sectionHeader}>Guia de cuidados:</Text>
+                    <Text style={styles.sectionHeader}>
+                        Guia de cuidados:
+                    </Text>
 
-                    <View style={styles.guideItem}>
-                        <Text style={styles.guideText}>
-                            <Text style={styles.guideLabel}>Solo: </Text>
-                            {plant.careGuide.solo}
-                        </Text>
-                    </View>
+                    {species.careGuide ? (
+                        <View style={styles.guideItem}>
+                            <Text style={styles.guideText}>{species.careGuide}</Text>
+                        </View>
+                    ) : (
+                        <>
+                            <View style={styles.guideItem}>
+                                <Text style={styles.guideText}>
+                                    <Text style={styles.guideLabel}>Solo: </Text>
+                                    {CARE_GUIDE.solo}
+                                </Text>
+                            </View>
 
-                    <View style={styles.guideItem}>
-                        <Text style={styles.guideText}>
-                            <Text style={styles.guideLabel}>Rega: </Text>
-                            {plant.careGuide.rega}
-                        </Text>
-                    </View>
+                            <View style={styles.guideItem}>
+                                <Text style={styles.guideText}>
+                                    <Text style={styles.guideLabel}>Rega: </Text>
+                                    {CARE_GUIDE.rega}
+                                </Text>
+                            </View>
 
-                    <View style={styles.guideItem}>
-                        <Text style={styles.guideText}>
-                            <Text style={styles.guideLabel}>Poda: </Text>
-                            {plant.careGuide.poda}
-                        </Text>
-                    </View>
+                            <View style={styles.guideItem}>
+                                <Text style={styles.guideText}>
+                                    <Text style={styles.guideLabel}>Poda: </Text>
+                                    {CARE_GUIDE.poda}
+                                </Text>
+                            </View>
+                        </>
+                    )}
                 </View>
 
-                {/* Care Action Cards (Lembretes) - Horizontal ScrollView starting from left */}
                 <View style={styles.careActionsSection}>
                     <ScrollView
                         horizontal
-                        style={{ height: verticalScale(141) }}
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.careActionsList}
                     >
@@ -329,6 +629,7 @@ export default function PlantDetailsScreen() {
                                             { backgroundColor: btnColor },
                                         ]}
                                         activeOpacity={0.8}
+                                        disabled={action.type === 'rega' && isWatering}
                                         onPress={() =>
                                             handleToggleCareAction(action.id)
                                         }
@@ -351,12 +652,13 @@ export default function PlantDetailsScreen() {
                 </View>
             </ScrollView>
 
-            {/* Floating Pencil Button for Editing */}
             <TouchableOpacity
                 style={styles.floatingEditButton}
                 activeOpacity={0.85}
                 onPress={() =>
-                    navigation.navigate('EditPlant', { plantId: plant.id })
+                    navigation.navigate('EditPlant', {
+                        plantId: plant.id,
+                    })
                 }
             >
                 <AppIcon

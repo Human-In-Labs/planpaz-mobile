@@ -76,7 +76,6 @@ export const styles = StyleSheet.create({
 
     descriptionTitle: {
         ...typography.subtitle,
-        marginBottom: verticalScale(8),
     },
 
     descriptionText: {
@@ -280,5 +279,12 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         ...shadows.medium,
+    },
+
+    emptyContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: scale(16),
     },
 });

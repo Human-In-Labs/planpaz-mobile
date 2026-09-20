@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, FlatList, } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, FlatList } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { styles } from './styles';
 import { ActivityCardData } from '../../../shared/types/activity';
 import { activityService } from '../../../shared/services/activityService';
@@ -11,24 +12,26 @@ function Separator() {
 }
 
 export default function ActivitySection() {
-
     const [activities, setActivities] = useState<ActivityCardData[]>([]);
 
-    useEffect(() => {
-
-        async function loadActivities() {
+    const carregarAtividades = useCallback(async () => {
+        try {
             const data = await activityService.getAll();
-            setActivities(data);
+            setActivities(data || []);
+        } catch (error) {
+            console.error('[ACTIVITY_SECTION] Erro ao carregar atividades:', error);
+            setActivities([]);
         }
-
-        loadActivities();
-
     }, []);
 
+    useFocusEffect(
+        useCallback(() => {
+            carregarAtividades();
+        }, [carregarAtividades]),
+    );
+
     return (
-
         <View style={styles.container}>
-
             <SectionHeader
                 title="Atividade recente"
                 onPress={() => {}}
@@ -45,8 +48,6 @@ export default function ActivitySection() {
                 contentContainerStyle={styles.listContent}
                 ItemSeparatorComponent={Separator}
             />
-
         </View>
-
     );
 }

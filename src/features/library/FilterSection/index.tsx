@@ -30,7 +30,7 @@ export default function FilterSection({
                 <FlatList
                     horizontal
                     data={filters}
-                    keyExtractor={item => item}
+                    keyExtractor={(item, index) => `${item}-${index}`}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.filtersContent}
                     renderItem={({ item }) => (

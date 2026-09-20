@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
 
     button: {
         position: 'absolute',
-        bottom: verticalScale(94),
+        bottom: verticalScale(98),
         left: scale(16),
         right: scale(16),
         height: verticalScale(48),

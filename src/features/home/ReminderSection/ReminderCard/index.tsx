@@ -1,16 +1,18 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { styles } from './styles';
 import { ReminderCardProps } from './types';
 import { colors } from '../../../../shared/theme';
 
 export default function ReminderCard({
     reminder,
+    onPressButton,
+    loading = false,
 }: ReminderCardProps) {
     const isOverdue = !!reminder.isOverdue;
     const statusColor = isOverdue ? colors.warning : colors.primary;
 
-    const actionText = reminder.action || reminder.reminderLabel;
+    const actionText = reminder.action || reminder.reminderLabel || 'Rega';
     const dueTimeText = reminder.dueTime || reminder.reminderValue;
     const referenceDayText = reminder.referenceDay;
 
@@ -53,10 +55,16 @@ export default function ReminderCard({
             <TouchableOpacity
                 style={[styles.button, { backgroundColor: statusColor }]}
                 activeOpacity={0.8}
+                disabled={loading}
+                onPress={() => onPressButton?.(reminder)}
             >
-                <Text style={styles.buttonText}>
-                    {reminder.buttonText}
-                </Text>
+                {loading ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                    <Text style={styles.buttonText}>
+                        {reminder.buttonText}
+                    </Text>
+                )}
             </TouchableOpacity>
         </View>
     );

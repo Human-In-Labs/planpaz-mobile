@@ -1,9 +1,10 @@
-import { View, Text, Image, TouchableOpacity, } from 'react-native'
-import { styles } from './styles'
-import { useNavigation } from '@react-navigation/native'
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
-import React, { useState } from 'react'
+import { styles } from './styles';
 
 type OnboardingScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
@@ -32,6 +33,7 @@ export default function OnboardingScreen() {
   //estado para controlar a página atual do onboarding
   const [currentPage, setCurrentPage] = useState(0);
   const navigation = useNavigation<OnboardingScreenNavigationProp>();
+  const insets = useSafeAreaInsets();
   const isLastPage = currentPage === pages.length - 1;
   const isFirstPage = currentPage === 0;
 
@@ -57,7 +59,7 @@ export default function OnboardingScreen() {
         </View>
 
         {/*Botões de navegação e mudança de estado para mudar a página*/}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
           {currentPage > 0 ? (
             <TouchableOpacity style={styles.previousButton}
               onPress={() => {

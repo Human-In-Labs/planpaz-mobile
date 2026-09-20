@@ -2,6 +2,7 @@ import { ImageSourcePropType } from 'react-native';
 
 export interface ReminderCardData {
     id: string;
+    gardenPlantId?: string;
     image: ImageSourcePropType;
     plantName: string;
     dueTime?: string;

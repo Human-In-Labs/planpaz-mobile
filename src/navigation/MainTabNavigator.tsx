@@ -1,6 +1,6 @@
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../features/home';
-import SocialScreen from '../features/social';
+import SocialNavigator from './SocialNavigator';
 import GardenNavigator from './GardenNavigator';
 import ProfileNavigator from './ProfileNavigator';
 import BottomTabBar from '../shared/components/TabBar';
@@ -29,7 +29,7 @@ export default function MainTabNavigator() {
         >
             <Tab.Screen
                 name="Social"
-                component={SocialScreen}
+                component={SocialNavigator}
             />
 
             <Tab.Screen

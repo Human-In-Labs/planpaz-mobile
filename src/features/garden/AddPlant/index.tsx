@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -6,62 +6,226 @@ import {
     Image,
     ScrollView,
     TouchableOpacity,
+    Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import {
+    useNavigation,
+    useRoute,
+    RouteProp,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { GardenStackParamList } from '../../../navigation/types';
 import AppHeader from '../../../shared/components/AppHeader';
 import AppIcon from '../../../shared/components/AppIcon';
 import DropdownField from '../../profile/settings/components/DropdownField';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
+import { adicionarAoJardim } from '../../../shared/api/garden';
+import {
+    buscarStagesDaEspecie,
+    PlantStage,
+} from '../../../shared/api/plant';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { styles } from './styles';
 
-type NavigationProp = NativeStackNavigationProp<GardenStackParamList, 'AddPlant'>;
-type RouteType = RouteProp<GardenStackParamList, 'AddPlant'>;
+type NavigationProp = NativeStackNavigationProp<
+    GardenStackParamList,
+    'AddPlant'
+>;
+
+type RouteType = RouteProp<
+    GardenStackParamList,
+    'AddPlant'
+>;
+
+const ROOM_MAP: Record<string, string> = {
+    Sala: 'LIVING_ROOM',
+    Quarto: 'BEDROOM',
+    Varanda: 'OTHER',
+    Quintal: 'YARD',
+    Cozinha: 'KITCHEN',
+};
+
+const getCurrentDate = () => {
+    const date = new Date();
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+};
+
+const formatDateForBackend = (date: string) => {
+    const [day, month, year] = date.split('/');
+
+    return `${year}-${month}-${day}T00:00:00`;
+};
 
 export default function AddPlantScreen() {
     const navigation = useNavigation<NavigationProp>();
     const route = useRoute<RouteType>();
+
+    const speciesId = route.params?.speciesId;
     const initialSpecies = route.params?.speciesName || '';
 
     const [nickname, setNickname] = useState('');
-    const [stage, setStage] = useState('Muda');
-    const [species, setSpecies] = useState(initialSpecies);
+    const [stage, setStage] = useState<PlantStage | null>(null);
+    const [species] = useState(initialSpecies);
     const [room, setRoom] = useState('Sala');
     const [directRain, setDirectRain] = useState('Não');
-    const [plantingDate, setPlantingDate] = useState('23/07/2026');
+    const [plantingDate, setPlantingDate] =
+        useState(getCurrentDate());
     const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
 
-    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-    const [changePhotoVisible, setChangePhotoVisible] = useState(false);
+    const [stages, setStages] = useState<PlantStage[]>([]);
+    const [loadingStages, setLoadingStages] = useState(false);
+    const [adding, setAdding] = useState(false);
 
-    const stageOptions = ['Muda', 'Adulta', 'Floração', 'Frutificação'];
-    const speciesOptions = [
-        'Jibóia',
-        'Mini Coroa de Cristo',
-        'Samambaia',
-        'Espada de São Jorge',
-        'Manjericão',
-        'Suculenta',
+    const [activeDropdown, setActiveDropdown] =
+        useState<string | null>(null);
+    const [changePhotoVisible, setChangePhotoVisible] =
+        useState(false);
+
+    const roomOptions = [
+        'Sala',
+        'Quarto',
+        'Varanda',
+        'Quintal',
+        'Cozinha',
     ];
-    const roomOptions = ['Sala', 'Quarto', 'Varanda', 'Quintal', 'Cozinha'];
+
     const directRainOptions = ['Sim', 'Não'];
 
+    useEffect(() => {
+        if (!speciesId) {
+            return;
+        }
+
+        let isMounted = true;
+
+        const carregarStages = async () => {
+            try {
+                setLoadingStages(true);
+
+                const data =
+                    await buscarStagesDaEspecie(speciesId);
+
+                if (!isMounted) {
+                    return;
+                }
+
+                setStages(data);
+
+                if (data.length > 0) {
+                    setStage(data[0]);
+                }
+            } catch (error) {
+                console.error(
+                    'Erro ao carregar estágios da espécie:',
+                    error,
+                );
+
+                if (isMounted) {
+                    setStages([]);
+                    setStage(null);
+                }
+            } finally {
+                if (isMounted) {
+                    setLoadingStages(false);
+                }
+            }
+        };
+
+        carregarStages();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [speciesId]);
+
     const toggleDropdown = (name: string) => {
-        setActiveDropdown(prev => (prev === name ? null : name));
+        setActiveDropdown(prev =>
+            prev === name ? null : name,
+        );
     };
 
-    const handleAdd = () => {
-        navigation.navigate('GardenMain');
+    const handleAdd = async () => {
+        if (!speciesId) {
+            Alert.alert(
+                'Erro',
+                'Não foi possível identificar a espécie.',
+            );
+            return;
+        }
+
+        if (!stage) {
+            Alert.alert(
+                'Erro',
+                'Não foi possível identificar o estágio da planta.',
+            );
+            return;
+        }
+
+        if (!nickname.trim()) {
+            Alert.alert(
+                'Atenção',
+                'Informe um apelido para a planta.',
+            );
+            return;
+        }
+
+        try {
+            setAdding(true);
+
+            const res = await adicionarAoJardim({
+                plant: {
+                    id: speciesId,
+                },
+                stage: {
+                    id: stage.id,
+                },
+                nickname: nickname.trim(),
+                plantedAt: formatDateForBackend(plantingDate),
+                wateringNotification: true,
+                directRain: directRain === 'Sim',
+                room: ROOM_MAP[room] || 'OTHER',
+                imagePath: null,
+            });
+
+            if (res && res.message) {
+                Alert.alert('Sucesso', res.message);
+            }
+            navigation.navigate('MainTabs', {
+                screen: 'Garden',
+                params: {
+                    screen: 'GardenMain',
+                },
+            } as any);
+        } catch (error: any) {
+            console.error(
+                'Erro ao adicionar planta ao jardim:',
+                error,
+            );
+
+            const backendMsg = error?.response?.data?.message || 'Não foi possível adicionar a planta ao jardim.';
+            Alert.alert('Aviso', backendMsg);
+        } finally {
+            setAdding(false);
+        }
     };
+
+    const stageOptions = stages.map(item => item.name);
 
     return (
         <View style={styles.container}>
-            <SafeAreaView edges={['top']} style={styles.container}>
+            <SafeAreaView
+                edges={['top']}
+                style={styles.container}
+            >
                 <AppHeader
                     title="Adicionar planta"
                     backButton
@@ -79,11 +243,12 @@ export default function AddPlantScreen() {
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
                 >
-                    {/* Dashed Photo Upload Box */}
                     <TouchableOpacity
                         style={styles.uploadBox}
                         activeOpacity={0.8}
-                        onPress={() => setChangePhotoVisible(true)}
+                        onPress={() =>
+                            setChangePhotoVisible(true)
+                        }
                     >
                         {selectedPhoto ? (
                             <Image
@@ -98,11 +263,14 @@ export default function AddPlantScreen() {
                                     style={styles.cameraIllustration}
                                     resizeMode="contain"
                                 />
+
                                 <Text style={styles.addPhotoLink}>
                                     Adicionar foto
                                 </Text>
+
                                 <Text style={styles.uploadSubtitle}>
-                                    Mostre sua planta para deixar mais especial
+                                    Mostre sua planta para deixar
+                                    mais especial
                                 </Text>
                             </>
                         )}
@@ -118,7 +286,10 @@ export default function AddPlantScreen() {
                         ]}
                     >
                         <View style={styles.fieldGroupLeft}>
-                            <Text style={styles.fieldLabel}>Apelido</Text>
+                            <Text style={styles.fieldLabel}>
+                                Apelido
+                            </Text>
+
                             <TextInput
                                 value={nickname}
                                 onChangeText={setNickname}
@@ -128,14 +299,36 @@ export default function AddPlantScreen() {
                         </View>
 
                         <View style={styles.fieldGroupRight}>
-                            <Text style={styles.fieldLabel}>Estagio</Text>
+                            <Text style={styles.fieldLabel}>
+                                Estagio
+                            </Text>
+
                             <DropdownField
-                                value={stage}
+                                value={
+                                    loadingStages
+                                        ? 'Carregando...'
+                                        : stage?.name || ''
+                                }
                                 options={stageOptions}
-                                isOpen={activeDropdown === 'stage'}
-                                onToggle={() => toggleDropdown('stage')}
-                                onSelect={val => {
-                                    setStage(val);
+                                isOpen={
+                                    activeDropdown === 'stage'
+                                }
+                                onToggle={() => {
+                                    if (!loadingStages) {
+                                        toggleDropdown('stage');
+                                    }
+                                }}
+                                onSelect={value => {
+                                    const selectedStage =
+                                        stages.find(
+                                            item =>
+                                                item.name === value,
+                                        );
+
+                                    if (selectedStage) {
+                                        setStage(selectedStage);
+                                    }
+
                                     setActiveDropdown(null);
                                 }}
                             />
@@ -146,36 +339,48 @@ export default function AddPlantScreen() {
                     <View
                         style={[
                             styles.formRow,
-                            activeDropdown === 'species' ||
                             activeDropdown === 'room'
                                 ? styles.rowZIndexActive
                                 : styles.rowZIndexDefault,
                         ]}
                     >
                         <View style={styles.fieldGroupLeft}>
-                            <Text style={styles.fieldLabel}>Especie</Text>
+                            <Text style={styles.fieldLabel}>
+                                Especie
+                            </Text>
+
                             <DropdownField
                                 value={species}
-                                options={speciesOptions}
-                                isOpen={activeDropdown === 'species'}
-                                onToggle={() => toggleDropdown('species')}
-                                onSelect={val => {
-                                    setSpecies(val);
-                                    setActiveDropdown(null);
-                                }}
+                                options={species ? [species] : []}
+                                isOpen={
+                                    activeDropdown === 'species'
+                                }
+                                onToggle={() =>
+                                    toggleDropdown('species')
+                                }
+                                onSelect={() =>
+                                    setActiveDropdown(null)
+                                }
                                 placeholder="Selecione a espécie"
                             />
                         </View>
 
                         <View style={styles.fieldGroupRight}>
-                            <Text style={styles.fieldLabel}>Cômodo</Text>
+                            <Text style={styles.fieldLabel}>
+                                Cômodo
+                            </Text>
+
                             <DropdownField
                                 value={room}
                                 options={roomOptions}
-                                isOpen={activeDropdown === 'room'}
-                                onToggle={() => toggleDropdown('room')}
-                                onSelect={val => {
-                                    setRoom(val);
+                                isOpen={
+                                    activeDropdown === 'room'
+                                }
+                                onToggle={() =>
+                                    toggleDropdown('room')
+                                }
+                                onSelect={value => {
+                                    setRoom(value);
                                     setActiveDropdown(null);
                                 }}
                             />
@@ -195,13 +400,21 @@ export default function AddPlantScreen() {
                             <Text style={styles.fieldLabel}>
                                 Recebe chuva direta?
                             </Text>
+
                             <DropdownField
                                 value={directRain}
                                 options={directRainOptions}
-                                isOpen={activeDropdown === 'directRain'}
-                                onToggle={() => toggleDropdown('directRain')}
-                                onSelect={val => {
-                                    setDirectRain(val);
+                                isOpen={
+                                    activeDropdown ===
+                                    'directRain'
+                                }
+                                onToggle={() =>
+                                    toggleDropdown(
+                                        'directRain',
+                                    )
+                                }
+                                onSelect={value => {
+                                    setDirectRain(value);
                                     setActiveDropdown(null);
                                 }}
                             />
@@ -211,15 +424,26 @@ export default function AddPlantScreen() {
                             <Text style={styles.fieldLabel}>
                                 Dia da Plantação
                             </Text>
-                            <View style={styles.dateInputContainer}>
+
+                            <View
+                                style={
+                                    styles.dateInputContainer
+                                }
+                            >
                                 <TextInput
                                     value={plantingDate}
-                                    onChangeText={setPlantingDate}
+                                    onChangeText={
+                                        setPlantingDate
+                                    }
                                     style={styles.dateInput}
                                     placeholder="99/99/9999"
+                                    keyboardType="numeric"
                                 />
+
                                 <AppIcon
-                                    icon={AppIcons.CALENDAR_DOTS}
+                                    icon={
+                                        AppIcons.CALENDAR_DOTS
+                                    }
                                     size={16}
                                     color={colors.primary}
                                 />
@@ -228,27 +452,30 @@ export default function AddPlantScreen() {
                     </View>
                 </ScrollView>
 
-                {/* Fixed Add to Garden Button + 166pt Gradient Fade Layer */}
                 <BottomActionOverlay
-                    title="Adicionar no Jardim"
+                    title={
+                        adding
+                            ? 'Adicionando...'
+                            : 'Adicionar no Jardim'
+                    }
                     onPress={handleAdd}
                 />
             </SafeAreaView>
 
-
-            {/* Photo Selection Modal */}
             <ChangePhotoOverlay
                 visible={changePhotoVisible}
-                onClose={() => setChangePhotoVisible(false)}
+                onClose={() =>
+                    setChangePhotoVisible(false)
+                }
                 onSelectFromGallery={() => {
                     setSelectedPhoto(
-                        require('../../../assets/images/auth-banner.png')
+                        require('../../../assets/images/auth-banner.png'),
                     );
                     setChangePhotoVisible(false);
                 }}
                 onTakePhoto={() => {
                     setSelectedPhoto(
-                        require('../../../assets/images/auth-banner.png')
+                        require('../../../assets/images/auth-banner.png'),
                     );
                     setChangePhotoVisible(false);
                 }}

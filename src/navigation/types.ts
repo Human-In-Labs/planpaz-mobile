@@ -1,3 +1,5 @@
+import { Post } from '../shared/types/social';
+
 export type RootStackParamList = {
     Onboarding: undefined;
     Login: undefined;
@@ -9,6 +11,7 @@ export type RootStackParamList = {
     MainTabs: undefined;
     Library: undefined;
     SpeciesDetails: { speciesId: string; };
+    AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
 };
 
 export type ProfileStackParamList = {
@@ -24,4 +27,10 @@ export type GardenStackParamList = {
     Library: undefined;
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
+};
+
+export type SocialStackParamList = {
+    SocialMain: undefined;
+    PostIndividual: { postId: string; post?: Post; isLiked?: boolean; };
+    CreatePost: undefined;
 };

@@ -1,5 +1,11 @@
-import React, { useCallback, useState } from 'react';
-import { FlatList, RefreshControl, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+    Animated,
+    FlatList,
+    RefreshControl,
+    Text,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,67 +19,10 @@ import FilterSection from './FilterSection';
 import PlantFilters from './PlantFilters';
 import SpeciesCard from './SpeciesCard';
 
-import { listarPlants } from '../../shared/api';
-
-const DEFAULT_SPECIES: Species[] = [
-    {
-        id: '1',
-        image: require('../../assets/images/auth-banner.png'),
-        commonName: 'Jibóia',
-        scientificName: 'Epipremnum aureum',
-        isRecommended: true,
-        type: 'Ornamental',
-        experience: 'Iniciante',
-        temperature: 'Média',
-        light: 'Baixa',
-        water: 'Frequente',
-        tags: ['Ornamental', 'Pequena', 'Baixa', 'Média', 'Frequente'],
-        description:
-            'Planta herbácea com comportamento pendente ou ascendente, possui folhagem extremamente ornamental, muito conhecida e cultivada em ambientes internos, por crescer com pouca luz e não demandar muitos cuidados. Também conhecida como hera do diabo, a planta jiboia é uma herbácea trepadeira, muito vista',
-        careGuide: {
-            solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com pH entre 6,0 e 7,5. O preparo adequado do solo garante um desenvolvimento vigoroso e uma maior produção de folhas saudáveis.',
-            rega: 'A planta se adapta bem a diferentes condições climáticas, mas cresce melhor em temperaturas entre 15 °C e 25 °C.',
-        },
-    },
-    {
-        id: '2',
-        image: require('../../assets/images/auth-banner.png'),
-        commonName: 'Mini Coroa de Cristo',
-        scientificName: 'Euphorbia milii',
-        isRecommended: true,
-        type: 'Ornamental',
-        experience: 'Intermediário',
-        temperature: 'Alta',
-        light: 'Intensa',
-        water: 'Esporádica',
-        tags: ['Ornamental', 'Pequena', 'Intensa', 'Alta', 'Esporádica'],
-        description:
-            'Arbusto suculento e espinhoso, originário de Madagascar, com inflorescências vistosas de brácteas vermelhas ou rosadas, muito resistente ao sol.',
-        careGuide: {
-            solo: 'Solo arenoso e bem drenado com regas moderadas.',
-            rega: 'Deixar o solo secar completamente entre as regas.',
-        },
-    },
-    {
-        id: '3',
-        image: require('../../assets/images/auth-banner.png'),
-        commonName: 'Espada de São Jorge',
-        scientificName: 'Sansevieria trifasciata',
-        isRecommended: false,
-        type: 'Ornamental',
-        experience: 'Iniciante',
-        temperature: 'Média',
-        light: 'Baixa',
-        water: 'Esporádica',
-        tags: ['Ornamental', 'Média', 'Baixa', 'Média', 'Esporádica'],
-        description:
-            'Planta de folhas eretas e coriáceas, altamente resistente à seca e à baixa luminosidade, excelente purificadora de ar.',
-        careGuide: {
-            solo: 'Substrato leve com boa drenagem.',
-            rega: 'Regar a cada 10 a 15 dias.',
-        },
-    },
-];
+import { listarPlants, PlantFilterParams } from '../../shared/api';
+import { getCleanPlantTags, translateTagToEN } from '../../shared/utils/tagMapper';
+import LoadingSpinner from '../../shared/components/LoadingSpinner';
+import { colors } from '../../shared/theme';
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
@@ -87,165 +36,144 @@ type SelectedFilters = Record<string, string>;
 export default function LibraryScreen() {
     const navigation = useNavigation<NavigationProp>();
 
+    const [scrollY] = useState(() => new Animated.Value(0));
     const [search, setSearch] = useState('');
-    const [selectedFilters, setSelectedFilters] =
-        useState<SelectedFilters>({});
+    const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({});
     const [filterVisible, setFilterVisible] = useState(false);
-
-    const [species, setSpecies] =
-        useState<Species[]>(DEFAULT_SPECIES);
-
+    const [rawPlants, setRawPlants] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
+    // Dispara a busca via API no backend com os parâmetros de pesquisa e filtro
     const carregarPlantas = useCallback(async () => {
         try {
             setLoading(true);
 
-            const plants = await listarPlants();
-
-            if (plants && plants.length > 0) {
-                const data: Species[] = plants.map((plant, index) => ({
-                    id: plant.id,
-                    image: require('../../assets/images/auth-banner.png'),
-                    commonName: plant.name,
-                    scientificName: plant.scientificName,
-                    isRecommended: index < 2,
-
-                    type: plant.type,
-                    size: plant.size,
-                    light: plant.luminosityLevel,
-                    water: plant.wateringLevel,
-
-                    tags: [
-                        plant.type || 'Ornamental',
-                        plant.size || 'Pequena',
-                        plant.luminosityLevel || 'Baixa',
-                        plant.wateringLevel || 'Média',
-                    ],
-
-                    description:
-                        plant.description ||
-                        DEFAULT_SPECIES[0].description,
-
-                    careGuide: DEFAULT_SPECIES[0].careGuide,
-                }));
-
-                setSpecies(data);
+            const params: PlantFilterParams = {};
+            if (search.trim()) {
+                params.search = search.trim();
             }
-        } catch {
-            console.log('Utilizando biblioteca padrão');
+            if (selectedFilters.type && selectedFilters.type !== 'Todas') {
+                params.type = translateTagToEN(selectedFilters.type);
+            }
+            if (selectedFilters.luminosity && selectedFilters.luminosity !== 'Todas') {
+                params.luminosity = translateTagToEN(selectedFilters.luminosity);
+            }
+            if (selectedFilters.watering && selectedFilters.watering !== 'Todas') {
+                params.watering = translateTagToEN(selectedFilters.watering);
+            }
+            if (selectedFilters.size && selectedFilters.size !== 'Todas') {
+                params.size = translateTagToEN(selectedFilters.size);
+            }
+
+            const plantsData = await listarPlants(params);
+            setRawPlants(plantsData || []);
+        } catch (error) {
+            console.error('[LIBRARY] Erro ao carregar biblioteca:', error);
+            setRawPlants([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [search, selectedFilters]);
 
     useFocusEffect(
         useCallback(() => {
             carregarPlantas();
-        }, [carregarPlantas])
+        }, [carregarPlantas]),
     );
 
-    const handleFilterChange = useCallback(
-        (type: string, value: string) => {
-            setSelectedFilters(prev => ({
-                ...prev,
-                [type]: value,
-            }));
-        },
-        [],
-    );
+    const handleFilterChange = useCallback((type: string, value: string) => {
+        setSelectedFilters(prev => ({
+            ...prev,
+            [type]: value,
+        }));
+    }, []);
 
-    const handleRemoveFilter = useCallback((filter: string) => {
+    const handleRemoveFilter = useCallback((filterLabel: string) => {
         setSelectedFilters(prev => {
             const next = { ...prev };
-
             const entry = Object.entries(next).find(
-                ([, value]) => value === filter,
+                ([, value]) => value === filterLabel,
             );
-
             if (entry) {
                 delete next[entry[0]];
             }
-
             return next;
         });
     }, []);
 
-    const filteredSpecies = species.filter(item => {
-        const searchText = search.toLowerCase().trim();
+    // Processamento otimizado via useMemo para evitar execuções pesadas durante re-render
+    const speciesList = useMemo<Species[]>(() => {
+        return rawPlants.map((plant) => ({
+            id: plant.id,
+            image: plant.imagePath
+                ? { uri: plant.imagePath }
+                : require('../../assets/images/auth-banner.png'),
 
-        if (
-            searchText &&
-            !item.commonName.toLowerCase().includes(searchText)
-        ) {
-            return false;
-        }
+            commonName: plant.name,
+            scientificName: plant.scientificName,
+            isRecommended: Boolean(plant.isRecommended),
 
-        const matchesType =
-            !selectedFilters.type ||
-            selectedFilters.type === 'Todas' ||
-            item.type === selectedFilters.type;
+            type: plant.type,
+            size: plant.size,
+            light: plant.luminosityLevel,
+            water: plant.wateringLevel,
+            temperature: plant.temperatureLevel,
 
-        const matchesExperience =
-            !selectedFilters.experience ||
-            selectedFilters.experience === 'Todas' ||
-            item.experience === selectedFilters.experience;
-
-        const matchesTemperature =
-            !selectedFilters.temperature ||
-            selectedFilters.temperature === 'Todas' ||
-            item.temperature === selectedFilters.temperature;
-
-        const matchesLuminosity =
-            !selectedFilters.luminosity ||
-            selectedFilters.luminosity === 'Todas' ||
-            item.light === selectedFilters.luminosity;
-
-        const matchesWatering =
-            !selectedFilters.watering ||
-            selectedFilters.watering === 'Todas' ||
-            item.water === selectedFilters.watering;
-
-        return (
-            matchesType &&
-            matchesExperience &&
-            matchesTemperature &&
-            matchesLuminosity &&
-            matchesWatering
-        );
-    });
+            tags: getCleanPlantTags(plant),
+            description: plant.description,
+        }));
+    }, [rawPlants]);
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
-            <FlatList
-                data={filteredSpecies}
+            <AppHeader
+                title="Biblioteca"
+                backButton
+                onBackPress={() => navigation.goBack()}
+                scrollY={scrollY}
+            />
+
+            <Animated.FlatList
+                data={speciesList}
                 keyExtractor={item => item.id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.content}
                 ItemSeparatorComponent={ItemSeparator}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false },
+                )}
+                scrollEventThrottle={16}
                 refreshControl={
                     <RefreshControl
                         refreshing={loading}
                         onRefresh={carregarPlantas}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
                     />
                 }
                 ListHeaderComponent={
-                    <>
-                        <AppHeader
-                            title="Biblioteca"
-                            backButton
-                            onBackPress={() => navigation.goBack()}
-                        />
-
-                        <FilterSection
-                            search={search}
-                            onSearchChange={setSearch}
-                            filters={Object.values(selectedFilters).filter(value => value !== 'Todas',)}
-                            onRemoveFilter={handleRemoveFilter}
-                            onFilterPress={() => setFilterVisible(true)}
-                            onSuggestionPress={() => { }}
-                        />
-                    </>
+                    <FilterSection
+                        search={search}
+                        onSearchChange={setSearch}
+                        filters={Object.values(selectedFilters).filter(
+                            value => value !== 'Todas',
+                        )}
+                        onRemoveFilter={handleRemoveFilter}
+                        onFilterPress={() => setFilterVisible(true)}
+                        onSuggestionPress={() => { }}
+                    />
+                }
+                ListEmptyComponent={
+                    loading ? (
+                        <LoadingSpinner />
+                    ) : (
+                        <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                            <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                                Nenhuma espécie encontrada.
+                            </Text>
+                        </View>
+                    )
                 }
                 renderItem={({ item }) => (
                     <SpeciesCard

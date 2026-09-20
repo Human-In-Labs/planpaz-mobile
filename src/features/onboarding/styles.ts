@@ -2,9 +2,9 @@ import { StyleSheet, Dimensions } from 'react-native';
 import { colors, radius, spacing, typography} from '../../shared/theme';
 import { scale, verticalScale } from '../../shared/theme/scale';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-const bannerHeight = width * (489 / 390);
+const bannerHeight = Math.min(width * (489 / 390), height * 0.45);
 
 export const styles = StyleSheet.create({
   container: {
@@ -34,7 +34,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginTop: verticalScale(spacing.xs),
-    marginBottom: verticalScale(60),
+    marginBottom: verticalScale(20),
   },
 
   paginationDot: {

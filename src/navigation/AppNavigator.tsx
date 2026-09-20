@@ -11,6 +11,7 @@ import MainTabNavigator from './MainTabNavigator';
 import { RootStackParamList } from './types';
 import LibraryScreen from '../features/library';
 import SpeciesDetailsScreen from '../features/library/SpeciesDetails';
+import AddPlantScreen from '../features/garden/AddPlant';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -18,7 +19,7 @@ export default function AppNavigator() {
     return (
         <NavigationContainer>
             <Stack.Navigator
-                initialRouteName="MainTabs"
+                initialRouteName="Onboarding"
                 screenOptions={{
                     headerShown: false,
                 }}
@@ -72,6 +73,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="SpeciesDetails"
                     component={SpeciesDetailsScreen}
+                />
+
+                <Stack.Screen
+                    name="AddPlant"
+                    component={AddPlantScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

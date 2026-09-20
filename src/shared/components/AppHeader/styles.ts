@@ -25,9 +25,19 @@ export const styles = StyleSheet.create({
     innerContainer: {
         flex: 1,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: scale(spacing.md),
+        gap: scale(8),
+    },
+
+    titleContainer: {
+        flex: 1,
+        minWidth: 0,
+        overflow: 'hidden',
+    },
+
+    titleScrollContent: {
+        flexGrow: 0,
     },
 
     title: {

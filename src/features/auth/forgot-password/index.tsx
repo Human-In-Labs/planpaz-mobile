@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen() {
           <TextInput
             style={[styles.input, emailError && styles.inputError]}
             placeholder="Email"
-            placeholderTextColor={colors.black}
+            placeholderTextColor={emailError && !email ? colors.warning : colors.black}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
