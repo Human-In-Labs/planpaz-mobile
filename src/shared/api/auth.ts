@@ -1,5 +1,11 @@
 import { api } from './client';
-import { saveToken, saveUser, removeToken, removeUser } from '../services/storage';
+import {
+    saveToken,
+    saveUser,
+    removeToken,
+    removeUser,
+    removeUserId,
+} from '../services/storage';
 
 export interface LoginRequest {
     email: string;
@@ -17,29 +23,82 @@ export interface AuthResponse {
     name: string;
     username: string;
     token: string;
+    id?: string;
+    userId?: string;
     message?: string;
+}
+
+function extractToken(
+    data: any,
+): string {
+    return (
+        data?.token ||
+        data?.accessToken ||
+        data?.jwtToken ||
+        (typeof data === 'string'
+            ? data
+            : '')
+    );
 }
 
 export async function login(
     data: LoginRequest,
 ): Promise<AuthResponse> {
+    const response =
+        await api.post<AuthResponse>(
+            '/auth/login',
+            data,
+        );
 
-    const response = await api.post<AuthResponse>('/auth/login', data);
-    await saveToken(response.data.token);
-    await saveUser({ name: response.data.name, username: response.data.username });
+    const raw = response.data as any;
+    const token = extractToken(raw);
+
+    if (token) {
+        await saveToken(token);
+    }
+
+    await saveUser({
+        id: raw?.id || raw?.userId,
+        name: raw?.name || data.email,
+        username:
+            raw?.username || data.email,
+        email:
+            raw?.email || data.email,
+    });
+
     return response.data;
 }
 
 export async function register(
     data: RegisterRequest,
 ): Promise<AuthResponse> {
+    const response =
+        await api.post<AuthResponse>(
+            '/auth/register',
+            data,
+        );
 
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    await saveToken(response.data.token);
-    await saveUser({ name: response.data.name, username: response.data.username });
+    const raw = response.data as any;
+    const token = extractToken(raw);
+
+    if (token) {
+        await saveToken(token);
+    }
+
+    await saveUser({
+        id: raw?.id || raw?.userId,
+        name: raw?.name || data.name,
+        username:
+            raw?.username || data.username,
+        email:
+            raw?.email || data.email,
+    });
+
     return response.data;
 }
+
 export async function logout(): Promise<void> {
     await removeToken();
     await removeUser();
+    await removeUserId();
 }

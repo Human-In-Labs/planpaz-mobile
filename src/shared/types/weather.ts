@@ -7,6 +7,10 @@ export interface WeatherCardData {
     temperature: number;
     condition: string;
     icon: WeatherIcon;
+    humidity: number;
+    rainProbability: number;
+    tempMin: number;
+    tempMax: number;
 }
 
 export interface WeatherSummaryData {

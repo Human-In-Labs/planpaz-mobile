@@ -2,14 +2,14 @@ import { AppIcons } from './appIcons';
 
 export const WeatherSummary = {
     HUMIDITY: {
-        icon: AppIcons.DROPLET,
+        icon: AppIcons.DROPLET
     },
 
-    UV: {
-        icon: AppIcons.SUN,
+    RAIN_PROBABILITY: {
+        icon: AppIcons.CLOUD_RAIN
     },
 
-    WIND: {
-        icon: AppIcons.WIND,
+    TEMPERATURE_RANGE: {
+        icon: AppIcons.THERMOMETER_SIMPLE,
     },
 } as const;

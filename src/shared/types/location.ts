@@ -1,9 +1,22 @@
 export interface LocationData {
     id: string;
+
     neighborhood: string;
+    city: string;
     state: string;
+
+    stateCode?: string;
+    country?: string;
+    countryCode?: string;
+
+    latitude?: number;
+    longitude?: number;
 }
 
 export function formatLocation(location: LocationData): string {
-    return `${location.neighborhood} - ${location.state}`;
+    if (location.neighborhood) {
+        return `${location.neighborhood} - ${location.stateCode ?? location.state}`;
+    }
+
+    return `${location.city} - ${location.stateCode ?? location.state}`;
 }

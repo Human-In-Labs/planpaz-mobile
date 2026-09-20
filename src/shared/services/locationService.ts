@@ -1,29 +1,46 @@
-import { locationMock } from '../mock/locationMock';
+import { buscarLocalizacoes } from '../api/location';
+import { LocationSearchData } from '../types/locationSearch';
 
 export const locationService = {
-    async getAll() {
-        return locationMock;
+
+    async getAll(): Promise<LocationSearchData[]> {
+        return [];
     },
 
-    async search(query: string) {
-        const term = query.trim().toLowerCase();
+    async search(
+        query: string,
+    ): Promise<LocationSearchData[]> {
+        const term = query.trim();
 
-        if (!term) {
+        if (term.length < 2) {
             return [];
         }
 
-        return locationMock.filter(location =>
-            location.city
-                .toLowerCase()
-                .includes(term)
-            ||
-            location.state
-                .toLowerCase()
-                .includes(term)
-            ||
-            location.neighborhood
-                .toLowerCase()
-                .includes(term)
+        const locations = await buscarLocalizacoes(
+            term,
         );
+
+        return locations.map(location => ({
+            id: location.id,
+
+            neighborhood:
+                location.neighborhood,
+
+            city:
+                location.city,
+
+            state:
+                location.stateCode ??
+                location.state,
+
+            country:
+                location.country,
+
+            latitude:
+                location.latitude ?? 0,
+
+            longitude:
+                location.longitude ?? 0,
+        }));
     },
 };
