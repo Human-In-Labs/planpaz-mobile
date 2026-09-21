@@ -10,12 +10,13 @@ interface TagBadgeProps {
     icon?: IconName;
 }
 
-export default function TagBadge({ label, icon = AppIcons.HASH }: TagBadgeProps) {
+export default function TagBadge({ label, icon }: TagBadgeProps) {
+    const finalIcon = icon || AppIcons.HASH;
     return (
         <View style={styles.container}>
             <View style={styles.iconContainer}>
                 <AppIcon
-                    icon={icon}
+                    icon={finalIcon}
                     size={10}
                     color={colors.black}
                 />

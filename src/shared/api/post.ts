@@ -39,9 +39,10 @@ export async function listarPosts(
     page?: number,
     size?: number,
     authorId?: string,
+    tag?: string,
 ): Promise<PageableResponse<PostResponse>> {
     const response = await api.get<PageableResponse<PostResponse>>('/posts', {
-        params: { page, size, currentUserId: authorId },
+        params: { page, size, currentUserId: authorId, tag },
     });
 
     return response.data;

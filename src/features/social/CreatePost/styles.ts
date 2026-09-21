@@ -37,6 +37,12 @@ export const styles = StyleSheet.create({
         paddingHorizontal: scale(16),
         ...shadows.small,
     },
+    uploadBoxWithImage: {
+        height: verticalScale(220),
+        borderStyle: 'solid',
+        paddingHorizontal: 0,
+        overflow: 'hidden',
+    },
     uploadedImage: {
         width: '100%',
         height: '100%',

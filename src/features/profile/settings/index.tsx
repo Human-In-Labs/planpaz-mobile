@@ -19,10 +19,17 @@ import HoursDropdown from './components/HoursDropdown';
 import OptionCard from './components/OptionCard';
 import ChangePhotoOverlay from '../overlays/ChangePhoto';
 import {
+    pickImageFromGallery,
+    takePhotoWithCamera,
+    SelectedImage,
+} from '../../../shared/utils/imagePicker';
+import {
     atualizarConfiguracoes,
     getMinhasConfiguracoes,
+    verificarDisponibilidadeUsername,
+    uploadImagem,
     UserSettings,
-} from '../../../shared/api/user';
+} from '../../../shared/api';
 import { logout } from '../../../shared/api/auth';
 import DateTimePicker, {
     DateTimePickerEvent,
@@ -272,6 +279,8 @@ export default function SettingsScreen() {
     const [username, setUsername] = useState('');
     const [birthDate, setBirthDate] = useState('');
     const [fullName, setFullName] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [selectedAvatarPhoto, setSelectedAvatarPhoto] = useState<SelectedImage | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
 
     // Dados necessários para atualização no backend
@@ -369,6 +378,10 @@ export default function SettingsScreen() {
 
                     if (settings.name) {
                         setFullName(settings.name);
+                    }
+
+                    if (settings.avatarUrl) {
+                        setAvatarUrl(settings.avatarUrl);
                     }
 
                     if (settings.bio !== undefined) {
@@ -574,6 +587,22 @@ export default function SettingsScreen() {
                 return;
             }
 
+            // Verifica se o username mudou e se está disponível
+            try {
+                const currentUserData = await getUser();
+                const currentCleanUsername = currentUserData?.username?.replace(/^@/, '').trim();
+                if (currentCleanUsername && currentCleanUsername.toLowerCase() !== cleanUsername.toLowerCase()) {
+                    const isAvailable = await verificarDisponibilidadeUsername(cleanUsername);
+                    if (!isAvailable) {
+                        Alert.alert('Aviso', `O nome de usuário @${cleanUsername} já está a ser utilizado por outra conta.`);
+                        setSaving(false);
+                        return;
+                    }
+                }
+            } catch {
+                // Se falhar a checagem prévia, prossegue para validação do backend
+            }
+
             // Tenta obter o ID do usuário caso não esteja preenchido
             let effectiveUserId = userId;
             if (!effectiveUserId || !isUUID(effectiveUserId)) {
@@ -617,6 +646,18 @@ export default function SettingsScreen() {
                 name: fullName.trim(),
                 username: cleanUsername,
             };
+
+            if (selectedAvatarPhoto?.uri) {
+                try {
+                    const uploadedUrl = await uploadImagem(selectedAvatarPhoto.uri);
+                    payload.avatarUrl = uploadedUrl;
+                } catch (uploadErr) {
+                    console.error('[SETTINGS] Erro no upload da foto de perfil:', uploadErr);
+                    Alert.alert('Aviso', 'Não foi possível fazer o upload da foto. O perfil será salvo sem alterar a imagem.');
+                }
+            } else if (avatarUrl) {
+                payload.avatarUrl = avatarUrl;
+            }
 
             if (effectiveUserId && isUUID(effectiveUserId)) {
                 payload.id = effectiveUserId;
@@ -780,7 +821,15 @@ export default function SettingsScreen() {
                             }
                         >
                             <Image
-                                source={require('../../../assets/images/auth-banner.png')}
+                                source={
+                                    selectedAvatarPhoto?.base64
+                                        ? { uri: selectedAvatarPhoto.base64 }
+                                        : selectedAvatarPhoto?.uri
+                                        ? { uri: selectedAvatarPhoto.uri }
+                                        : avatarUrl
+                                        ? { uri: avatarUrl }
+                                        : require('../../../assets/images/auth-banner.png')
+                                }
                                 style={
                                     styles.avatarImage
                                 }
@@ -1387,6 +1436,20 @@ export default function SettingsScreen() {
                         false,
                     )
                 }
+                onSelectFromGallery={async () => {
+                    setIsChangePhotoOpen(false);
+                    const photo = await pickImageFromGallery();
+                    if (photo) {
+                        setSelectedAvatarPhoto(photo);
+                    }
+                }}
+                onTakePhoto={async () => {
+                    setIsChangePhotoOpen(false);
+                    const photo = await takePhotoWithCamera();
+                    if (photo) {
+                        setSelectedAvatarPhoto(photo);
+                    }
+                }}
             />
         </SafeAreaView>
     );

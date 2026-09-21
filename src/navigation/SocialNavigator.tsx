@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SocialScreen from '../features/social';
 import PostIndividualScreen from '../features/social/PostIndividual';
 import CreatePostScreen from '../features/social/CreatePost';
+import UserProfileScreen from '../features/profile/UserProfile';
 import { SocialStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<SocialStackParamList>();
@@ -26,6 +27,10 @@ export default function SocialNavigator() {
             <Stack.Screen
                 name="CreatePost"
                 component={CreatePostScreen}
+            />
+            <Stack.Screen
+                name="UserProfile"
+                component={UserProfileScreen}
             />
         </Stack.Navigator>
     );

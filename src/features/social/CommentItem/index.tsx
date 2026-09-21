@@ -17,6 +17,8 @@ interface CommentItemProps {
     onSendReply?: (commentId: string, text: string) => void;
     onCancelReply?: () => void;
     onLongPress?: (comment: PostComment) => void;
+    onUserPress?: (userId?: string) => void;
+    onReportPress?: (comment: PostComment) => void;
 }
 
 const UNLIKED_COLOR = '#8E8E93';
@@ -31,6 +33,7 @@ export default function CommentItem({
     onSendReply,
     onCancelReply,
     onLongPress,
+    onUserPress,
 }: CommentItemProps) {
     // Por padrão no design do Figma, os comentários aninhados vêm abertos e podem ser fechados
     const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
@@ -50,6 +53,31 @@ export default function CommentItem({
             return next;
         });
         onLikePress?.(comment.id);
+    };
+
+    const authorUserId = (comment as any)?.authorId || (comment.author as any)?.id;
+
+    const handleLongPress = () => {
+        const options: Array<{ text: string; style?: 'default' | 'cancel' | 'destructive'; onPress?: () => void }> = [];
+
+        if (onReportPress) {
+            options.push({
+                text: 'Denunciar comentário',
+                style: 'destructive',
+                onPress: () => onReportPress(comment),
+            });
+        }
+
+        if (onLongPress) {
+            options.push({
+                text: 'Excluir comentário',
+                onPress: () => onLongPress(comment),
+            });
+        }
+
+        options.push({ text: 'Cancelar', style: 'cancel' });
+
+        Alert.alert('Opções do Comentário', 'Escolha uma ação:', options);
     };
 
     return (
@@ -72,16 +100,23 @@ export default function CommentItem({
                     !isReply && <View style={styles.caretPlaceholder} />
                 )}
 
-                <Image
-                    source={comment.author.avatar}
-                    style={styles.avatar}
-                    resizeMode="cover"
-                />
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                        if (authorUserId) onUserPress?.(authorUserId);
+                    }}
+                >
+                    <Image
+                        source={comment.author.avatar}
+                        style={styles.avatar}
+                        resizeMode="cover"
+                    />
+                </TouchableOpacity>
 
                 <TouchableOpacity
                     activeOpacity={0.9}
                     style={styles.contentArea}
-                    onLongPress={() => onLongPress?.(comment)}
+                    onLongPress={handleLongPress}
                 >
                     {/* Cabeçalho do Usuário com timestamp relativo dinâmico imediatamente após o username */}
                     <View style={styles.authorHeaderRow}>

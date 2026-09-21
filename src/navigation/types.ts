@@ -12,12 +12,14 @@ export type RootStackParamList = {
     Library: undefined;
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
+    UserProfile: { userId: string; };
 };
 
 export type ProfileStackParamList = {
     ProfileMain: undefined;
     Configuracoes: undefined;
     Achievements: undefined;
+    UserProfile: { userId: string; };
 };
 
 export type GardenStackParamList = {
@@ -27,10 +29,12 @@ export type GardenStackParamList = {
     Library: undefined;
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
+    UserProfile: { userId: string; };
 };
 
 export type SocialStackParamList = {
     SocialMain: undefined;
     PostIndividual: { postId: string; post?: Post; isLiked?: boolean; };
     CreatePost: undefined;
+    UserProfile: { userId: string; };
 };

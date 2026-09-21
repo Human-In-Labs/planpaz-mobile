@@ -20,6 +20,7 @@ export interface UserSettings {
     latitude?: number | null;
     longitude?: number | null;
     fcmToken?: string | null;
+    avatarUrl?: string | null;
     createdAt?: string | null;
 }
 
@@ -76,6 +77,15 @@ export async function pesquisarUsuarios(username: string): Promise<UserSummary[]
     return response.data;
 }
 
+export async function verificarDisponibilidadeUsername(username: string): Promise<boolean> {
+    try {
+        const response = await api.get<{ exists: boolean; available: boolean }>('/user/check-username', { params: { username } });
+        return response.data?.available ?? true;
+    } catch {
+        return true;
+    }
+}
+
 export async function seguirUsuario(id: string): Promise<void> {
     await api.post(`/user/${id}/follow`);
 }
@@ -96,4 +106,26 @@ export async function getSeguindo(id: string): Promise<UserSummary[]> {
 
 export async function removerSeguidor(followerId: string): Promise<void> {
     await api.delete(`/user/followers/${followerId}`);
+}
+
+export interface PublicUserProfile {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    bio?: string | null;
+    avatarUrl?: string | null;
+    followersCount: number;
+    followingCount: number;
+    isFollowing: boolean;
+    totalPlants: number;
+    totalPosts: number;
+    daysOnApp: number;
+    carbonPoints: number;
+    achievements: any[];
+}
+
+export async function getPublicUserProfile(id: string): Promise<PublicUserProfile> {
+    const response = await api.get<PublicUserProfile>(`/user/${id}/profile`);
+    return response.data;
 }

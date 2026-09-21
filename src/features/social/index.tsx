@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     RefreshControl,
     Text,
+    Image,
 } from 'react-native';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,13 +18,21 @@ import FilterChip from '../../shared/components/FilterChip';
 import FloatingActionButton from '../../shared/components/FloatingActionButton';
 import AppIcon from '../../shared/components/AppIcon';
 import NotificationOverlay from '../home/overlays/Notification';
+import FilterModal from './FilterModal';
 import { AppIcons } from '../../shared/constants/appIcons';
 import { colors } from '../../shared/theme';
 
 import PostCard from './PostCard';
-import { mockPosts, mockFilterCategories } from '../../shared/mock/socialMock';
+import { mockPosts } from '../../shared/mock/socialMock';
 import { Post } from '../../shared/types/social';
-import { listarPosts, PostResponse, toggleCurtirPost, onPostLikeChanged } from '../../shared/api';
+import {
+    listarPosts,
+    PostResponse,
+    toggleCurtirPost,
+    onPostLikeChanged,
+    pesquisarUsuarios,
+    UserSummary,
+} from '../../shared/api';
 import { getCurrentAuthorId } from '../../shared/services/storage';
 import { formatRelativeTime } from '../../shared/utils/date';
 import { SocialStackParamList } from '../../navigation/types';
@@ -69,16 +78,24 @@ export default function SocialScreen() {
     const navigation = useNavigation<NavigationProp>();
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState<{ id: string; label: string; removable?: boolean }[]>([]);
+    const [activeTags, setActiveTags] = useState<string[]>([]);
+    const [filterModalVisible, setFilterModalVisible] = useState(false);
     const [posts, setPosts] = useState<Post[]>(mockPosts);
     const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Efeito de scroll idêntico ao da HomeScreen para transição suave com fade no header
+    // Estado para busca de usuários por @
+    const [searchedUsers, setSearchedUsers] = useState<UserSummary[]>([]);
+    const [userSearchLoading, setUserSearchLoading] = useState(false);
+
+    const isUserSearch = searchQuery.trim().startsWith('@');
+
+    // Efeito de scroll para transição suave com fade no header
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const carregarPosts = useCallback(async (isPullToRefresh = false) => {
+    const carregarPosts = useCallback(async (isPullToRefresh = false, tagsToFilter: string[] = activeTags) => {
         try {
             if (isPullToRefresh) {
                 setRefreshing(true);
@@ -91,7 +108,8 @@ export default function SocialScreen() {
             } catch (err) {
                 console.log('[SOCIAL] Usuário logado não identificado para o feed:', err);
             }
-            const data = await listarPosts(0, 15, currentUserId);
+            const tagParam = tagsToFilter.length > 0 ? tagsToFilter[0] : undefined;
+            const data = await listarPosts(0, 15, currentUserId, tagParam);
             if (data?.content && Array.isArray(data.content)) {
                 const mappedPosts = data.content.map(mapPostResponseToPost);
                 setPosts(mappedPosts);
@@ -113,7 +131,31 @@ export default function SocialScreen() {
                 setLoading(false);
             }
         }
-    }, []);
+    }, [activeTags]);
+
+    // Busca de usuários por @ em tempo real (com debounce)
+    useEffect(() => {
+        if (!isUserSearch) {
+            setSearchedUsers([]);
+            return;
+        }
+
+        const usernameTerm = searchQuery.trim().substring(1);
+        const timer = setTimeout(async () => {
+            setUserSearchLoading(true);
+            try {
+                const results = await pesquisarUsuarios(usernameTerm);
+                setSearchedUsers(results || []);
+            } catch (err) {
+                console.log('[SOCIAL] Erro ao pesquisar usuários por @:', err);
+                setSearchedUsers([]);
+            } finally {
+                setUserSearchLoading(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, isUserSearch]);
 
     // Sincroniza em tempo real caso o post seja curtido/descurtido em qualquer tela (ex: PostIndividual)
     useEffect(() => {
@@ -144,9 +186,26 @@ export default function SocialScreen() {
         }, [carregarPosts])
     );
 
+    const handleApplyFilters = useCallback((selectedTags: string[]) => {
+        setActiveTags(selectedTags);
+        const newFilters = selectedTags.map(t => ({
+            id: `tag-${t}`,
+            label: t.startsWith('#') ? t : `# ${t}`,
+            removable: true,
+        }));
+        setFilters(newFilters);
+        carregarPosts(false, selectedTags);
+    }, [carregarPosts]);
+
     const handleRemoveFilter = useCallback((filterId: string) => {
-        setFilters(prev => prev.filter(f => f.id !== filterId));
-    }, []);
+        setFilters(prev => {
+            const nextFilters = prev.filter(f => f.id !== filterId);
+            const nextActiveTags = nextFilters.map(f => f.label.replace(/^#\s*/, ''));
+            setActiveTags(nextActiveTags);
+            carregarPosts(false, nextActiveTags);
+            return nextFilters;
+        });
+    }, [carregarPosts]);
 
     const handleLikePress = useCallback(async (postId: string) => {
         const currentlyLiked = likedPostIds.has(postId);
@@ -246,6 +305,12 @@ export default function SocialScreen() {
         console.log(`[SOCIAL] Compartilhar post: ${postId}`);
     }, []);
 
+    const handleUserPress = useCallback((userId?: string) => {
+        if (userId) {
+            (navigation as any).navigate('UserProfile', { userId });
+        }
+    }, [navigation]);
+
     const handleCreatePost = useCallback(() => {
         navigation.navigate('CreatePost');
     }, [navigation]);
@@ -265,8 +330,8 @@ export default function SocialScreen() {
             const activeFilterLabels = filters.map(f => f.label.toLowerCase());
             const matchesChips =
                 activeFilterLabels.length === 0 ||
-                post.tags.some(t => activeFilterLabels.some(chip => t.label.toLowerCase().includes(chip))) ||
-                activeFilterLabels.some(chip => post.content.toLowerCase().includes(chip));
+                post.tags.some(t => activeFilterLabels.some(chip => t.label.toLowerCase().includes(chip.replace(/^#\s*/, '')))) ||
+                activeFilterLabels.some(chip => post.content.toLowerCase().includes(chip.replace(/^#\s*/, '')));
 
             return matchesQuery && matchesChips;
         });
@@ -283,87 +348,136 @@ export default function SocialScreen() {
                     onNotificationPress={() => setNotificationVisible(true)}
                 />
 
-                {/* Feed de Publicações com Animated.FlatList */}
-                <Animated.FlatList
-                    data={filteredPosts}
-                    keyExtractor={item => item.id}
-                    showsVerticalScrollIndicator={false}
-                    scrollEventThrottle={16}
-                    onScroll={Animated.event(
-                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                        { useNativeDriver: false }
-                    )}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={() => carregarPosts(true)}
-                            colors={[colors.primary]}
-                            tintColor={colors.primary}
-                        />
-                    }
-                    contentContainerStyle={styles.feedContent}
-                    ListHeaderComponent={
-                        <>
-                            {/* Barra de Pesquisa */}
+                {/* Feed de Publicações ou Lista de Busca de Usuários com Animated.FlatList */}
+                {isUserSearch ? (
+                    <Animated.FlatList
+                        data={searchedUsers}
+                        keyExtractor={item => item.id}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.feedContent}
+                        ListHeaderComponent={
                             <View style={styles.searchSection}>
                                 <SearchBar
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
-                                    placeholder="Pesquise por assunto"
+                                    placeholder="Pesquise por assunto ou @usuario"
                                 />
                             </View>
-
-                            {/* Linha de Filtros Ativos */}
-                            <View style={styles.filtersSection}>
-                                <View style={styles.filtersRow}>
-                                    {filters.map(filter => (
-                                        <View key={filter.id} style={styles.filterChipWrapper}>
-                                            <FilterChip
-                                                label={filter.label}
-                                                removable={filter.removable}
-                                                onRemove={() => handleRemoveFilter(filter.id)}
-                                            />
-                                        </View>
-                                    ))}
+                        }
+                        ListEmptyComponent={
+                            userSearchLoading ? (
+                                <LoadingSpinner />
+                            ) : (
+                                <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                                        Nenhum utilizador encontrado com esse @.
+                                    </Text>
+                                </View>
+                            )
+                        }
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={styles.userCard}
+                                activeOpacity={0.7}
+                                onPress={() => handleUserPress(item.id)}
+                            >
+                                <Image source={DEFAULT_AVATAR} style={styles.userAvatar} />
+                                <View style={styles.userInfo}>
+                                    <Text style={styles.userName}>{item.name}</Text>
+                                    <Text style={styles.userUsername}>
+                                        {item.username.startsWith('@') ? item.username : `@${item.username}`}
+                                    </Text>
+                                </View>
+                                <AppIcon icon={AppIcons.CARET_RIGHT} size={18} color="#8E8E93" />
+                            </TouchableOpacity>
+                        )}
+                    />
+                ) : (
+                    <Animated.FlatList
+                        data={filteredPosts}
+                        keyExtractor={item => item.id}
+                        showsVerticalScrollIndicator={false}
+                        scrollEventThrottle={16}
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: false }
+                        )}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={() => carregarPosts(true)}
+                                colors={[colors.primary]}
+                                tintColor={colors.primary}
+                            />
+                        }
+                        contentContainerStyle={styles.feedContent}
+                        ListHeaderComponent={
+                            <>
+                                {/* Barra de Pesquisa */}
+                                <View style={styles.searchSection}>
+                                    <SearchBar
+                                        value={searchQuery}
+                                        onChangeText={setSearchQuery}
+                                        placeholder="Pesquise por assunto ou @usuario"
+                                    />
                                 </View>
 
-                                {/* Botão de Menu de Filtros */}
-                                <TouchableOpacity
-                                    style={styles.menuButton}
-                                    activeOpacity={0.7}
-                                    onPress={() => console.log('[SOCIAL] Abrir menu de filtros')}
-                                >
-                                    <AppIcon
-                                        icon={AppIcons.LIST_DASHES}
-                                        size={16}
-                                        color={colors.primary}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                        </>
-                    }
-                    ListEmptyComponent={
-                        loading ? (
-                            <LoadingSpinner />
-                        ) : (
-                            <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-                                <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                                    Nenhuma publicação encontrada no feed.
-                                </Text>
-                            </View>
-                        )
-                    }
-                    renderItem={({ item }) => (
-                        <PostCard
-                            post={item}
-                            isLiked={likedPostIds.has(item.id)}
-                            onPress={() => handlePostPress(item)}
-                            onLikePress={() => handleLikePress(item.id)}
-                            onCommentPress={() => handleCommentPress(item)}
-                            onSharePress={() => handleSharePress(item.id)}
-                        />
-                    )}
-                />
+                                {/* Linha de Filtros Ativos */}
+                                <View style={styles.filtersSection}>
+                                    <View style={styles.filtersRow}>
+                                        {filters.map(filter => (
+                                            <View key={filter.id} style={styles.filterChipWrapper}>
+                                                <FilterChip
+                                                    label={filter.label}
+                                                    removable={filter.removable}
+                                                    onRemove={() => handleRemoveFilter(filter.id)}
+                                                />
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    {/* Botão de Menu de Filtros */}
+                                    <TouchableOpacity
+                                        style={styles.menuButton}
+                                        activeOpacity={0.7}
+                                        onPress={() => setFilterModalVisible(true)}
+                                    >
+                                        <AppIcon
+                                            icon={AppIcons.LIST_DASHES}
+                                            size={16}
+                                            color={colors.primary}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </>
+                        }
+                        ListEmptyComponent={
+                            loading ? (
+                                <LoadingSpinner />
+                            ) : (
+                                <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
+                                        Nenhuma publicação encontrada no feed.
+                                    </Text>
+                                </View>
+                            )
+                        }
+                        renderItem={({ item }) => (
+                            <PostCard
+                                post={item}
+                                isLiked={likedPostIds.has(item.id)}
+                                onPress={() => handlePostPress(item)}
+                                onPressTag={(tagLabel) => {
+                                    handleApplyFilters([tagLabel]);
+                                }}
+                                onUserPress={handleUserPress}
+                                onLikePress={() => handleLikePress(item.id)}
+                                onCommentPress={() => handleCommentPress(item)}
+                                onSharePress={() => handleSharePress(item.id)}
+                            />
+                        )}
+                    />
+                )}
 
                 {/* Botão de Ação Flutuante (FAB) posicionado corretamente acima da TabBar */}
                 {!notificationVisible && (
@@ -380,6 +494,15 @@ export default function SocialScreen() {
             <NotificationOverlay
                 visible={notificationVisible}
                 onClose={() => setNotificationVisible(false)}
+            />
+
+            {/* Modal de Seleção de Filtros por Tag */}
+            <FilterModal
+                visible={filterModalVisible}
+                onClose={() => setFilterModalVisible(false)}
+                activeTags={activeTags}
+                onApplyFilters={handleApplyFilters}
+                maxTags={3}
             />
         </View>
     );

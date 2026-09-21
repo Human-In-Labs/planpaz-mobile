@@ -5,7 +5,7 @@ import { AppIcons } from '../../constants/appIcons';
 import { colors } from '../../theme';
 
 interface LoadingSpinnerProps {
-    size?: number;
+    size?: number | 'small' | 'large';
     color?: string;
 }
 
@@ -13,6 +13,14 @@ export default function LoadingSpinner({
     size = 28,
     color = colors.primary,
 }: LoadingSpinnerProps) {
+    const numericSize =
+        typeof size === 'number'
+            ? size
+            : size === 'large'
+            ? 36
+            : size === 'small'
+            ? 20
+            : 28;
     const spinValue = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -36,7 +44,7 @@ export default function LoadingSpinner({
     return (
         <View style={styles.container}>
             <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                <AppIcon icon={AppIcons.LEAF} size={size} color={color} />
+                <AppIcon icon={AppIcons.LEAF} size={numericSize} color={color} />
             </Animated.View>
         </View>
     );

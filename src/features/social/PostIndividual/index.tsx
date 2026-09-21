@@ -86,6 +86,14 @@ export default function PostIndividualScreen() {
     });
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+    const [reportTarget, setReportTarget] = useState<{ contentType: 'POST' | 'COMMENT'; contentId: string }>({
+        contentType: 'POST',
+        contentId: post.id,
+    });
+
+    useEffect(() => {
+        setReportTarget({ contentType: 'POST', contentId: post.id });
+    }, [post.id]);
 
     useEffect(() => {
         if (typeof route.params?.isLiked === 'boolean') {
@@ -190,6 +198,12 @@ export default function PostIndividualScreen() {
     };
 
     const handleReportPost = () => {
+        setReportTarget({ contentType: 'POST', contentId: post.id });
+        setIsReportModalVisible(true);
+    };
+
+    const handleReportComment = (commentToReport: PostComment) => {
+        setReportTarget({ contentType: 'COMMENT', contentId: commentToReport.id });
         setIsReportModalVisible(true);
     };
 
@@ -279,6 +293,12 @@ export default function PostIndividualScreen() {
         );
     }, []);
 
+    const handleUserPress = useCallback((userId?: string) => {
+        if (userId) {
+            (navigation as any).navigate('UserProfile', { userId });
+        }
+    }, [navigation]);
+
     return (
         <View style={styles.container}>
             <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -311,6 +331,7 @@ export default function PostIndividualScreen() {
                             isLiked={isPostLiked}
                             showReportButton
                             isDetailed
+                            onUserPress={handleUserPress}
                             onLikePress={handleLikePost}
                             onCommentPress={handlePostCommentButtonPress}
                             onSharePress={handleSharePost}
@@ -339,6 +360,7 @@ export default function PostIndividualScreen() {
                                         key={comment.id}
                                         comment={comment}
                                         activeReplyCommentId={activeReplyCommentId}
+                                        onUserPress={handleUserPress}
                                         onLikePress={id =>
                                             console.log(`[COMENTÁRIOS] Like no comentário: ${id}`)
                                         }
@@ -346,6 +368,7 @@ export default function PostIndividualScreen() {
                                         onSendReply={handleSendReply}
                                         onCancelReply={() => setActiveReplyCommentId(null)}
                                         onLongPress={handleDeleteComment}
+                                        onReportPress={handleReportComment}
                                     />
                                 ))}
                             </View>
@@ -364,8 +387,10 @@ export default function PostIndividualScreen() {
             <ReportModal
                 visible={isReportModalVisible}
                 onClose={() => setIsReportModalVisible(false)}
-                onConfirmReport={(category, details) => {
-                    console.log(`[POST INDIVIDUAL] Denúncia confirmada para post ${post.id}: ${category} - ${details}`);
+                contentType={reportTarget.contentType}
+                contentId={reportTarget.contentId}
+                onConfirmReport={(reason, message) => {
+                    console.log(`[POST INDIVIDUAL] Denúncia enviada para ${reportTarget.contentType} ${reportTarget.contentId}`);
                 }}
             />
         </View>

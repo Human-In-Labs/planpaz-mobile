@@ -5,57 +5,75 @@ import {
     TextInput,
     TouchableOpacity,
     Alert,
+    ActivityIndicator,
 } from 'react-native';
 import Overlay from '../../../shared/components/Overlay';
+import {
+    enviarDenuncia,
+    ReportContentType,
+    ReportReason,
+} from '../../../shared/api';
 import { styles } from './styles';
 
 interface ReportModalProps {
     visible: boolean;
     onClose: () => void;
-    onConfirmReport?: (category: string, details: string) => void;
+    contentType?: ReportContentType;
+    contentId?: string;
+    onConfirmReport?: (reason: ReportReason, message: string) => void;
 }
 
 interface ReportCategory {
-    id: string;
+    id: ReportReason;
     title: string;
     description: string;
 }
 
 const REPORT_CATEGORIES: ReportCategory[] = [
     {
-        id: 'spam',
-        title: 'Spam ou Conteúdo Comercial',
+        id: 'HATE_SPEECH',
+        title: 'Discurso de ódio',
         description:
-            'Publicações repetitivas, anúncios não autorizados ou links suspeitos.',
+            'Preconceito, discriminação, ataques pessoais ou violência verbal.',
     },
     {
-        id: 'offensive',
-        title: 'Conteúdo Inadequado ou Ofensivo',
+        id: 'UNAUTHORIZED_DISCLOSURE',
+        title: 'Divulgação indevida',
         description:
-            'Linguagem imprópria, assédio, violência ou desrespeito às regras da comunidade.',
+            'Vazamento de informações pessoais, imagens não autorizadas ou dados privados.',
     },
     {
-        id: 'misinformation',
-        title: 'Informação Falsa ou Enganosa',
+        id: 'SPAM',
+        title: 'Spam ou Golpes',
         description:
-            'Dicas prejudiciais ao cultivo, desinformação botânica ou alegações incorretas.',
+            'Publicações repetitivas, anúncios não autorizados, ofertas falsas ou links suspeitos.',
+    },
+    {
+        id: 'INAPPROPRIATE_CONTENT',
+        title: 'Conteúdo inapropriado',
+        description:
+            'Linguagem imprópria, assédio ou desrespeito às regras da comunidade PlanPaz.',
     },
 ];
 
 export default function ReportModal({
     visible,
     onClose,
+    contentType = 'POST',
+    contentId,
     onConfirmReport,
 }: ReportModalProps) {
     const [stage, setStage] = useState<'categories' | 'confirm'>('categories');
     const [selectedCategory, setSelectedCategory] = useState<ReportCategory | null>(null);
-    const [details, setDetails] = useState('');
+    const [message, setMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (visible) {
             setStage('categories');
             setSelectedCategory(null);
-            setDetails('');
+            setMessage('');
+            setIsSubmitting(false);
         }
     }, [visible]);
 
@@ -64,15 +82,43 @@ export default function ReportModal({
         setStage('confirm');
     };
 
-    const handleConfirm = () => {
-        if (selectedCategory) {
-            onConfirmReport?.(selectedCategory.title, details);
+    const handleConfirm = async () => {
+        if (!selectedCategory) return;
+
+        if (contentId) {
+            try {
+                setIsSubmitting(true);
+                await enviarDenuncia({
+                    contentType,
+                    contentId,
+                    reason: selectedCategory.id,
+                    message: message.trim() || undefined,
+                });
+
+                onConfirmReport?.(selectedCategory.id, message);
+
+                Alert.alert(
+                    'Denúncia Enviada',
+                    'Agradecemos a sua denúncia. Nossa equipe de moderação irá analisar o conteúdo.',
+                    [{ text: 'OK', onPress: onClose }]
+                );
+            } catch (error: any) {
+                console.error('[REPORT MODAL] Erro ao enviar denúncia:', error);
+                const errMsg =
+                    error?.response?.data?.message ||
+                    'Não foi possível enviar sua denúncia. Tente novamente.';
+                Alert.alert('Aviso', errMsg);
+            } finally {
+                setIsSubmitting(false);
+            }
+        } else {
+            onConfirmReport?.(selectedCategory.id, message);
             Alert.alert(
-                'Denúncia enviada',
-                'Obrigado pelo aviso! Nossa equipe analisará a publicação com base nas diretrizes da comunidade.'
+                'Denúncia Enviada',
+                'Agradecemos a sua denúncia. Nossa equipe de moderação irá analisar o conteúdo.'
             );
+            onClose();
         }
-        onClose();
     };
 
     return (
@@ -84,7 +130,7 @@ export default function ReportModal({
             <View style={styles.cardContent}>
                 {stage === 'categories' ? (
                     <>
-                        {/* Etapa 1: Categorias de Denúncia (DenunciarPost.svg) */}
+                        {/* Etapa 1: Categorias de Denúncia */}
                         <Text style={styles.title}>
                             Por que você está denunciando?
                         </Text>
@@ -109,23 +155,24 @@ export default function ReportModal({
                     </>
                 ) : (
                     <>
-                        {/* Etapa 2: Confirmação da Denúncia (PopupConfirmarDenuncia.svg) */}
+                        {/* Etapa 2: Confirmação da Denúncia com Mensagem Opcional */}
                         <Text style={styles.title}>
-                            Você tem certeza que quer denunciar este post?
+                            Confirmar denúncia de {contentType === 'POST' ? 'post' : 'comentário'}?
                         </Text>
 
                         <Text style={styles.confirmSubtitle}>
-                            Se desejar, forneça mais informações abaixo:
+                            Motivo: {selectedCategory?.title}
                         </Text>
 
                         <View style={styles.detailsInputContainer}>
                             <TextInput
                                 style={styles.detailsInput}
-                                value={details}
-                                onChangeText={setDetails}
-                                placeholder="Detalhes adicionais (opcional)..."
+                                value={message}
+                                onChangeText={setMessage}
+                                placeholder="Descreva mais detalhes (opcional)..."
                                 placeholderTextColor="#8E8E93"
                                 multiline
+                                maxLength={300}
                             />
                         </View>
 
@@ -134,6 +181,7 @@ export default function ReportModal({
                                 style={styles.cancelButton}
                                 activeOpacity={0.8}
                                 onPress={() => setStage('categories')}
+                                disabled={isSubmitting}
                             >
                                 <Text style={styles.cancelButtonText}>
                                     Voltar
@@ -141,13 +189,18 @@ export default function ReportModal({
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={styles.confirmButton}
+                                style={[styles.confirmButton, isSubmitting && { opacity: 0.6 }]}
                                 activeOpacity={0.8}
                                 onPress={handleConfirm}
+                                disabled={isSubmitting}
                             >
-                                <Text style={styles.confirmButtonText}>
-                                    Denunciar
-                                </Text>
+                                {isSubmitting ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                ) : (
+                                    <Text style={styles.confirmButtonText}>
+                                        Denunciar
+                                    </Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </>

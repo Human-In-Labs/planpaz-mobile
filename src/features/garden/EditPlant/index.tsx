@@ -19,10 +19,12 @@ import DropdownField from '../../profile/settings/components/DropdownField';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
+import { pickImageFromGallery, takePhotoWithCamera, SelectedImage } from '../../../shared/utils/imagePicker';
 import {
     buscarPlantaDoJardim,
     buscarStagesDaEspecie,
     editarPlantaDoJardim,
+    uploadImagem,
     PlantStage,
     ROOM_ENUM_TO_LABEL,
 } from '../../../shared/api';
@@ -51,6 +53,7 @@ export default function EditPlantScreen() {
     const [plantImage, setPlantImage] = useState<any>(
         require('../../../assets/images/auth-banner.png')
     );
+    const [selectedPhoto, setSelectedPhoto] = useState<SelectedImage | null>(null);
 
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [changePhotoVisible, setChangePhotoVisible] = useState(false);
@@ -159,12 +162,22 @@ export default function EditPlantScreen() {
 
         try {
             setSaving(true);
+            let finalImagePath: string | undefined = undefined;
+            if (selectedPhoto?.uri) {
+                try {
+                    finalImagePath = await uploadImagem(selectedPhoto.uri);
+                } catch (uploadErr) {
+                    console.error('[EDIT_PLANT] Erro no upload da imagem da planta:', uploadErr);
+                }
+            }
+
             const res = await editarPlantaDoJardim(plantId, {
                 nickname: nickname.trim(),
                 room: room,
                 directRain: directRain === 'Sim',
                 wateringNotification: reminders === 'Ativado',
                 stage: selectedStageId ? { id: selectedStageId } : undefined,
+                imagePath: finalImagePath,
             });
 
             if (res && res.message) {
@@ -237,7 +250,13 @@ export default function EditPlantScreen() {
                 >
                     <View style={styles.photoContainer}>
                         <Image
-                            source={plantImage}
+                            source={
+                                selectedPhoto?.base64
+                                    ? { uri: selectedPhoto.base64 }
+                                    : selectedPhoto?.uri
+                                    ? { uri: selectedPhoto.uri }
+                                    : plantImage
+                            }
                             style={styles.photo}
                             resizeMode="cover"
                         />
@@ -374,11 +393,15 @@ export default function EditPlantScreen() {
             <ChangePhotoOverlay
                 visible={changePhotoVisible}
                 onClose={() => setChangePhotoVisible(false)}
-                onSelectFromGallery={() => {
+                onSelectFromGallery={async () => {
                     setChangePhotoVisible(false);
+                    const img = await pickImageFromGallery();
+                    if (img) setSelectedPhoto(img);
                 }}
-                onTakePhoto={() => {
+                onTakePhoto={async () => {
                     setChangePhotoVisible(false);
+                    const img = await takePhotoWithCamera();
+                    if (img) setSelectedPhoto(img);
                 }}
             />
         </View>

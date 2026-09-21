@@ -22,7 +22,8 @@ import AppIcon from '../../../shared/components/AppIcon';
 import DropdownField from '../../profile/settings/components/DropdownField';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
-import { adicionarAoJardim } from '../../../shared/api/garden';
+import { adicionarAoJardim, uploadImagem } from '../../../shared/api';
+import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
 import {
     buscarStagesDaEspecie,
     PlantStage,
@@ -181,6 +182,15 @@ export default function AddPlantScreen() {
         try {
             setAdding(true);
 
+            let finalImagePath: string | null = null;
+            if (selectedPhoto?.uri) {
+                try {
+                    finalImagePath = await uploadImagem(selectedPhoto.uri);
+                } catch (uploadErr) {
+                    console.error('[ADD_PLANT] Erro ao fazer upload da imagem da planta:', uploadErr);
+                }
+            }
+
             const res = await adicionarAoJardim({
                 plant: {
                     id: speciesId,
@@ -193,7 +203,7 @@ export default function AddPlantScreen() {
                 wateringNotification: true,
                 directRain: directRain === 'Sim',
                 room: ROOM_MAP[room] || 'OTHER',
-                imagePath: null,
+                imagePath: finalImagePath,
             });
 
             if (res && res.message) {
@@ -467,17 +477,19 @@ export default function AddPlantScreen() {
                 onClose={() =>
                     setChangePhotoVisible(false)
                 }
-                onSelectFromGallery={() => {
-                    setSelectedPhoto(
-                        require('../../../assets/images/auth-banner.png'),
-                    );
+                onSelectFromGallery={async () => {
                     setChangePhotoVisible(false);
+                    const image = await pickImageFromGallery();
+                    if (image) {
+                        setSelectedPhoto({ uri: image.uri, base64: image.base64 });
+                    }
                 }}
-                onTakePhoto={() => {
-                    setSelectedPhoto(
-                        require('../../../assets/images/auth-banner.png'),
-                    );
+                onTakePhoto={async () => {
                     setChangePhotoVisible(false);
+                    const image = await takePhotoWithCamera();
+                    if (image) {
+                        setSelectedPhoto({ uri: image.uri, base64: image.base64 });
+                    }
                 }}
             />
         </View>

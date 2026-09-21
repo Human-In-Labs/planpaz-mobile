@@ -48,6 +48,7 @@ export interface EditGardenPlantRequest {
     stage?: {
         id: string;
     };
+    imagePath?: string | null;
 }
 
 export interface WateringReminder {

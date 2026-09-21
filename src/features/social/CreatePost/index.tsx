@@ -20,10 +20,11 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
 import { SocialStackParamList } from '../../../navigation/types';
-import { criarPost } from '../../../shared/api';
+import { criarPost, uploadImagem } from '../../../shared/api';
 import { getCurrentAuthorId } from '../../../shared/services/storage';
 import HashtagInput from './HashtagInput';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
+import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<SocialStackParamList, 'CreatePost'>;
@@ -38,9 +39,25 @@ export default function CreatePostScreen() {
     const [title, setTitle] = useState('');
     const [tags, setTags] = useState<string[]>(['Ornamental']);
     const [content, setContent] = useState('');
-    const [selectedImage, setSelectedImage] = useState<ImageSourcePropType | null>(null);
+    const [selectedImage, setSelectedImage] = useState<{ uri: string; base64?: string } | null>(null);
     const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSelectGallery = async () => {
+        setIsImagePickerVisible(false);
+        const image = await pickImageFromGallery();
+        if (image) {
+            setSelectedImage({ uri: image.uri, base64: image.base64 });
+        }
+    };
+
+    const handleSelectCamera = async () => {
+        setIsImagePickerVisible(false);
+        const image = await takePhotoWithCamera();
+        if (image) {
+            setSelectedImage({ uri: image.uri, base64: image.base64 });
+        }
+    };
 
     const handlePublish = async () => {
         if (!title.trim() && !content.trim()) {
@@ -55,7 +72,14 @@ export default function CreatePostScreen() {
             const authorId = await getCurrentAuthorId();
 
             const formattedTags = tags.map(tag => (tag.startsWith('#') ? tag : `#${tag}`));
-            const mediaUrl = selectedImage ? 'https://meu-storage.com/posts/imagem1.jpg' : null;
+            let mediaUrl: string | null = null;
+            if (selectedImage?.uri) {
+                try {
+                    mediaUrl = await uploadImagem(selectedImage.uri);
+                } catch (uploadErr) {
+                    console.log('[CREATE POST] Erro ao fazer upload da mídia para o Cloudinary:', uploadErr);
+                }
+            }
 
             const res = await criarPost({
                 authorId,
@@ -79,8 +103,10 @@ export default function CreatePostScreen() {
             );
         } catch (error: any) {
             console.log('[CREATE POST] Erro ao criar post na API:', error);
+            const status = error?.response?.status;
             const errorMsg = error?.response?.data?.message || 'Não foi possível registrar sua publicação. Tente novamente.';
-            Alert.alert('Aviso', errorMsg);
+            const alertTitle = status === 400 ? 'Conteúdo Não Permitido' : 'Aviso';
+            Alert.alert(alertTitle, errorMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -109,7 +135,7 @@ export default function CreatePostScreen() {
                     >
                         {/* Container de Adicionar Foto com estilo exatamente igual a AddPlant */}
                         <TouchableOpacity
-                            style={styles.uploadBox}
+                            style={[styles.uploadBox, selectedImage ? styles.uploadBoxWithImage : null]}
                             activeOpacity={0.8}
                             onPress={() => setIsImagePickerVisible(true)}
                         >
@@ -207,12 +233,8 @@ export default function CreatePostScreen() {
             <ChangePhotoOverlay
                 visible={isImagePickerVisible}
                 onClose={() => setIsImagePickerVisible(false)}
-                onTakePhoto={() => {
-                    setSelectedImage(SAMPLE_IMAGE);
-                }}
-                onSelectFromGallery={() => {
-                    setSelectedImage(SAMPLE_IMAGE);
-                }}
+                onTakePhoto={handleSelectCamera}
+                onSelectFromGallery={handleSelectGallery}
             />
         </View>
     );

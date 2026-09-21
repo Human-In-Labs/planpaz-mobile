@@ -13,6 +13,7 @@ interface PostCardProps {
     showReportButton?: boolean;
     isDetailed?: boolean;
     onPress?: () => void;
+    onUserPress?: (userId?: string) => void;
     onLikePress?: () => void;
     onCommentPress?: () => void;
     onSharePress?: () => void;
@@ -28,6 +29,7 @@ export default function PostCard({
     showReportButton = false,
     isDetailed = false,
     onPress,
+    onUserPress,
     onLikePress,
     onCommentPress,
     onSharePress,
@@ -44,6 +46,8 @@ export default function PostCard({
             ? post.content.split('\n\n').slice(1).join('\n\n')
             : undefined);
 
+    const authorUserId = (post as any)?.authorId || (post.author as any)?.id;
+
     return (
         <TouchableOpacity
             style={styles.card}
@@ -52,7 +56,15 @@ export default function PostCard({
         >
             {/* Header: Avatar, Username, Timestamp e Botão Denunciar (no post individual) */}
             <View style={styles.header}>
-                <View style={styles.headerLeft}>
+                <TouchableOpacity
+                    style={styles.headerLeft}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                        if (authorUserId) {
+                            onUserPress?.(authorUserId);
+                        }
+                    }}
+                >
                     <Image
                         source={post.author.avatar}
                         style={styles.avatar}
@@ -67,7 +79,7 @@ export default function PostCard({
                             </>
                         )}
                     </View>
-                </View>
+                </TouchableOpacity>
 
                 {showReportButton && (
                     <TouchableOpacity

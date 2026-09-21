@@ -178,6 +178,7 @@ export default function ProfileScreen() {
                             username: cleanUsername || prev.username,
                             name: settings.name || prev.name,
                             bio: settings.bio ?? '',
+                            avatar: settings.avatarUrl ? { uri: settings.avatarUrl } : prev.avatar,
                             followers: followersCount,
                             following: followingCount,
                         }));
@@ -277,6 +278,7 @@ export default function ProfileScreen() {
                 title={followersTitle}
                 users={followersTitle === 'Meus seguidores' ? followersList : followingList}
                 onClose={() => setActiveOverlay(null)}
+                onUserPress={(userId) => (navigation as any).navigate('UserProfile', { userId })}
             />
 
             <NotificationOverlay

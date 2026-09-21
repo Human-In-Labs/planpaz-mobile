@@ -7,3 +7,5 @@ export * from './user';
 export * from './weather';
 export * from './achievement';
 export * from './location';
+export * from './upload';
+export * from './report';

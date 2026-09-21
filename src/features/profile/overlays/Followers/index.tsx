@@ -22,15 +22,17 @@ interface FollowersOverlayProps {
     title?: string;
     users?: FollowerUser[];
     onOptionsPress?: (user: FollowerUser) => void;
+    onUserPress?: (userId: string) => void;
 }
 
 interface FollowerItemProps {
     item: FollowerUser;
     onToggleOptions: (item: FollowerUser, cardTopInModal: number, cardHeight: number) => void;
     containerNodeRef: React.RefObject<View | null>;
+    onUserPress?: (userId: string) => void;
 }
 
-function FollowerRow({ item, onToggleOptions, containerNodeRef }: FollowerItemProps) {
+function FollowerRow({ item, onToggleOptions, containerNodeRef, onUserPress }: FollowerItemProps) {
     const cardRef = useRef<View>(null);
 
     function handlePress() {
@@ -56,14 +58,20 @@ function FollowerRow({ item, onToggleOptions, containerNodeRef }: FollowerItemPr
 
     return (
         <View ref={cardRef} style={styles.card} collapsable={false}>
-            <Image
-                source={item.avatar}
-                style={styles.avatar}
-            />
+            <TouchableOpacity
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+                activeOpacity={0.7}
+                onPress={() => onUserPress?.(item.id)}
+            >
+                <Image
+                    source={item.avatar}
+                    style={styles.avatar}
+                />
 
-            <Text style={styles.username} numberOfLines={1}>
-                {item.username}
-            </Text>
+                <Text style={styles.username} numberOfLines={1}>
+                    {item.username}
+                </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
                 style={styles.kebabButton}
@@ -86,6 +94,7 @@ export default function FollowersOverlay({
     title = 'Meus seguidores',
     users = [],
     onOptionsPress,
+    onUserPress,
 }: FollowersOverlayProps) {
     const containerRef = useRef<View>(null);
 
@@ -174,6 +183,10 @@ export default function FollowersOverlay({
                             item={item}
                             onToggleOptions={handleToggleOptions}
                             containerNodeRef={containerRef}
+                            onUserPress={(userId) => {
+                                onClose();
+                                onUserPress?.(userId);
+                            }}
                         />
                     )}
                 />

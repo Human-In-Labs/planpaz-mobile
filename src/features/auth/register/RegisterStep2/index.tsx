@@ -15,7 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../../navigation/types';
 import { colors } from '../../../../shared/theme';
-import { register } from '../../../../shared/api';
+import { register, verificarDisponibilidadeUsername } from '../../../../shared/api';
 import { ErrorPopup } from '../../errors';
 import { styles } from './styles';
 
@@ -62,6 +62,14 @@ export default function RegisterStep2Screen() {
 
     try {
       setLoading(true);
+      const isAvailable = await verificarDisponibilidadeUsername(cleanUsername);
+      if (!isAvailable) {
+        setUsernameError(true);
+        setErrorMessage(`Este nome de usuário (@${cleanUsername.replace(/^@/, '')}) já está em uso.`);
+        setLoading(false);
+        return;
+      }
+
       const res = await register({
         name: cleanFirstName,
         username: cleanUsername,
@@ -88,7 +96,10 @@ export default function RegisterStep2Screen() {
         const serverMsg =
           error.response.data?.message ||
           error.response.data?.error ||
-          (error.response.status === 400 ? 'Este e-mail ou usuário já está cadastrado' : 'Não foi possível realizar o cadastro');
+          (error.response.status === 400 ? 'Este e-mail ou nome de usuário já está cadastrado' : 'Não foi possível realizar o cadastro');
+        if (serverMsg.toLowerCase().includes('usuário') || serverMsg.toLowerCase().includes('username')) {
+          setUsernameError(true);
+        }
         setErrorMessage(serverMsg);
       } else if (error?.request) {
         console.log('[REGISTER] Sem resposta do servidor:', error.request);

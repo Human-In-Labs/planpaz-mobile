@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileScreen from '../features/profile';
 import SettingsScreen from '../features/profile/settings';
 import AchievementsScreen from '../features/profile/achievements';
+import UserProfileScreen from '../features/profile/UserProfile';
 import { ProfileStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -26,6 +27,10 @@ export default function ProfileNavigator() {
             <Stack.Screen
                 name="Achievements"
                 component={AchievementsScreen}
+            />
+            <Stack.Screen
+                name="UserProfile"
+                component={UserProfileScreen}
             />
         </Stack.Navigator>
     );

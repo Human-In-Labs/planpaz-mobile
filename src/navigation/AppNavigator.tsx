@@ -25,6 +25,7 @@ import MainTabNavigator from './MainTabNavigator';
 import LibraryScreen from '../features/library';
 import SpeciesDetailsScreen from '../features/library/SpeciesDetails';
 import AddPlantScreen from '../features/garden/AddPlant';
+import UserProfileScreen from '../features/profile/UserProfile';
 
 import { RootStackParamList } from './types';
 
@@ -176,6 +177,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="AddPlant"
                     component={AddPlantScreen}
+                />
+
+                <Stack.Screen
+                    name="UserProfile"
+                    component={UserProfileScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

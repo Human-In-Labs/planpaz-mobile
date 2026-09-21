@@ -47,4 +47,36 @@ export const styles = StyleSheet.create({
         right: scale(16),
         bottom: verticalScale(106),
     },
+    userCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: scale(16),
+        paddingVertical: verticalScale(12),
+        marginHorizontal: scale(16),
+        marginBottom: verticalScale(8),
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        ...shadows.small,
+    },
+    userAvatar: {
+        width: scale(44),
+        height: scale(44),
+        borderRadius: scale(22),
+        marginRight: scale(12),
+        backgroundColor: '#E8F5E9',
+    },
+    userInfo: {
+        flex: 1,
+    },
+    userName: {
+        fontSize: scale(15),
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: verticalScale(2),
+    },
+    userUsername: {
+        fontSize: scale(13),
+        color: colors.primary,
+        fontWeight: '500',
+    },
 });
