@@ -112,6 +112,7 @@ export const styles = StyleSheet.create({
         fontSize: scale(12),
         fontFamily: fonts.interRegular,
         color: colors.black,
+        marginRight: scale(4),
         paddingVertical: 0,
     },
 

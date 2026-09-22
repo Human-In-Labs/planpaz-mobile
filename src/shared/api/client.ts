@@ -61,19 +61,28 @@ api.interceptors.response.use(
 
     async error => {
         const requestUrl = error.config?.url || '';
-        const isAuthEndpoint = requestUrl.includes('/auth/');
+        const isAuthEndpoint =
+            requestUrl.includes('/auth/') ||
+            requestUrl.includes('check-username') ||
+            requestUrl.includes('/login') ||
+            requestUrl.includes('/register');
+        const hasAuthHeader = Boolean(error.config?.headers?.Authorization);
 
         if (
             (error.response?.status === 401 || error.response?.status === 403) &&
-            !isAuthEndpoint
+            !isAuthEndpoint &&
+            hasAuthHeader
         ) {
-            if (!isHandlingUnauthorized) {
+            const currentToken = await getToken();
+
+            if (currentToken && !isHandlingUnauthorized) {
                 isHandlingUnauthorized = true;
 
                 console.log(
                     `[API Interceptor] Error ${error.response.status}: Limpando token e notificando desautenticação.`,
                 );
 
+                delete api.defaults.headers.common.Authorization;
                 await removeToken();
                 await removeUser();
                 await removeUserId();

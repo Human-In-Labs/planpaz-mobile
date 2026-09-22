@@ -5,4 +5,5 @@ export interface ActionFeedbackModalProps {
     buttonText?: string;
     onClose?: () => void;
     onConfirm?: () => void;
+    closeOnBackdropPress?: boolean;
 }

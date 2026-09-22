@@ -47,6 +47,7 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
 
     if (token) {
         await saveToken(token);
+        api.defaults.headers.common.Authorization = `Bearer ${token}`;
     }
 
     await saveUser({
@@ -66,6 +67,7 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
 
     if (token) {
         await saveToken(token);
+        api.defaults.headers.common.Authorization = `Bearer ${token}`;
     }
 
     await saveUser({
@@ -79,6 +81,7 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
 }
 
 export async function logout(): Promise<void> {
+    delete api.defaults.headers.common.Authorization;
     await removeToken();
     await removeUser();
     await removeUserId();

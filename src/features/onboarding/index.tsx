@@ -17,14 +17,14 @@ const pages = [
   },
 
   {
-    title: 'Cultive suas plantas',
-    description: 'Aprenda a cuidar das espécies ideais para você.',
+    title: 'Seu jardim começa aqui!',
+    description: 'Adicione plantas e acompanhe os cuidados de cada uma. Receba lembretes para regar, adubar e manter seu jardim saudável.',
     image: require('../../assets/images/onboarding-2.png'),
   },
 
   {
-    title: 'Compartilhe experiências',
-    description: 'Conecte-se com pessoas que também cultivam plantas.',
+    title: 'Faça parte da nossa comunidade!',
+    description: 'Compartilhe suas plantas, tire dúvidas e troque experiências com quem também ama cultivar. ',
     image: require('../../assets/images/onboarding-3.png'),
   },
 ];

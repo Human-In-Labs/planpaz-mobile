@@ -80,6 +80,7 @@ export default function ResetPasswordScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
+          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
           <Text style={styles.title}>Redefinir</Text>
           <Text style={styles.subtitle}>Digite a nova senha</Text>
 
@@ -200,8 +201,6 @@ export default function ResetPasswordScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   );
 }

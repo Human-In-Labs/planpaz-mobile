@@ -4,7 +4,7 @@ import { scale, verticalScale } from '../../shared/theme/scale';
 
 const { width, height } = Dimensions.get('window');
 
-const bannerHeight = Math.min(width * (489 / 390), height * 0.45);
+const bannerHeight = Math.min(width * (489 / 390), height * 0.7);
 
 export const styles = StyleSheet.create({
   container: {
@@ -57,7 +57,7 @@ export const styles = StyleSheet.create({
   },
 
   title: {
-    ...typography.h2,
+    ...typography.h1,
     marginBottom: spacing.xl,
   }, 
 

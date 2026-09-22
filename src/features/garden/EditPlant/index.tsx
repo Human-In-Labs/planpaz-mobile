@@ -18,6 +18,7 @@ import AppIcon from '../../../shared/components/AppIcon';
 import DropdownField from '../../profile/settings/components/DropdownField';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { pickImageFromGallery, takePhotoWithCamera, SelectedImage } from '../../../shared/utils/imagePicker';
 import {
@@ -180,9 +181,8 @@ export default function EditPlantScreen() {
                 imagePath: finalImagePath,
             });
 
-            if (res && res.message) {
-                Alert.alert('Sucesso', res.message);
-            }
+            const msg = res?.message || 'Planta alterada com sucesso!';
+            showFeedback(msg);
             navigation.goBack();
         } catch (error: any) {
             console.error('Erro ao editar planta:', error);

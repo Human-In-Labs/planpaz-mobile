@@ -43,6 +43,7 @@ export default function ValidateCodeScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
+          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
           <Text style={styles.title}>Validar</Text>
           <Text style={styles.subtitle}>
             Digite o código enviado por Email
@@ -80,8 +81,6 @@ export default function ValidateCodeScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   );
 }

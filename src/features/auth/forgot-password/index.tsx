@@ -47,6 +47,7 @@ export default function ForgotPasswordScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
+          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
           <Text style={styles.title}>Email</Text>
           <Text style={styles.subtitle}>
             Digite seu Email para receber um código de redefinição de sua senha
@@ -84,8 +85,6 @@ export default function ForgotPasswordScreen() {
           </TouchableOpacity>
         </View>
       </View>
-
-      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </View>
   );
 }

@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +18,7 @@ import { colors } from '../../../shared/theme';
 import { login, getUserSettings } from '../../../shared/api';
 import { saveToken, getToken, saveUserId, isUUID } from '../../../shared/services/storage';
 import AppIcon from '../../../shared/components/AppIcon';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
 
@@ -36,6 +38,7 @@ export default function LoginScreen() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = async () => {
+    Keyboard.dismiss();
     const cleanEmail = email.trim();
 
     if (!cleanEmail && !password) {
@@ -93,9 +96,14 @@ export default function LoginScreen() {
 
       console.log('[LOGIN] Token salvo:', tokenSalvo);
 
-      console.log('[LOGIN] Login realizado:', data);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
 
-      navigation.navigate('MainTabs');
+      setTimeout(() => {
+        showFeedback('Login realizado com sucesso!');
+      }, 350);
     } catch (error: any) {
       console.log('[LOGIN] Erro completo no login:', error);
       if (error?.response) {
@@ -124,17 +132,18 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <View style={styles.header}>
           <Image
-            source={require('../../../assets/images/auth-banner.png')}
+            source={require('../../../assets/images/onboarding-1.png')}
             resizeMode="cover"
             style={styles.banner}
           />
@@ -142,6 +151,7 @@ export default function LoginScreen() {
 
         <View style={styles.main}>
           <View style={styles.content}>
+            <ErrorPopup visible={!!errorMessage} message={errorMessage} />
             <Text style={styles.title}>Entrar</Text>
 
             <TextInput
@@ -214,8 +224,6 @@ export default function LoginScreen() {
           </View>
         </View>
       </ScrollView>
-
-      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </KeyboardAvoidingView>
   );
 }

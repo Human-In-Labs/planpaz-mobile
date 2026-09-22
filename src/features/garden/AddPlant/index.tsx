@@ -29,6 +29,9 @@ import {
     buscarStagesDaEspecie,
     PlantStage,
 } from '../../../shared/api/plant';
+import DateTimePicker, {
+    DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { styles } from './styles';
@@ -61,6 +64,33 @@ const getCurrentDate = () => {
     return `${day}/${month}/${year}`;
 };
 
+function parseDateStringToDate(dateStr?: string): Date {
+    if (!dateStr) return new Date();
+
+    const clean = dateStr.trim();
+    const parts = clean.split('/');
+    if (parts.length === 3) {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const y = parseInt(parts[2], 10);
+        if (!isNaN(d) && !isNaN(m) && !isNaN(y)) {
+            return new Date(y, m, d);
+        }
+    }
+
+    const isoParts = clean.split('-');
+    if (isoParts.length === 3) {
+        const y = parseInt(isoParts[0], 10);
+        const m = parseInt(isoParts[1], 10) - 1;
+        const d = parseInt(isoParts[2], 10);
+        if (!isNaN(d) && !isNaN(m) && !isNaN(y)) {
+            return new Date(y, m, d);
+        }
+    }
+
+    return new Date();
+}
+
 const formatDateForBackend = (date: string) => {
     const [day, month, year] = date.split('/');
 
@@ -91,6 +121,20 @@ export default function AddPlantScreen() {
         useState<string | null>(null);
     const [changePhotoVisible, setChangePhotoVisible] =
         useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
+    const handleDateChange = (
+        event: DateTimePickerEvent,
+        selectedDate?: Date,
+    ) => {
+        setShowDatePicker(false);
+        if (event.type === 'set' && selectedDate) {
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            setPlantingDate(`${day}/${month}/${year}`);
+        }
+    };
 
     const roomOptions = [
         'Sala',
@@ -435,29 +479,36 @@ export default function AddPlantScreen() {
                                 Dia da Plantação
                             </Text>
 
-                            <View
-                                style={
-                                    styles.dateInputContainer
-                                }
+                            <TouchableOpacity
+                                activeOpacity={0.7}
+                                style={styles.dateInputContainer}
+                                onPress={() => setShowDatePicker(true)}
                             >
-                                <TextInput
-                                    value={plantingDate}
-                                    onChangeText={
-                                        setPlantingDate
-                                    }
-                                    style={styles.dateInput}
-                                    placeholder="99/99/9999"
-                                    keyboardType="numeric"
-                                />
+                                <Text
+                                    style={[
+                                        styles.dateInput,
+                                        !plantingDate && { color: '#94a3b8' },
+                                    ]}
+                                >
+                                    {plantingDate || 'DD/MM/AAAA'}
+                                </Text>
 
                                 <AppIcon
-                                    icon={
-                                        AppIcons.CALENDAR_DOTS
-                                    }
+                                    icon={AppIcons.CALENDAR_DOTS}
                                     size={16}
                                     color={colors.primary}
                                 />
-                            </View>
+                            </TouchableOpacity>
+
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={parseDateStringToDate(plantingDate)}
+                                    mode="date"
+                                    display="default"
+                                    maximumDate={new Date()}
+                                    onChange={handleDateChange}
+                                />
+                            )}
                         </View>
                     </View>
                 </ScrollView>

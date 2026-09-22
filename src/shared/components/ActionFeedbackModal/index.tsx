@@ -20,6 +20,7 @@ export default function ActionFeedbackModal({
     buttonText = 'Continuar',
     onClose,
     onConfirm,
+    closeOnBackdropPress = false,
 }: ActionFeedbackModalProps) {
     if (!visible) return null;
 
@@ -31,14 +32,26 @@ export default function ActionFeedbackModal({
         }
     };
 
+    const handleBackdropPress = () => {
+        if (closeOnBackdropPress) {
+            if (onClose) {
+                onClose();
+            } else if (onConfirm) {
+                onConfirm();
+            }
+        }
+    };
+
     return (
         <Modal
             transparent
             visible={visible}
             animationType="fade"
-            onRequestClose={onClose}
+            statusBarTranslucent
+            hardwareAccelerated
+            onRequestClose={onClose || onConfirm}
         >
-            <TouchableWithoutFeedback onPress={onClose}>
+            <TouchableWithoutFeedback onPress={handleBackdropPress}>
                 <View style={styles.backdrop}>
                     <TouchableWithoutFeedback>
                         <View style={styles.card}>

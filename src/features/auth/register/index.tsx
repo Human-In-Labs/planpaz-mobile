@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,14 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { colors } from '../../../shared/theme';
+import { verticalScale } from '../../../shared/theme/scale';
 import AppIcon from '../../../shared/components/AppIcon';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
@@ -25,11 +27,17 @@ const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterNavigationProp>();
   const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const confirmPasswordInputRef = useRef<TextInput>(null);
+  const activeFieldRef = useRef<'email' | 'password' | 'confirmPassword' | null>(null);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
@@ -40,7 +48,51 @@ export default function RegisterScreen() {
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
 
+  const scrollToField = (field: 'email' | 'password' | 'confirmPassword') => {
+    activeFieldRef.current = field;
+    const targetY =
+      field === 'confirmPassword'
+        ? verticalScale(240)
+        : field === 'password'
+        ? verticalScale(160)
+        : 0;
+
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: targetY, animated: true });
+    }, 80);
+  };
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      if (activeFieldRef.current === 'confirmPassword') {
+        setTimeout(() => {
+          scrollViewRef.current?.scrollTo({ y: verticalScale(240), animated: true });
+        }, 50);
+      } else if (activeFieldRef.current === 'password') {
+        setTimeout(() => {
+          scrollViewRef.current?.scrollTo({ y: verticalScale(160), animated: true });
+        }, 50);
+      }
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+      activeFieldRef.current = null;
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const handleNext = () => {
+    Keyboard.dismiss();
     const cleanEmail = email.trim();
 
     if (!cleanEmail || !password || !confirmPassword) {
@@ -88,17 +140,27 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        ref={scrollViewRef}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom:
+              keyboardHeight > 0
+                ? verticalScale(180)
+                : 0,
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
         <View style={styles.header}>
           <Image
-            source={require('../../../assets/images/auth-banner.png')}
+            source={require('../../../assets/images/onboarding-1.png')}
             resizeMode="cover"
             style={styles.banner}
           />
@@ -106,6 +168,7 @@ export default function RegisterScreen() {
 
         <View style={styles.main}>
         <View style={styles.content}>
+          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
           <Text style={styles.title}>Cadastrar</Text>
 
           <TextInput
@@ -118,6 +181,9 @@ export default function RegisterScreen() {
               if (emailError) setEmailError(false);
               if (errorMessage) setErrorMessage('');
             }}
+            onFocus={() => scrollToField('email')}
+            returnKeyType="next"
+            onSubmitEditing={() => passwordInputRef.current?.focus()}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -125,6 +191,7 @@ export default function RegisterScreen() {
 
           <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
             <TextInput
+              ref={passwordInputRef}
               style={styles.inputPassword}
               placeholder="Password"
               placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
@@ -139,6 +206,9 @@ export default function RegisterScreen() {
                 }
                 if (errorMessage) setErrorMessage('');
               }}
+              onFocus={() => scrollToField('password')}
+              returnKeyType="next"
+              onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
               autoCapitalize="none"
               underlineColorAndroid="transparent"
             />
@@ -156,6 +226,7 @@ export default function RegisterScreen() {
 
           <View style={[styles.passwordContainer, confirmPasswordError && styles.inputError]}>
             <TextInput
+              ref={confirmPasswordInputRef}
               style={styles.inputPassword}
               placeholder="Confirm password"
               placeholderTextColor={confirmPasswordError && !confirmPassword ? colors.warning : colors.black}
@@ -169,6 +240,9 @@ export default function RegisterScreen() {
                 }
                 if (errorMessage) setErrorMessage('');
               }}
+              onFocus={() => scrollToField('confirmPassword')}
+              returnKeyType="done"
+              onSubmitEditing={handleNext}
               autoCapitalize="none"
               underlineColorAndroid="transparent"
             />
@@ -248,10 +322,8 @@ export default function RegisterScreen() {
             <Text style={styles.nextButtonText}>Próximo</Text>
           </TouchableOpacity>
         </View>
-      </View>
+        </View>
       </ScrollView>
-
-      <ErrorPopup visible={!!errorMessage} message={errorMessage} />
     </KeyboardAvoidingView>
   );
 }

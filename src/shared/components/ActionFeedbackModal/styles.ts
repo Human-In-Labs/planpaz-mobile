@@ -9,6 +9,8 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: scale(16),
+        zIndex: 9999,
+        elevation: 9999,
     },
     card: {
         width: '100%',
@@ -20,6 +22,8 @@ export const styles = StyleSheet.create({
         paddingBottom: verticalScale(28),
         alignItems: 'center',
         ...shadows.medium,
+        zIndex: 10000,
+        elevation: 10,
     },
     iconWrapper: {
         alignItems: 'center',

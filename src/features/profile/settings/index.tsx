@@ -321,6 +321,9 @@ export default function SettingsScreen() {
                             index: 0,
                             routes: [{ name: 'Login' as never }],
                         });
+                        setTimeout(() => {
+                            showFeedback('Desconectado com sucesso!');
+                        }, 350);
                     },
                 },
             ],

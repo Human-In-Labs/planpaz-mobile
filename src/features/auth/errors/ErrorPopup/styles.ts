@@ -1,28 +1,20 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { colors, fonts, radius, spacing } from '../../../../shared/theme';
 import { verticalScale } from '../../../../shared/theme/scale';
 
-const { width } = Dimensions.get('window');
-const bannerHeight = width * (248 / 390);
-const bannerToTitleGap = verticalScale(82);
-const popupHeight = verticalScale(36);
-const popupTop = bannerHeight + (bannerToTitleGap - popupHeight) / 2;
-
 export const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: popupTop,
-    left: spacing.md,
-    right: spacing.md,
-    height: popupHeight,
+    width: '100%',
+    minHeight: verticalScale(36),
     justifyContent: 'center',
     backgroundColor: 'rgba(145, 16, 0, 0.5)',
     borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
+    paddingVertical: verticalScale(6),
     gap: spacing.xs,
-    zIndex: 100,
+    marginBottom: spacing.sm,
   },
 
   iconWrapper: {

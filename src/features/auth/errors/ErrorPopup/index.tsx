@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleProp, ViewStyle } from 'react-native';
 import AppIcon from '../../../../shared/components/AppIcon';
 import { colors } from '../../../../shared/theme';
 import { styles } from './styles';
@@ -8,15 +8,16 @@ import { AppIcons } from '../../../../shared/constants/appIcons';
 export interface ErrorPopupProps {
   visible: boolean;
   message: string;
+  style?: StyleProp<ViewStyle>;
 }
 
-export default function ErrorPopup({ visible, message }: ErrorPopupProps) {
+export default function ErrorPopup({ visible, message, style }: ErrorPopupProps) {
   if (!visible || !message) {
     return null;
   }
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <View style={[styles.container, style]} pointerEvents="none">
       <View style={styles.iconWrapper}>
         <AppIcon icon={AppIcons.WARNING} size={20} color={colors.warning} />
       </View>
