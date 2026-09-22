@@ -5,6 +5,13 @@ import { WeatherSummary } from '../../shared/constants/weatherSummary';
 
 export const weatherCardsMock: WeatherCardData[] = [
     {
+        id: 'now',
+        hour: 'Agora',
+        temperature: 20,
+        condition: 'Ensolarado',
+        icon: WeatherIcons.SUN,
+    },
+    {
         id: '1',
         hour: '09:00',
         temperature: 21,

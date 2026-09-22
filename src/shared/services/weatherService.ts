@@ -14,7 +14,7 @@ import {
 
 import { WeatherSummary } from '../constants/weatherSummary';
 
-function mapWeatherIcon(
+export function mapWeatherIcon(
     icone?: string | null,
     descricao?: string,
 ): WeatherIcon {
@@ -111,6 +111,22 @@ export const weatherService = {
             lat,
             lng,
         );
+    },
+
+    formatCurrentWeatherToCard(current: WeatherResponse): WeatherCardData {
+        return {
+            id: 'now',
+            hour: 'Agora',
+            temperature: Math.round(current.temperatura ?? 0),
+            condition: current.descricao || 'Indisponível',
+            icon: mapWeatherIcon(current.icone, current.descricao),
+            humidity: current.umidade ?? 0,
+            rainProbability: Math.round(
+                current.probabilidadeChuva ?? (current.chovendo ? 100 : 0),
+            ),
+            tempMin: Math.round(current.tempMin ?? current.temperatura ?? 0),
+            tempMax: Math.round(current.tempMax ?? current.temperatura ?? 0),
+        };
     },
 
     async getForecast(
