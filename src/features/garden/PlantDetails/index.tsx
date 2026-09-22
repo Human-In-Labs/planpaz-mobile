@@ -28,7 +28,7 @@ import {
     WateringReminder,
 } from '../../../shared/api';
 import { styles } from './styles';
-import { translateTagToPT } from '../../../shared/utils/tagMapper';
+import { getPlantTags } from '../../../shared/utils/tagMapper';
 
 type NavigationProp = NativeStackNavigationProp<
     GardenStackParamList,
@@ -294,22 +294,7 @@ export default function PlantDetailsScreen() {
         });
     }, [stages, plant?.stage?.id, stageCardWidth, stageGap]);
 
-    const getTagIcon = (tag: string) => {
-        const upper = tag.toUpperCase();
-        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER', 'SOL', 'LUZ'].some(k => upper.includes(k))) {
-            return AppIcons.SUN;
-        }
-        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE', 'ÁGUA', 'REGA'].some(k => upper.includes(k))) {
-            return AppIcons.DROPLET;
-        }
-        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE', 'PORTE', 'TAMANHO'].some(k => upper.includes(k))) {
-            return AppIcons.RULER;
-        }
-        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].some(k => upper.includes(k))) {
-            return AppIcons.BRIEFCASE;
-        }
-        return AppIcons.LEAF;
-    };
+
 
     if (!plant) {
         return (
@@ -331,12 +316,7 @@ export default function PlantDetailsScreen() {
 
     const species = plant.plant;
 
-    const tags = [
-        species.type,
-        species.size,
-        species.luminosityLevel,
-        species.wateringLevel,
-    ].filter(Boolean);
+    const tags = getPlantTags(species);
 
     const cultivationDays = plant.plantedAt
         ? Math.max(
@@ -377,15 +357,15 @@ export default function PlantDetailsScreen() {
                     <View style={styles.tagsRow}>
                         {tags.map((tag, index) => (
                             <View
-                                key={`${tag}-${index}`}
+                                key={`${tag.label}-${index}`}
                                 style={styles.tagBadge}
                             >
                                 <AppIcon
-                                    icon={getTagIcon(tag)}
+                                    icon={tag.icon}
                                     size={12}
                                     color={colors.black}
                                 />
-                                <Text style={styles.tagText}>{translateTagToPT(tag)}</Text>
+                                <Text style={styles.tagText}>{tag.label}</Text>
                             </View>
                         ))}
                     </View>

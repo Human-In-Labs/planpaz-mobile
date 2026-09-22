@@ -20,7 +20,7 @@ import PlantFilters from './PlantFilters';
 import SpeciesCard from './SpeciesCard';
 
 import { listarPlants, PlantFilterParams } from '../../shared/api';
-import { getCleanPlantTags, translateTagToEN } from '../../shared/utils/tagMapper';
+import { getPlantTags, translateTagToEN } from '../../shared/utils/tagMapper';
 import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import { colors } from '../../shared/theme';
 
@@ -57,6 +57,9 @@ export default function LibraryScreen() {
             }
             if (selectedFilters.luminosity && selectedFilters.luminosity !== 'Todas') {
                 params.luminosity = translateTagToEN(selectedFilters.luminosity);
+            }
+            if (selectedFilters.temperature && selectedFilters.temperature !== 'Todas') {
+                params.temperature = translateTagToEN(selectedFilters.temperature);
             }
             if (selectedFilters.watering && selectedFilters.watering !== 'Todas') {
                 params.watering = translateTagToEN(selectedFilters.watering);
@@ -119,7 +122,7 @@ export default function LibraryScreen() {
             water: plant.wateringLevel,
             temperature: plant.temperatureLevel,
 
-            tags: getCleanPlantTags(plant),
+            tags: getPlantTags(plant),
             description: plant.description,
         }));
     }, [rawPlants]);

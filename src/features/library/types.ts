@@ -1,4 +1,5 @@
 import { ImageSourcePropType } from 'react-native';
+import { PlantTag } from '../../shared/utils/tagMapper';
 
 export interface Species {
     id: string;
@@ -11,7 +12,7 @@ export interface Species {
 
     isRecommended?: boolean;
 
-    tags: string[];
+    tags: (string | PlantTag)[];
 
     light?: string;
 

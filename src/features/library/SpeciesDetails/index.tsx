@@ -25,7 +25,7 @@ import {
     buscarPlantPorId,
     Plant,
 } from '../../../shared/api';
-import { translateTagToPT } from '../../../shared/utils/tagMapper';
+import { getPlantTags } from '../../../shared/utils/tagMapper';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
 import { styles } from './styles';
 
@@ -95,22 +95,6 @@ export default function SpeciesDetailsScreen() {
         };
     }, [speciesId]);
 
-    const getTagIcon = (tag: string) => {
-        const upper = tag.toUpperCase();
-        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER'].includes(upper)) {
-            return AppIcons.SUN;
-        }
-        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE'].includes(upper)) {
-            return AppIcons.DROPLET;
-        }
-        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE'].includes(upper)) {
-            return AppIcons.RULER;
-        }
-        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].includes(upper)) {
-            return AppIcons.BRIEFCASE;
-        }
-        return AppIcons.LEAF;
-    };
 
     if (!species) {
         return (
@@ -137,12 +121,7 @@ export default function SpeciesDetailsScreen() {
         );
     }
 
-    const tags = [
-        species.type,
-        species.size,
-        species.luminosityLevel,
-        species.wateringLevel,
-    ].filter(Boolean);
+    const tags = getPlantTags(species);
 
     const description =
         species.description || 'Sem descrição disponível.';
@@ -178,16 +157,16 @@ export default function SpeciesDetailsScreen() {
                     <View style={styles.tagsRow}>
                         {tags.map((tag, index) => (
                             <View
-                                key={`${tag}-${index}`}
+                                key={`${tag.label}-${index}`}
                                 style={styles.tagBadge}
                             >
                                 <AppIcon
-                                    icon={getTagIcon(tag)}
+                                    icon={tag.icon}
                                     size={10}
                                     color={colors.black}
                                 />
                                 <Text style={styles.tagText}>
-                                    {translateTagToPT(tag)}
+                                    {tag.label}
                                 </Text>
                             </View>
                         ))}

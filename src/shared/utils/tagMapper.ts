@@ -1,4 +1,5 @@
 import { Plant } from '../api/plant';
+import { AppIcons, IconName } from '../constants/appIcons';
 
 export const TAG_TRANSLATIONS_EN_TO_PT: Record<string, string> = {
     // Type
@@ -29,6 +30,9 @@ export const TAG_TRANSLATIONS_EN_TO_PT: Record<string, string> = {
     SPORADIC: 'Esporádica',
     LOW_WATER: 'Pouca Água',
     HIGH_HUMIDITY: 'Alta Umidade',
+
+    // Temperature
+    HIGH: 'Alta',
 
     // Experience
     BEGINNER: 'Iniciante',
@@ -97,30 +101,141 @@ export function translateTagsToPT(tags?: (string | undefined | null)[]): string[
     return Array.from(new Set(translatedList));
 }
 
+export interface PlantTag {
+    label: string;
+    icon: IconName;
+    category: 'size' | 'type' | 'watering' | 'temperature' | 'luminosity';
+}
+
 /**
- * Extrai tags limpas e traduzidas defensivamente para um card de planta/espécie,
- * garantindo exatamente uma tag por categoria de forma amigável e sem duplicadas.
+ * Retorna o ícone correto para uma tag textual baseando-se no seu valor.
  */
-export function getCleanPlantTags(plant?: Partial<Plant> | null): string[] {
+export function getTagIcon(tag?: string | null): IconName {
+    if (!tag) return AppIcons.LEAF;
+    const upper = tag.trim().toUpperCase();
+
+    // 1. Rega (Watering) -> DROPLET
+    if ([
+        'DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'LOW_WATER', 'HIGH_HUMIDITY',
+        'DIÁRIA', 'DIARIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'ESPORADICA',
+        'POUCA ÁGUA', 'POUCA AGUA', 'ALTA UMIDADE', 'ÁGUA', 'AGUA', 'REGA'
+    ].some(k => upper === k || upper.includes(k))) {
+        return AppIcons.DROPLET;
+    }
+
+    // 2. Tamanho (Size) -> RULER
+    if ([
+        'SMALL', 'LARGE', 'PEQUENA', 'GRANDE', 'PORTE', 'TAMANHO'
+    ].some(k => upper === k || upper.includes(k))) {
+        return AppIcons.RULER;
+    }
+
+    // 3. Luminosidade (Light) -> SUN
+    if ([
+        'INTENSE', 'FULL_SUN', 'PARTIAL_SHADE', 'SHADE', 'INDOOR', 'OUTSIDE',
+        'SOL PLENO', 'PLENO', 'MEIA SOMBRA', 'SOMBRA', 'INTERIOR', 'EXTERIOR',
+        'SOL', 'LUZ', 'LUMINOSIDADE'
+    ].some(k => upper === k || upper.includes(k))) {
+        return AppIcons.SUN;
+    }
+
+    // 4. Temperatura (Temperature) -> THERMOMETER_SIMPLE
+    if ([
+        'HIGH', 'HOT', 'COLD', 'WARM', 'MILD', 'ALTA', 'QUENTE', 'FRIO', 'CLIMA', 'TEMPERATURA'
+    ].some(k => upper === k || upper.includes(k))) {
+        return AppIcons.THERMOMETER_SIMPLE;
+    }
+
+    // 5. Tipo (Type) -> LEAF
+    if ([
+        'EDIBLE', 'AROMATIC', 'ORNAMENTAL', 'OTHER',
+        'COMESTÍVEL', 'COMESTIVEL', 'AROMÁTICA', 'AROMATICA', 'ORNAMENTAL', 'OUTRA', 'TIPO'
+    ].some(k => upper === k || upper.includes(k))) {
+        return AppIcons.LEAF;
+    }
+
+    return AppIcons.LEAF;
+}
+
+/**
+ * Extrai todas as tags com os respectivos ícones diretamente das propriedades da espécie/planta:
+ * - Tipo -> folha (LEAF)
+ * - Tamanho -> régua (RULER)
+ * - Rega -> gota (DROPLET)
+ * - Temperatura -> termômetro (THERMOMETER_SIMPLE)
+ * - Luminosidade -> Sol (SUN)
+ */
+export function getPlantTags(plant?: (Partial<Plant> & {
+    water?: string;
+    light?: string;
+    temperature?: string;
+    watering?: string;
+    luminosity?: string;
+}) | null): PlantTag[] {
     if (!plant) return [];
 
-    const tags: string[] = [];
+    const tags: PlantTag[] = [];
 
-    if (plant.type) {
-        tags.push(translateTagToPT(plant.type));
+    const typeVal = plant.type;
+    const sizeVal = plant.size;
+    const waterVal = plant.wateringLevel || plant.watering || plant.water;
+    const tempVal = plant.temperatureLevel || plant.temperature;
+    const lightVal = plant.luminosityLevel || plant.luminosity || plant.light;
+
+    if (typeVal) {
+        tags.push({
+            label: translateTagToPT(typeVal),
+            icon: AppIcons.LEAF,
+            category: 'type',
+        });
     }
 
-    if (plant.size) {
-        tags.push(translateTagToPT(plant.size));
+    if (sizeVal) {
+        tags.push({
+            label: translateTagToPT(sizeVal),
+            icon: AppIcons.RULER,
+            category: 'size',
+        });
     }
 
-    if (plant.luminosityLevel) {
-        tags.push(translateTagToPT(plant.luminosityLevel));
+    if (waterVal) {
+        tags.push({
+            label: translateTagToPT(waterVal),
+            icon: AppIcons.DROPLET,
+            category: 'watering',
+        });
     }
 
-    if (plant.wateringLevel) {
-        tags.push(translateTagToPT(plant.wateringLevel));
+    if (tempVal) {
+        tags.push({
+            label: translateTagToPT(tempVal),
+            icon: AppIcons.THERMOMETER_SIMPLE,
+            category: 'temperature',
+        });
     }
 
-    return Array.from(new Set(tags)).filter(Boolean);
+    if (lightVal) {
+        tags.push({
+            label: translateTagToPT(lightVal),
+            icon: AppIcons.SUN,
+            category: 'luminosity',
+        });
+    }
+
+    return tags;
 }
+
+/**
+ * Extrai tags limpas e traduzidas defensivamente para um card de planta/espécie,
+ * garantindo todas as categorias de forma amigável.
+ */
+export function getCleanPlantTags(plant?: (Partial<Plant> & {
+    water?: string;
+    light?: string;
+    temperature?: string;
+    watering?: string;
+    luminosity?: string;
+}) | null): string[] {
+    return getPlantTags(plant).map(t => t.label);
+}
+

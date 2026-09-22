@@ -20,6 +20,7 @@ export interface PlantFilterParams {
     search?: string;
     type?: string;
     luminosity?: string;
+    temperature?: string;
     watering?: string;
     size?: string;
 }

@@ -5,7 +5,7 @@ import { colors } from '../../../shared/theme';
 import { styles } from './styles';
 import { SpeciesCardProps } from './types';
 import { AppIcons } from '../../../shared/constants/appIcons';
-import { translateTagToPT } from '../../../shared/utils/tagMapper';
+import { getTagIcon, translateTagToPT } from '../../../shared/utils/tagMapper';
 
 export default function SpeciesCard({
     image,
@@ -15,23 +15,6 @@ export default function SpeciesCard({
     onPress,
     onAddPress,
 }: SpeciesCardProps) {
-    const getTagIcon = (tag: string) => {
-        const upper = tag.toUpperCase();
-        if (['LOW', 'MEDIUM', 'INTENSE', 'ANY', 'BAIXA', 'MEIA SOMBRA', 'SOL PLENO', 'PLENO', 'SOMBRA', 'QUALQUER'].includes(upper)) {
-            return AppIcons.SUN;
-        }
-        if (['DAILY', 'FREQUENT', 'WEEKLY', 'SPORADIC', 'DIÁRIA', 'FREQUENTE', 'SEMANAL', 'ESPORÁDICA', 'POUCA ÁGUA', 'ALTA UMIDADE'].includes(upper)) {
-            return AppIcons.DROPLET;
-        }
-        if (['SMALL', 'MEDIUM', 'LARGE', 'PEQUENA', 'MÉDIA', 'GRANDE'].includes(upper)) {
-            return AppIcons.RULER;
-        }
-        if (['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'INICIANTE', 'INTERMEDIÁRIO', 'AVANÇADO'].includes(upper)) {
-            return AppIcons.BRIEFCASE;
-        }
-        return AppIcons.LEAF;
-    };
-
     return (
         <TouchableOpacity
             activeOpacity={0.85}
@@ -65,16 +48,19 @@ export default function SpeciesCard({
                 </View>
 
                 <View style={styles.tagsRow}>
-                    {tags.map((tag, idx) => {
-                        const labelPT = translateTagToPT(tag);
+                    {tags.map((tagItem, idx) => {
+                        const isObj = typeof tagItem === 'object' && tagItem !== null;
+                        const label = isObj ? tagItem.label : translateTagToPT(tagItem);
+                        const icon = isObj ? tagItem.icon : getTagIcon(tagItem);
+
                         return (
-                            <View key={`${tag}-${idx}`} style={styles.tagBadge}>
+                            <View key={`${label}-${idx}`} style={styles.tagBadge}>
                                 <AppIcon
-                                    icon={getTagIcon(tag)}
+                                    icon={icon}
                                     size={10}
                                     color={colors.black}
                                 />
-                                <Text style={styles.tagText}>{labelPT}</Text>
+                                <Text style={styles.tagText}>{label}</Text>
                             </View>
                         );
                     })}
