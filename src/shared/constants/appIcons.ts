@@ -79,6 +79,7 @@ export const AppIcons = {
     THERMOMETER_SIMPLE: 'thermometerSimple',
     HOUSE_SIMPLE: 'houseSimple',
     WARNING: 'warning',
+    CHECK_CIRCLE: 'checkCircle',
 } as const;
 
 export type IconName = typeof AppIcons[keyof typeof AppIcons];

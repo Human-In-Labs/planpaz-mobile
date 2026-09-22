@@ -22,6 +22,7 @@ import { colors } from '../../../shared/theme';
 import { SocialStackParamList } from '../../../navigation/types';
 import { criarPost, uploadImagem } from '../../../shared/api';
 import { getCurrentAuthorId } from '../../../shared/services/storage';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import HashtagInput from './HashtagInput';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
@@ -90,17 +91,8 @@ export default function CreatePostScreen() {
             });
 
             const msg = (res as any)?.message || 'Publicação realizada com sucesso!';
-
-            Alert.alert(
-                'Sucesso',
-                msg,
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.goBack(),
-                    },
-                ]
-            );
+            showFeedback(msg);
+            navigation.goBack();
         } catch (error: any) {
             console.log('[CREATE POST] Erro ao criar post na API:', error);
             const status = error?.response?.status;

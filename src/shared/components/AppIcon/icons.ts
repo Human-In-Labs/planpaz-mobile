@@ -92,6 +92,7 @@ import ThermometerSimple from '../../../assets/icons/thermometer-simple.svg';
 import HouseSimple from '../../../assets/icons/house-simple.svg';
 import Warning from '../../../assets/icons/warning.svg';
 import CloudRain from '../../../assets/icons/cloud-rain.svg';
+import CheckCircle from '../../../assets/icons/check-circle.svg';
 
 import { SvgProps } from 'react-native-svg';
 
@@ -194,6 +195,7 @@ export const icons = {
     'cloud-rain': CloudRain,
     houseSimple: HouseSimple,
     warning: Warning,
+    checkCircle: CheckCircle,
 } satisfies Record<string, SvgIcon>;
 
 export type IconName = keyof typeof icons;

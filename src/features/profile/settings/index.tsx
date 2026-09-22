@@ -18,6 +18,7 @@ import DropdownField from './components/DropdownField';
 import HoursDropdown from './components/HoursDropdown';
 import OptionCard from './components/OptionCard';
 import ChangePhotoOverlay from '../overlays/ChangePhoto';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import {
     pickImageFromGallery,
     takePhotoWithCamera,
@@ -723,16 +724,8 @@ export default function SettingsScreen() {
                 await saveUserId(updated.id);
             }
 
-            Alert.alert(
-                'Sucesso',
-                'Configurações atualizadas com sucesso!',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.goBack(),
-                    },
-                ],
-            );
+            showFeedback('Configurações atualizadas com sucesso!');
+            navigation.goBack();
         } catch (error: any) {
             console.error(
                 '[SETTINGS] Erro ao salvar configurações:',

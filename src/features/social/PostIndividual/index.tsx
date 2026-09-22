@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import AppHeader from '../../../shared/components/AppHeader';
 import NotificationOverlay from '../../home/overlays/Notification';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import { SocialStackParamList } from '../../../navigation/types';
 import { mockPosts } from '../../../shared/mock/socialMock';
 import { PostComment } from '../../../shared/types/social';
@@ -221,9 +222,8 @@ export default function PostIndividualScreen() {
             const newComment = mapCommentResponseToPostComment(response, []);
             setComments(prev => [newComment, ...prev]);
             setIsCommentExpanded(false);
-            if ((response as any)?.message) {
-                Alert.alert('Sucesso', (response as any).message);
-            }
+            const successMsg = (response as any)?.message || 'Comentário publicado com sucesso!';
+            showFeedback(successMsg);
         } catch (error: any) {
             console.log('[POST INDIVIDUAL] Erro ao criar comentário:', error);
             const backendMsg = error?.response?.data?.message || 'Não foi possível registrar seu comentário. Tente novamente.';
@@ -256,9 +256,8 @@ export default function PostIndividualScreen() {
                 })
             );
             setActiveReplyCommentId(null);
-            if ((response as any)?.message) {
-                Alert.alert('Sucesso', (response as any).message);
-            }
+            const successMsg = (response as any)?.message || 'Resposta publicada com sucesso!';
+            showFeedback(successMsg);
         } catch (error: any) {
             console.log('[POST INDIVIDUAL] Erro ao enviar resposta:', error);
             const backendMsg = error?.response?.data?.message || 'Não foi possível registrar sua resposta. Tente novamente.';

@@ -8,6 +8,7 @@ import { ReminderCardData } from '../../../shared/types/reminder';
 import { reminderService } from '../../../shared/services/reminderService';
 import SectionHeader from '../../../shared/components/SectionHeader';
 import { colors } from '../../../shared/theme';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
@@ -49,7 +50,7 @@ export default function ReminderSection() {
         try {
             setActionLoadingId(targetId);
             await reminderService.completeWatering(targetId);
-            Alert.alert('Sucesso!', `${item.plantName} foi regada com sucesso.`);
+            showFeedback('Rega concluída');
             await carregarLembretes();
         } catch (err) {
             console.error('[REMINDER_SECTION] Erro ao regar planta:', err);

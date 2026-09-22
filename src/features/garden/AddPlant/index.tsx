@@ -23,6 +23,7 @@ import DropdownField from '../../profile/settings/components/DropdownField';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
 import { adicionarAoJardim, uploadImagem } from '../../../shared/api';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
 import {
     buscarStagesDaEspecie,
@@ -206,9 +207,8 @@ export default function AddPlantScreen() {
                 imagePath: finalImagePath,
             });
 
-            if (res && res.message) {
-                Alert.alert('Sucesso', res.message);
-            }
+            const msg = res?.message || 'Planta adicionada com sucesso!';
+            showFeedback(msg);
             (navigation as any).navigate('MainTabs', {
                 screen: 'Garden',
                 params: {

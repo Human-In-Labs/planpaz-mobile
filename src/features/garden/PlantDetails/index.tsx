@@ -18,6 +18,7 @@ import AppIcon from '../../../shared/components/AppIcon';
 import StatisticCard from '../../profile/StatisticCard';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
+import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import {
     buscarPlantaDoJardim,
     buscarStagesDaEspecie,
@@ -221,9 +222,8 @@ export default function PlantDetailsScreen() {
             try {
                 const res = await regarPlanta(plant.id);
 
-                if (res && res.message) {
-                    Alert.alert('Sucesso', res.message);
-                }
+                const msg = res?.message || 'Rega concluída';
+                showFeedback(msg);
 
                 setActions(prev =>
                     prev.map(a => {
