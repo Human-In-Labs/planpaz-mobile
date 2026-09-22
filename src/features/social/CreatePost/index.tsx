@@ -23,6 +23,7 @@ import { SocialStackParamList } from '../../../navigation/types';
 import { criarPost, uploadImagem } from '../../../shared/api';
 import { getCurrentAuthorId } from '../../../shared/services/storage';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
+import ForbiddenContentModal from '../../../shared/components/ForbiddenContentModal';
 import HashtagInput from './HashtagInput';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
@@ -43,6 +44,8 @@ export default function CreatePostScreen() {
     const [selectedImage, setSelectedImage] = useState<{ uri: string; base64?: string } | null>(null);
     const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isForbiddenModalVisible, setIsForbiddenModalVisible] = useState(false);
+    const [forbiddenMessage, setForbiddenMessage] = useState('');
 
     const handleSelectGallery = async () => {
         setIsImagePickerVisible(false);
@@ -96,9 +99,25 @@ export default function CreatePostScreen() {
         } catch (error: any) {
             console.log('[CREATE POST] Erro ao criar post na API:', error);
             const status = error?.response?.status;
-            const errorMsg = error?.response?.data?.message || 'Não foi possível registrar sua publicação. Tente novamente.';
-            const alertTitle = status === 400 ? 'Conteúdo Não Permitido' : 'Aviso';
-            Alert.alert(alertTitle, errorMsg);
+            const errorMsg =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                error?.customMessage ||
+                error?.message ||
+                'Não foi possível registrar sua publicação. Tente novamente.';
+
+            const isForbidden =
+                status === 400 ||
+                errorMsg.toLowerCase().includes('termos inadequados') ||
+                errorMsg.toLowerCase().includes('regras da comunidade') ||
+                errorMsg.toLowerCase().includes('não permitido');
+
+            if (isForbidden) {
+                setForbiddenMessage(errorMsg);
+                setIsForbiddenModalVisible(true);
+            } else {
+                Alert.alert('Aviso', errorMsg);
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -227,6 +246,13 @@ export default function CreatePostScreen() {
                 onClose={() => setIsImagePickerVisible(false)}
                 onTakePhoto={handleSelectCamera}
                 onSelectFromGallery={handleSelectGallery}
+            />
+
+            {/* Modal de conteúdo proibido / não permitido */}
+            <ForbiddenContentModal
+                visible={isForbiddenModalVisible}
+                message={forbiddenMessage || undefined}
+                onClose={() => setIsForbiddenModalVisible(false)}
             />
         </View>
     );
