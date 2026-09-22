@@ -3,8 +3,8 @@
 .DS_Store
 
 docs
-.agents
 scratch
+.agents
 
 # Xcode
 #
@@ -82,4 +82,4 @@ planpaz-api/
 
 # Expo & Logs
 .expo/
-*.log
+*.log

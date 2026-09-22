@@ -20,7 +20,7 @@ export const activityService = {
                         id: 'act-welcome',
                         userName: username,
                         userAvatar: defaultBanner,
-                        activity: 'Comece seu cultivo adicionando sua primeira planta no Jardim PlanPaz!',
+                        activity: 'Comece seu cultivo adicionando sua primeira planta no Jardim Planpaz!',
                         createdAt: 'Hoje',
                         image: defaultBanner,
                     },

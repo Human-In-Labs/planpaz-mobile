@@ -340,7 +340,7 @@ export default function SocialScreen() {
     return (
         <View style={styles.container}>
             <SafeAreaView edges={['top']} style={styles.safeArea}>
-                {/* Cabeçalho fixo no topo com efeito de scroll e fade para logo PlanPaz */}
+                {/* Cabeçalho fixo no topo com efeito de scroll e fade para logo Planpaz */}
                 <AppHeader
                     title="Comunidade"
                     scrollY={scrollY}

@@ -208,7 +208,7 @@ export function mapGardenPlantToCultivatedPlant(item: GardenPlant): CultivatedPl
 
     const tags = translateTagsToPT(rawTags);
 
-    const description = item.plant?.description || 'Planta cultivada no jardim PlanPaz.';
+    const description = item.plant?.description || 'Planta cultivada no jardim Planpaz.';
 
     const imageSource = item.imagePath
         ? { uri: item.imagePath }
