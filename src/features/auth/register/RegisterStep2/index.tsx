@@ -5,7 +5,6 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
@@ -16,6 +15,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../../navigation/types';
 import { colors } from '../../../../shared/theme';
 import { register, verificarDisponibilidadeUsername } from '../../../../shared/api';
+import ActionFeedbackModal from '../../../../shared/components/ActionFeedbackModal';
 import { ErrorPopup } from '../../errors';
 import { styles } from './styles';
 
@@ -34,6 +34,7 @@ export default function RegisterStep2Screen() {
   const [usernameError, setUsernameError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
 
   const handleRegister = async () => {
     const cleanFirstName = firstName.trim();
@@ -70,25 +71,14 @@ export default function RegisterStep2Screen() {
         return;
       }
 
-      const res = await register({
+      await register({
         name: cleanFirstName,
         username: cleanUsername,
         email,
         password,
       });
 
-      const successMsg = (res as any)?.message || 'Sua conta foi criada com sucesso.';
-
-      Alert.alert(
-        'Cadastro realizado!',
-        successMsg,
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ],
-      );
+      setSuccessVisible(true);
     } catch (error: any) {
       console.log('[REGISTER] Erro completo no cadastro:', error);
       if (error?.response) {
@@ -188,6 +178,20 @@ export default function RegisterStep2Screen() {
       </ScrollView>
 
       <ErrorPopup visible={!!errorMessage} message={errorMessage} />
+      <ActionFeedbackModal
+        visible={successVisible}
+        title="Cadastrado com sucesso"
+        message="Cadastro realizado! Seu jardim está esperando por você."
+        buttonText="Continuar"
+        onConfirm={() => {
+          setSuccessVisible(false);
+          navigation.navigate('Login');
+        }}
+        onClose={() => {
+          setSuccessVisible(false);
+          navigation.navigate('Login');
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

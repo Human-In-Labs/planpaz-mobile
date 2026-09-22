@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import Overlay from '../../../shared/components/Overlay';
+import ActionFeedbackModal from '../../../shared/components/ActionFeedbackModal';
 import {
     enviarDenuncia,
     ReportContentType,
@@ -52,7 +53,7 @@ const REPORT_CATEGORIES: ReportCategory[] = [
         id: 'INAPPROPRIATE_CONTENT',
         title: 'Conteúdo inapropriado',
         description:
-            'Linguagem imprópria, assédio ou desrespeito às regras da comunidade PlanPaz.',
+            'Linguagem imprópria, assédio ou desrespeito às regras da comunidade Planpaz.',
     },
 ];
 
@@ -67,6 +68,7 @@ export default function ReportModal({
     const [selectedCategory, setSelectedCategory] = useState<ReportCategory | null>(null);
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successModalVisible, setSuccessModalVisible] = useState(false);
 
     useEffect(() => {
         if (visible) {
@@ -74,6 +76,7 @@ export default function ReportModal({
             setSelectedCategory(null);
             setMessage('');
             setIsSubmitting(false);
+            setSuccessModalVisible(false);
         }
     }, [visible]);
 
@@ -96,12 +99,7 @@ export default function ReportModal({
                 });
 
                 onConfirmReport?.(selectedCategory.id, message);
-
-                Alert.alert(
-                    'Denúncia Enviada',
-                    'Agradecemos a sua denúncia. Nossa equipe de moderação irá analisar o conteúdo.',
-                    [{ text: 'OK', onPress: onClose }]
-                );
+                setSuccessModalVisible(true);
             } catch (error: any) {
                 console.error('[REPORT MODAL] Erro ao enviar denúncia:', error);
                 const errMsg =
@@ -113,20 +111,17 @@ export default function ReportModal({
             }
         } else {
             onConfirmReport?.(selectedCategory.id, message);
-            Alert.alert(
-                'Denúncia Enviada',
-                'Agradecemos a sua denúncia. Nossa equipe de moderação irá analisar o conteúdo.'
-            );
-            onClose();
+            setSuccessModalVisible(true);
         }
     };
 
     return (
-        <Overlay
-            visible={visible}
-            onClose={onClose}
-            containerStyle={styles.container}
-        >
+        <>
+            <Overlay
+                visible={visible && !successModalVisible}
+                onClose={onClose}
+                containerStyle={styles.container}
+            >
             <View style={styles.cardContent}>
                 {stage === 'categories' ? (
                     <>
@@ -207,5 +202,21 @@ export default function ReportModal({
                 )}
             </View>
         </Overlay>
+
+        <ActionFeedbackModal
+            visible={successModalVisible}
+            title="Denúncia enviada"
+            message="Agradecemos a sua denúncia. Nossa equipe de moderação irá analisar o conteúdo."
+            buttonText="Continuar"
+            onConfirm={() => {
+                setSuccessModalVisible(false);
+                onClose();
+            }}
+            onClose={() => {
+                setSuccessModalVisible(false);
+                onClose();
+            }}
+        />
+    </>
     );
 }
