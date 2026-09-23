@@ -350,7 +350,7 @@ export default function EditPlantScreen() {
                                 : styles.rowZIndexDefault,
                         ]}
                     >
-                        <View style={styles.fieldGroupEqual}>
+                        <View style={styles.fieldGroupLeft}>
                             <Text style={styles.fieldLabel}>
                                 Recebe chuva direta?
                             </Text>
@@ -367,7 +367,7 @@ export default function EditPlantScreen() {
                             />
                         </View>
 
-                        <View style={styles.fieldGroupEqual}>
+                        <View style={styles.fieldGroupRight}>
                             <Text style={styles.fieldLabel}>Lembretes</Text>
 
                             <DropdownField

@@ -393,6 +393,7 @@ export default function AddPlantScreen() {
                     <View
                         style={[
                             styles.formRow,
+                            activeDropdown === 'species' ||
                             activeDropdown === 'room'
                                 ? styles.rowZIndexActive
                                 : styles.rowZIndexDefault,
@@ -450,7 +451,7 @@ export default function AddPlantScreen() {
                                 : styles.rowZIndexDefault,
                         ]}
                     >
-                        <View style={styles.fieldGroupEqual}>
+                        <View style={styles.fieldGroupLeft}>
                             <Text style={styles.fieldLabel}>
                                 Recebe chuva direta?
                             </Text>
@@ -474,7 +475,7 @@ export default function AddPlantScreen() {
                             />
                         </View>
 
-                        <View style={styles.fieldGroupEqual}>
+                        <View style={styles.fieldGroupRight}>
                             <Text style={styles.fieldLabel}>
                                 Dia da Plantação
                             </Text>
