@@ -7,7 +7,7 @@ import {
 } from '../services/storage';
 
 // Host da API – ajuste para o IP/porta da sua máquina de desenvolvimento.
-export const API_HOST = 'http://localhost:8080';
+export const API_HOST = 'http://127.0.0.1:8080';
 
 export const api = axios.create({
     baseURL: `${API_HOST}/api`,
