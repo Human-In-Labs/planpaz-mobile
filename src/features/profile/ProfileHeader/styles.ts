@@ -1,6 +1,16 @@
 import { StyleSheet } from 'react-native';
-import { colors, fonts, radius, shadows } from '../../../shared/theme';
-import { scale, verticalScale } from '../../../shared/theme/scale';
+
+import {
+    colors,
+    fonts,
+    radius,
+    shadows,
+} from '../../../shared/theme';
+
+import {
+    scale,
+    verticalScale,
+} from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
@@ -59,8 +69,17 @@ export const styles = StyleSheet.create({
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#115634',
+        backgroundColor: colors.primary,
         ...shadows.small,
+    },
+
+    actionButtonOutlined: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: colors.primary,
+
+        elevation: 0,
+        shadowOpacity: 0,
     },
 
     actionButtonText: {
@@ -68,4 +87,8 @@ export const styles = StyleSheet.create({
         fontFamily: fonts.poppinsSemiBold,
         color: colors.white,
     },
-});
+
+    actionButtonTextOutlined: {
+        color: colors.primary,
+    },
+});

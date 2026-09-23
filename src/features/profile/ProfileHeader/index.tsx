@@ -1,5 +1,11 @@
 import React from 'react';
-import { Image, Text, TouchableOpacity, View, } from 'react-native';
+import {
+    Image,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
 import { ProfileHeaderProps } from './types';
 import { styles } from './styles';
 
@@ -13,12 +19,17 @@ export default function ProfileHeader({
     followersLabel = `${followers} seguidores`,
     followingLabel = `${following} seguindo`,
     actionLabel,
+    actionOutlined = false,
     onFollowersPress,
     onFollowingPress,
     onActionPress,
 }: ProfileHeaderProps) {
 
-    const resolvedActionLabel = actionLabel || (isOwnProfile ? 'Configurações' : 'Seguir');
+    const resolvedActionLabel =
+        actionLabel ||
+        (isOwnProfile
+            ? 'Configurações'
+            : 'Seguir');
 
     return (
         <View style={styles.container}>
@@ -29,7 +40,10 @@ export default function ProfileHeader({
                 />
 
                 <View style={styles.headerInfo}>
-                    <Text style={styles.name} numberOfLines={1}>
+                    <Text
+                        style={styles.name}
+                        numberOfLines={1}
+                    >
                         {name}
                     </Text>
 
@@ -60,11 +74,21 @@ export default function ProfileHeader({
             </Text>
 
             <TouchableOpacity
-                style={styles.actionButton}
+                style={[
+                    styles.actionButton,
+                    actionOutlined &&
+                    styles.actionButtonOutlined,
+                ]}
                 activeOpacity={0.8}
                 onPress={onActionPress}
             >
-                <Text style={styles.actionButtonText}>
+                <Text
+                    style={[
+                        styles.actionButtonText,
+                        actionOutlined &&
+                        styles.actionButtonTextOutlined,
+                    ]}
+                >
                     {resolvedActionLabel}
                 </Text>
             </TouchableOpacity>

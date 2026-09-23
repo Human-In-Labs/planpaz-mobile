@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         borderColor: '#115634',
-        backgroundColor: colors.white,
+        backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: scale(4),

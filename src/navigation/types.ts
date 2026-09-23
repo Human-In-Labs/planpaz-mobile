@@ -18,10 +18,12 @@ export type RootStackParamList = {
 export type ProfileStackParamList = {
     ProfileMain: undefined;
     Configuracoes: undefined;
-    Achievements: undefined;
+    Achievements: {
+        userId?: string;
+        username?: string;
+    } | undefined;
     UserProfile: { userId: string; };
 };
-
 export type GardenStackParamList = {
     GardenMain: undefined;
     PlantDetails: { plantId: string; };
@@ -34,7 +36,17 @@ export type GardenStackParamList = {
 
 export type SocialStackParamList = {
     SocialMain: undefined;
-    PostIndividual: { postId: string; post?: Post; isLiked?: boolean; };
+    PostIndividual: {
+        postId: string;
+        post?: Post;
+        isLiked?: boolean;
+    };
     CreatePost: undefined;
-    UserProfile: { userId: string; };
+    UserProfile: {
+        userId: string;
+    };
+    Achievements: {
+        userId?: string;
+        username?: string;
+    } | undefined;
 };

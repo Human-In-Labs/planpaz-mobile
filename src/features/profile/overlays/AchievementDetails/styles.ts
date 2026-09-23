@@ -42,7 +42,7 @@ export const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#115634',
-        backgroundColor: colors.white,
+        backgroundColor: 'transparent',
         justifyContent: 'center',
         alignItems: 'center',
     },

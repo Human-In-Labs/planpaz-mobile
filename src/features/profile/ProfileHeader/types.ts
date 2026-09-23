@@ -9,6 +9,7 @@ export interface ProfileHeaderProps {
     followersLabel?: string;
     followingLabel?: string;
     actionLabel?: string;
+    actionOutlined?: boolean;
 
     onFollowersPress: () => void;
     onFollowingPress: () => void;

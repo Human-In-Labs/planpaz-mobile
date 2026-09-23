@@ -1,6 +1,14 @@
 import { StyleSheet } from 'react-native';
-import { colors, fonts, spacing } from '../../../shared/theme';
-import { scale, verticalScale } from '../../../shared/theme/scale';
+import {
+    colors,
+    fonts,
+    spacing,
+} from '../../../shared/theme';
+
+import {
+    scale,
+    verticalScale,
+} from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
@@ -22,7 +30,9 @@ export const styles = StyleSheet.create({
 
     list: {
         marginTop: verticalScale(12),
+        flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%',
+        paddingHorizontal: scale(2),
     },
 });

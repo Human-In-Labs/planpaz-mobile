@@ -1,15 +1,17 @@
 import { StyleSheet } from 'react-native';
-import { colors, spacing } from '../../../shared/theme';
+import { colors } from '../../../shared/theme';
+import { verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
     },
+
     content: {
-        paddingHorizontal: spacing.md,
-        paddingBottom: spacing.xxl,
+        paddingBottom: verticalScale(120),
     },
+
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
