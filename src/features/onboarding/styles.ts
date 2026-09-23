@@ -28,15 +28,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
 
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: verticalScale(spacing.xs),
-    marginBottom: verticalScale(20),
-  },
-
   paginationDot: {
     width: scale(12),
     height: verticalScale(12),
@@ -52,18 +43,28 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
 
+  pagination: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: verticalScale(spacing.xs),
+      marginBottom: 0,
+  },
+
   content: {
-    flex: 1,
+      flex: 1,
+      paddingTop: verticalScale(60),
   },
 
   title: {
-    ...typography.h1,
-    marginBottom: spacing.xl,
-  }, 
+      ...typography.h1,
+      marginBottom: verticalScale(spacing.xl),
+  },
 
   text: {
-    flex: 1,
-    ...typography.bodyStrong,
+      flex: 1,
+      ...typography.bodyStrong,
   },
 
   footer: {
