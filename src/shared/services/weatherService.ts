@@ -224,6 +224,10 @@ export const weatherService = {
                 ),
             );
 
+            const windSpeed = Math.round(
+                currentWeather.velocidadeVentoKmh ?? 0,
+            );
+
             const summaryCards: WeatherSummaryCardData[] = [
                 {
                     id: 'humidity',
@@ -234,6 +238,11 @@ export const weatherService = {
                     id: 'rainProb',
                     icon: WeatherSummary.RAIN.icon,
                     value: `${rainPercent}%`,
+                },
+                {
+                    id: 'wind',
+                    icon: WeatherSummary.WIND.icon,
+                    value: `${windSpeed} km/h`,
                 },
                 {
                     id: 'tempRange',

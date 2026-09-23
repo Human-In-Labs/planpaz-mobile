@@ -7,6 +7,7 @@ export interface WeatherResponse {
     tempMin: number;
     tempMax: number;
     umidade: number;
+    velocidadeVentoKmh?: number | null;
     probabilidadeChuva?: number | null;
     chovendo: boolean;
     icone: string | null;

@@ -20,4 +20,8 @@ export const WeatherSummary = {
     TEMPERATURE_RANGE: {
         icon: AppIcons.TEMPERATURE,
     },
+
+    WIND: {
+        icon: AppIcons.WIND,
+    },
 } as const;
