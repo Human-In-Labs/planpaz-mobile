@@ -48,8 +48,8 @@ export const styles = StyleSheet.create({
 
     listContent: {
         paddingLeft: scale(spacing.md),
-        paddingTop: 0,
-        paddingBottom: scale(spacing.xs),
+        paddingTop: verticalScale(spacing.xxxs),
+        paddingBottom: verticalScale(spacing.xs),
     },
 
     separator: {
