@@ -8,4 +8,6 @@ export interface AppHeaderProps {
     backButton?: boolean;
     onBackPress?: () => void;
     scrollY?: Animated.Value;
+
+    scrollSensitivity?: number;
 }

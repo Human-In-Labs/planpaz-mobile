@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+    Animated,
     View,
     Text,
     Image,
@@ -52,6 +53,9 @@ export default function SpeciesDetailsScreen() {
     const route = useRoute<RouteType>();
 
     const speciesId = route.params?.speciesId;
+    const [scrollY] = useState(
+        () => new Animated.Value(0),
+    );
 
     const [species, setSpecies] = useState<Plant | null>(null);
     const [descriptionExpanded, setDescriptionExpanded] =
@@ -132,11 +136,28 @@ export default function SpeciesDetailsScreen() {
                 title={species.name}
                 backButton
                 onBackPress={() => navigation.goBack()}
+                scrollY={scrollY}
+                scrollSensitivity={4}
             />
 
-            <ScrollView
+            <Animated.ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                onScroll={Animated.event(
+                    [
+                        {
+                            nativeEvent: {
+                                contentOffset: {
+                                    y: scrollY,
+                                },
+                            },
+                        },
+                    ],
+                    {
+                        useNativeDriver: false,
+                    },
+                )}
+                scrollEventThrottle={16}
             >
                 <View
                     style={[
@@ -353,7 +374,7 @@ export default function SpeciesDetailsScreen() {
                         </>
                     )}
                 </View>
-            </ScrollView>
+            </Animated.ScrollView>
 
             <BottomActionOverlay
                 title="Adicionar ao jardim"

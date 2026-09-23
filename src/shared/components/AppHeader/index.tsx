@@ -25,25 +25,37 @@ export default function AppHeader({
     backButton,
     onBackPress,
     scrollY,
+    scrollSensitivity = 1,
 }: AppHeaderProps) {
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const sensitivity = Math.max(scrollSensitivity, 1);
 
     useEffect(() => {
         if (!scrollY) return;
 
         const listenerId = scrollY.addListener(({ value }) => {
-            const scrolled = value >= 45;
-            setIsScrolled(prev => (prev !== scrolled ? scrolled : prev));
+            const scrolled =
+                value >= 45 / sensitivity;
+
+            setIsScrolled(prev =>
+                prev !== scrolled
+                    ? scrolled
+                    : prev,
+            );
         });
 
         return () => {
             scrollY.removeListener(listenerId);
         };
-    }, [scrollY]);
+    }, [scrollY, sensitivity]);
 
     const normalOpacity = scrollY
         ? scrollY.interpolate({
-            inputRange: [0, 45],
+            inputRange: [
+                0,
+                45 / sensitivity,
+            ],
             outputRange: [1, 0],
             extrapolate: 'clamp',
         })
@@ -51,7 +63,11 @@ export default function AppHeader({
 
     const buttonElevation = scrollY
         ? scrollY.interpolate({
-            inputRange: [0, 30, 45],
+            inputRange: [
+                0,
+                30 / sensitivity,
+                45 / sensitivity,
+            ],
             outputRange: [2, 0.5, 0],
             extrapolate: 'clamp',
         })
@@ -59,7 +75,11 @@ export default function AppHeader({
 
     const buttonShadowOpacity = scrollY
         ? scrollY.interpolate({
-            inputRange: [0, 30, 45],
+            inputRange: [
+                0,
+                30 / sensitivity,
+                45 / sensitivity,
+            ],
             outputRange: [0.10, 0.03, 0],
             extrapolate: 'clamp',
         })
@@ -67,7 +87,11 @@ export default function AppHeader({
 
     const buttonScale = scrollY
         ? scrollY.interpolate({
-            inputRange: [0, 35, 45],
+            inputRange: [
+                0,
+                35 / sensitivity,
+                45 / sensitivity,
+            ],
             outputRange: [1, 0.8, 0],
             extrapolate: 'clamp',
         })
@@ -75,7 +99,10 @@ export default function AppHeader({
 
     const scrolledOpacity = scrollY
         ? scrollY.interpolate({
-            inputRange: [20, 50],
+            inputRange: [
+                20 / sensitivity,
+                50 / sensitivity,
+            ],
             outputRange: [0, 1],
             extrapolate: 'clamp',
         })
