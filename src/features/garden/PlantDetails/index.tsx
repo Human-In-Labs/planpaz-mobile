@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Alert,
+    Animated,
     Dimensions,
     Image,
     ScrollView,
@@ -100,6 +101,9 @@ export default function PlantDetailsScreen() {
     const route = useRoute<RouteType>();
 
     const plantId = route.params?.plantId;
+    const [scrollY] = useState(
+        () => new Animated.Value(0),
+    );
 
     const stagesScrollRef = useRef<ScrollView>(null);
 
@@ -335,11 +339,27 @@ export default function PlantDetailsScreen() {
                 title={plant.nickname || species.name}
                 backButton
                 onBackPress={() => navigation.goBack()}
+                scrollY={scrollY}
             />
 
-            <ScrollView
+           <Animated.ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                onScroll={Animated.event(
+                    [
+                        {
+                            nativeEvent: {
+                                contentOffset: {
+                                    y: scrollY,
+                                },
+                            },
+                        },
+                    ],
+                    {
+                        useNativeDriver: false,
+                    },
+                )}
+                scrollEventThrottle={16}
             >
                 <View style={styles.heroCard}>
                     <Image
@@ -632,7 +652,7 @@ export default function PlantDetailsScreen() {
                         })}
                     </ScrollView>
                 </View>
-            </ScrollView>
+            </Animated.ScrollView>
 
             <TouchableOpacity
                 style={styles.floatingEditButton}
