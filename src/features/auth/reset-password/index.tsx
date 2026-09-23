@@ -3,6 +3,7 @@ import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
+import { verticalScale } from '../../../shared/theme/scale';
 import { colors } from '../../../shared/theme';
 import AppIcon from '../../../shared/components/AppIcon';
 import { ErrorPopup } from '../errors';
@@ -80,7 +81,11 @@ export default function ResetPasswordScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
-          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
+            <ErrorPopup
+              visible={!!errorMessage}
+              message={errorMessage}
+              areaHeight={verticalScale(82)}
+            />
           <Text style={styles.title}>Redefinir</Text>
           <Text style={styles.subtitle}>Digite a nova senha</Text>
 

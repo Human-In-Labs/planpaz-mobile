@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
   },
 
   content: {
-    paddingTop: verticalScale(82),
+    paddingTop: 0,
   },
 
   title: {

@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
-import { colors } from '../../../shared/theme';
 import { verticalScale } from '../../../shared/theme/scale';
+import { colors } from '../../../shared/theme';
 import AppIcon from '../../../shared/components/AppIcon';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
@@ -168,7 +168,11 @@ export default function RegisterScreen() {
 
         <View style={styles.main}>
         <View style={styles.content}>
-          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
+          <ErrorPopup
+            visible={!!errorMessage}
+            message={errorMessage}
+            areaHeight={verticalScale(76)}
+          />
           <Text style={styles.title}>Cadastrar</Text>
 
           <TextInput

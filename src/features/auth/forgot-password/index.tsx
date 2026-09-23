@@ -3,6 +3,7 @@ import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
+import { verticalScale } from '../../../shared/theme/scale';
 import { colors } from '../../../shared/theme';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
@@ -47,7 +48,11 @@ export default function ForgotPasswordScreen() {
 
       <View style={styles.main}>
         <View style={styles.content}>
-          <ErrorPopup visible={!!errorMessage} message={errorMessage} />
+          <ErrorPopup
+            visible={!!errorMessage}
+            message={errorMessage}
+            areaHeight={verticalScale(76)}
+          />
           <Text style={styles.title}>Email</Text>
           <Text style={styles.subtitle}>
             Digite seu Email para receber um código de redefinição de sua senha

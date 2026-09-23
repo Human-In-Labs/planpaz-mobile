@@ -17,6 +17,7 @@ import { RootStackParamList } from '../../../navigation/types';
 import { colors } from '../../../shared/theme';
 import { login, getUserSettings } from '../../../shared/api';
 import { saveToken, getToken, saveUserId, isUUID } from '../../../shared/services/storage';
+import { verticalScale } from '../../../shared/theme/scale';
 import AppIcon from '../../../shared/components/AppIcon';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import { ErrorPopup } from '../errors';
@@ -151,7 +152,11 @@ export default function LoginScreen() {
 
         <View style={styles.main}>
           <View style={styles.content}>
-            <ErrorPopup visible={!!errorMessage} message={errorMessage} />
+            <ErrorPopup
+              visible={!!errorMessage}
+              message={errorMessage}
+              areaHeight={verticalScale(76)}
+            />
             <Text style={styles.title}>Entrar</Text>
 
             <TextInput
