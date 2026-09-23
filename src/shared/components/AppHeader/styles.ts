@@ -34,6 +34,9 @@ export const styles = StyleSheet.create({
         flex: 1,
         minWidth: 0,
         overflow: 'hidden',
+        transform: [
+            { translateY: verticalScale(9) },
+        ],
     },
 
     titleScrollContent: {
