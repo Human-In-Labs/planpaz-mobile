@@ -30,7 +30,6 @@ export const styles = StyleSheet.create({
         fontSize: 12,
         fontFamily: fonts.interRegular,
         color: colors.primary,
-        backgroundColor: '#E8F5E9',
         paddingHorizontal: scale(10),
         paddingVertical: verticalScale(4),
         borderRadius: radius.md,
@@ -45,9 +44,7 @@ export const styles = StyleSheet.create({
         borderRadius: radius.md,
         paddingHorizontal: scale(12),
         height: verticalScale(44),
-        borderWidth: 1,
-        borderColor: '#E5E5EA',
-        ...shadows.small,
+        boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.16)',
     },
     input: {
         flex: 1,
@@ -82,7 +79,7 @@ export const styles = StyleSheet.create({
     activeChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#E8F5E9',
+        backgroundColor: 'transparent',
         borderRadius: radius.md,
         paddingHorizontal: scale(10),
         paddingVertical: verticalScale(6),
@@ -93,7 +90,7 @@ export const styles = StyleSheet.create({
     activeChipText: {
         fontSize: 12,
         fontFamily: fonts.interSemiBold,
-        color: colors.primary,
+        color: colors.black,
     },
     removeButton: {
         padding: 2,
@@ -108,15 +105,14 @@ export const styles = StyleSheet.create({
     },
     suggestionChip: {
         backgroundColor: colors.white,
-        borderRadius: radius.md,
+        borderRadius: 10,
         paddingHorizontal: scale(12),
         paddingVertical: verticalScale(8),
-        borderWidth: 1,
-        borderColor: '#E5E5EA',
-        ...shadows.small,
+        boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.08)',
     },
     suggestionChipSelected: {
         backgroundColor: '#E8F5E9',
+        borderWidth: 1,
         borderColor: colors.primary,
     },
     suggestionChipText: {
@@ -141,23 +137,21 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.white,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#E5E5EA',
-        ...shadows.small,
+
+        boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.16)',
     },
     clearButtonText: {
         ...typography.button,
         fontSize: 13,
-        color: '#666666',
+        color: colors.primary,
     },
     applyButton: {
-        flex: 2,
+        flex: 1,
         height: verticalScale(40),
         borderRadius: radius.md,
         backgroundColor: colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
-        ...shadows.small,
     },
     applyButtonText: {
         ...typography.button,

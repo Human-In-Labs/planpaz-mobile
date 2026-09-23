@@ -92,7 +92,7 @@ export default function FilterModal({
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Text style={styles.limitBadge}>{selectedTags.length}/{maxTags}</Text>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <AppIcon icon={AppIcons.X} size={18} color="#666666" />
+                        <AppIcon icon={AppIcons.X} size={18} color="#115634" />
                     </TouchableOpacity>
                 </View>
             </View>
