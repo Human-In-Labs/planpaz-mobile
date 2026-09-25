@@ -36,6 +36,7 @@ export const styles = StyleSheet.create({
         width: '100%',
         height: verticalScale(280),
         borderRadius: radius.xl,
+        overflow: 'hidden',
         marginBottom: verticalScale(8),
     },
 
@@ -299,5 +300,101 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: scale(16),
+    },
+
+    deletePlantLink: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: verticalScale(16),
+        marginTop: verticalScale(8),
+        marginBottom: verticalScale(32),
+    },
+
+    deletePlantLinkText: {
+        fontFamily: 'Inter-Medium',
+        fontSize: scale(14),
+        color: '#8B0000',
+        textDecorationLine: 'underline',
+        fontWeight: '500',
+    },
+
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: scale(24),
+    },
+
+    modalCard: {
+        width: '100%',
+        backgroundColor: colors.white,
+        borderRadius: radius.xxl,
+        padding: scale(20),
+        alignItems: 'center',
+        ...shadows.medium,
+    },
+
+    modalIconBadge: {
+        width: scale(48),
+        height: scale(48),
+        borderRadius: scale(24),
+        backgroundColor: '#FEF2F2',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: verticalScale(12),
+    },
+
+    modalTitle: {
+        fontFamily: 'Inter-Bold',
+        fontSize: scale(18),
+        color: colors.black,
+        marginBottom: verticalScale(8),
+        textAlign: 'center',
+    },
+
+    modalMessage: {
+        fontFamily: 'Inter-Regular',
+        fontSize: scale(14),
+        color: '#4B5563',
+        textAlign: 'center',
+        lineHeight: scale(20),
+        marginBottom: verticalScale(20),
+    },
+
+    modalActionsRow: {
+        flexDirection: 'row',
+        gap: scale(12),
+        width: '100%',
+    },
+
+    modalCancelButton: {
+        flex: 1,
+        height: verticalScale(44),
+        borderRadius: radius.lg,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    modalCancelButtonText: {
+        fontFamily: 'Inter-Medium',
+        fontSize: scale(14),
+        color: '#4B5563',
+    },
+
+    modalConfirmButton: {
+        flex: 1,
+        height: verticalScale(44),
+        borderRadius: radius.lg,
+        backgroundColor: '#DC2626',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    modalConfirmButtonText: {
+        fontFamily: 'Inter-Bold',
+        fontSize: scale(14),
+        color: colors.white,
     },
 });

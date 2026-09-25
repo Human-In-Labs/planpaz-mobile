@@ -108,6 +108,21 @@ export async function removerSeguidor(followerId: string): Promise<void> {
     await api.delete(`/user/followers/${followerId}`);
 }
 
+export interface UserStats {
+    userId: string;
+    totalCo2Grams: number;
+    totalEcoScore: number;
+    totalPlants: number;
+    totalPosts: number;
+    daysOnApp: number;
+}
+
+export async function getUserStats(userId?: string): Promise<UserStats> {
+    const url = userId ? `/user/${userId}/stats` : '/user/stats';
+    const response = await api.get<UserStats>(url);
+    return response.data;
+}
+
 export interface PublicUserProfile {
     id: string;
     name: string;
@@ -122,6 +137,7 @@ export interface PublicUserProfile {
     totalPosts: number;
     daysOnApp: number;
     carbonPoints: number;
+    ecoscore: number;
     achievements: any[];
 }
 

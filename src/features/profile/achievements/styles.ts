@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontFamily: fonts.poppinsBold,
-        color: colors.black,
+        color: colors.black || '#111827',
     },
 
     backButton: {
@@ -35,13 +35,47 @@ export const styles = StyleSheet.create({
 
     content: {
         paddingHorizontal: scale(16),
-        paddingTop: verticalScale(16),
+        paddingTop: verticalScale(8),
         paddingBottom: verticalScale(100),
     },
 
-    grid: {
+    gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
+        gap: scale(12),
+    },
+
+    emptyContainer: {
+        paddingVertical: verticalScale(48),
+        paddingHorizontal: scale(24),
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    emptyIconBox: {
+        width: scale(72),
+        height: scale(72),
+        borderRadius: 36,
+        backgroundColor: '#E8F5E9',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: verticalScale(16),
+    },
+
+    emptyTitle: {
+        fontSize: 16,
+        fontFamily: fonts.poppinsBold,
+        color: '#111827',
+        textAlign: 'center',
+        marginBottom: verticalScale(8),
+    },
+
+    emptySubtitle: {
+        fontSize: 13,
+        fontFamily: fonts.interRegular,
+        color: '#4B5563',
+        textAlign: 'center',
+        lineHeight: 18,
     },
 });

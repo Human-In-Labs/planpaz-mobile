@@ -9,10 +9,13 @@ import { styles } from './styles';
 
 type FeedbackListener = (message: string) => void;
 let feedbackListener: FeedbackListener | null = null;
+const globalQueue: string[] = [];
 
 export const showFeedback = (message: string) => {
     if (feedbackListener) {
         feedbackListener(message);
+    } else {
+        globalQueue.push(message);
     }
 };
 
@@ -25,35 +28,17 @@ export const FeedbackPopup: React.FC = () => {
     const opacity = useRef(new Animated.Value(0)).current;
     const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const hide = useCallback(() => {
-        if (hideTimeoutRef.current) {
-            clearTimeout(hideTimeoutRef.current);
-            hideTimeoutRef.current = null;
+    const queueRef = useRef<string[]>([]);
+    const isShowingRef = useRef(false);
+
+    const processNextMessage = useCallback(() => {
+        if (isShowingRef.current || queueRef.current.length === 0) {
+            return;
         }
 
-        Animated.parallel([
-            Animated.timing(translateY, {
-                toValue: -80,
-                duration: 220,
-                useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-                toValue: 0,
-                duration: 180,
-                useNativeDriver: true,
-            }),
-        ]).start(() => {
-            setVisible(false);
-        });
-    }, [translateY, opacity]);
-
-    const show = useCallback((msg: string) => {
-        if (hideTimeoutRef.current) {
-            clearTimeout(hideTimeoutRef.current);
-            hideTimeoutRef.current = null;
-        }
-
-        setMessage(msg);
+        const nextMsg = queueRef.current.shift()!;
+        isShowingRef.current = true;
+        setMessage(nextMsg);
         setVisible(true);
 
         translateY.setValue(-80);
@@ -73,21 +58,49 @@ export const FeedbackPopup: React.FC = () => {
             }),
         ]).start();
 
-        // Stays for 2.5 seconds (2500ms) then disappears
         hideTimeoutRef.current = setTimeout(() => {
-            hide();
+            Animated.parallel([
+                Animated.timing(translateY, {
+                    toValue: -80,
+                    duration: 220,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(opacity, {
+                    toValue: 0,
+                    duration: 180,
+                    useNativeDriver: true,
+                }),
+            ]).start(() => {
+                setVisible(false);
+                isShowingRef.current = false;
+                setTimeout(() => {
+                    processNextMessage();
+                }, 300);
+            });
         }, 2500);
-    }, [hide, translateY, opacity]);
+    }, [translateY, opacity]);
+
+    const enqueueMessage = useCallback((msg: string) => {
+        queueRef.current.push(msg);
+        processNextMessage();
+    }, [processNextMessage]);
 
     useEffect(() => {
-        feedbackListener = show;
+        while (globalQueue.length > 0) {
+            const item = globalQueue.shift();
+            if (item) queueRef.current.push(item);
+        }
+
+        feedbackListener = enqueueMessage;
+        processNextMessage();
+
         return () => {
             feedbackListener = null;
             if (hideTimeoutRef.current) {
                 clearTimeout(hideTimeoutRef.current);
             }
         };
-    }, [show]);
+    }, [enqueueMessage, processNextMessage]);
 
     if (!visible) {
         return null;

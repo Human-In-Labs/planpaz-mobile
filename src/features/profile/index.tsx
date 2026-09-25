@@ -20,6 +20,7 @@ import {
     getMinhasConfiguracoes,
     getSeguidores,
     getSeguindo,
+    getUserStats,
     listarJardim,
     listarPosts,
     obterConquistasMe,
@@ -104,43 +105,38 @@ export default function ProfileScreen() {
                         setFollowingList(followingMapped);
 
                         let plantsCount = 0;
-                        try {
-                            const jardim = await listarJardim();
-                            if (Array.isArray(jardim)) {
-                                plantsCount = jardim.length;
-                            }
-                        } catch (jardimErr) {
-                            console.log('[PROFILE] Erro ao carregar jardim:', jardimErr);
-                        }
-
                         let postsCount = 0;
-                        if (settings.id) {
-                            try {
-                                const postsRes = await listarPosts(0, 100, settings.id);
-                                if (postsRes && Array.isArray(postsRes.content)) {
-                                    postsCount = postsRes.content.filter(p => p.authorId === settings.id).length;
-                                }
-                            } catch (postsErr) {
-                                console.log('[PROFILE] Erro ao carregar posts:', postsErr);
-                            }
-                        }
-
                         let daysInPlanpaz = 0;
-                        if (settings.createdAt) {
-                            const createdDate = new Date(settings.createdAt);
-                            if (!isNaN(createdDate.getTime())) {
-                                const diffDays = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-                                daysInPlanpaz = Math.max(0, diffDays);
+                        let co2Display: string | number = '0g';
+                        let ecoscoreVal = settings.ecoscore ?? 0;
+
+                        try {
+                            const statsData = await getUserStats(settings.id);
+                            if (statsData) {
+                                plantsCount = statsData.totalPlants;
+                                postsCount = statsData.totalPosts;
+                                daysInPlanpaz = statsData.daysOnApp;
+                                ecoscoreVal = statsData.totalEcoScore;
+                                co2Display = statsData.totalCo2Grams >= 1000
+                                    ? `${(statsData.totalCo2Grams / 1000).toFixed(1)}kg`
+                                    : `${statsData.totalCo2Grams}g`;
+                            }
+                        } catch (statsErr) {
+                            console.log('[PROFILE] Erro ao carregar estatísticas do backend:', statsErr);
+                            try {
+                                const jardim = await listarJardim();
+                                if (Array.isArray(jardim)) {
+                                    plantsCount = jardim.length;
+                                }
+                            } catch (jardimErr) {
+                                console.log('[PROFILE] Erro ao carregar jardim:', jardimErr);
                             }
                         }
-
-                        const co2 = Math.round(plantsCount * 5 * 10) / 10;
-                        const ecoscoreVal = settings.ecoscore ?? (plantsCount * 100);
 
                         const stats: Statistic[] = [
                             {
                                 id: '1',
-                                value: co2,
+                                value: co2Display,
                                 label: 'CO² capturado',
                                 icon: <AppIcon icon={AppIcons.CROSSHAIR} size={22} color="#000000" />,
                                 isHighlighted: true,

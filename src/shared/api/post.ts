@@ -1,4 +1,5 @@
 import { api } from './client';
+import { AchievementProgress } from './achievement';
 
 export interface PostResponse {
     id: string;
@@ -13,6 +14,8 @@ export interface PostResponse {
     likesCount: number;
     likedByCurrentUser?: boolean;
     commentsCount: number;
+    unlockedAchievement?: AchievementProgress;
+    unlockedAchievements?: AchievementProgress[];
 }
 
 export interface PageableResponse<T> {
@@ -75,6 +78,8 @@ export interface CommentResponse {
     authorName: string;
     authorUsername: string;
     parentCommentId?: string | null;
+    unlockedAchievement?: AchievementProgress;
+    unlockedAchievements?: AchievementProgress[];
 }
 
 export interface CreateCommentRequest {

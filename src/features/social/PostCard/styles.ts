@@ -88,6 +88,7 @@ export const styles = StyleSheet.create({
         width: '100%',
         height: verticalScale(220),
         borderRadius: scale(24),
+        overflow: 'hidden',
         marginBottom: verticalScale(14),
     },
     actionsRow: {

@@ -28,6 +28,8 @@ import {
     CommentResponse,
 } from '../../../shared/api';
 import { getCurrentAuthorId } from '../../../shared/services/storage';
+import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
+import { Achievement } from '../../profile/AchievementsSection/types';
 import { formatRelativeTime } from '../../../shared/utils/date';
 import { colors } from '../../../shared/theme';
 import PostCard from '../PostCard';
@@ -208,6 +210,8 @@ export default function PostIndividualScreen() {
         setIsReportModalVisible(true);
     };
 
+    const [unlockedQueue, setUnlockedQueue] = useState<Achievement[]>([]);
+
     const handleSendComment = async (text: string) => {
         if (!text.trim()) return;
 
@@ -222,8 +226,20 @@ export default function PostIndividualScreen() {
             const newComment = mapCommentResponseToPostComment(response, []);
             setComments(prev => [newComment, ...prev]);
             setIsCommentExpanded(false);
-            const successMsg = (response as any)?.message || 'Comentário publicado com sucesso!';
-            showFeedback(successMsg);
+            const items = (response as any)?.unlockedAchievements && (response as any).unlockedAchievements.length > 0
+                ? (response as any).unlockedAchievements
+                : (response as any)?.unlockedAchievement
+                    ? [(response as any).unlockedAchievement]
+                    : [];
+
+            if (items.length > 0) {
+                items.forEach((item: any) => {
+                    showFeedback(`Você ganhou a conquista: ${item.name}! 🌿`);
+                });
+            } else {
+                const successMsg = (response as any)?.message || 'Comentário publicado com sucesso!';
+                showFeedback(successMsg);
+            }
         } catch (error: any) {
             console.log('[POST INDIVIDUAL] Erro ao criar comentário:', error);
             const backendMsg = error?.response?.data?.message || 'Não foi possível registrar seu comentário. Tente novamente.';
@@ -256,8 +272,21 @@ export default function PostIndividualScreen() {
                 })
             );
             setActiveReplyCommentId(null);
-            const successMsg = (response as any)?.message || 'Resposta publicada com sucesso!';
-            showFeedback(successMsg);
+
+            const items = (response as any)?.unlockedAchievements && (response as any).unlockedAchievements.length > 0
+                ? (response as any).unlockedAchievements
+                : (response as any)?.unlockedAchievement
+                    ? [(response as any).unlockedAchievement]
+                    : [];
+
+            if (items.length > 0) {
+                items.forEach((item: any) => {
+                    showFeedback(`Você ganhou a conquista: ${item.name}! 🌿`);
+                });
+            } else {
+                const successMsg = (response as any)?.message || 'Resposta publicada com sucesso!';
+                showFeedback(successMsg);
+            }
         } catch (error: any) {
             console.log('[POST INDIVIDUAL] Erro ao enviar resposta:', error);
             const backendMsg = error?.response?.data?.message || 'Não foi possível registrar sua resposta. Tente novamente.';
@@ -391,6 +420,12 @@ export default function PostIndividualScreen() {
                 onConfirmReport={(reason, message) => {
                     console.log(`[POST INDIVIDUAL] Denúncia enviada para ${reportTarget.contentType} ${reportTarget.contentId}`);
                 }}
+            />
+
+            <AchievementDetailsOverlay
+                visible={unlockedQueue.length > 0}
+                onClose={() => setUnlockedQueue(prev => prev.slice(1))}
+                achievement={unlockedQueue.length > 0 ? unlockedQueue[0] : null}
             />
         </View>
     );

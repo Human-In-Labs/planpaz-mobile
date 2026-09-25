@@ -4,37 +4,46 @@ import { scale, verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
-        width: scale(67),
+        width: scale(72),
         alignItems: 'center',
+        marginRight: scale(10),
+        marginBottom: verticalScale(8),
     },
 
     card: {
-        width: scale(67),
-        height: verticalScale(63),
-        borderRadius: radius.md,
+        width: scale(64),
+        height: scale(64),
+        borderRadius: radius.md || 16,
+        backgroundColor: colors.white || '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.white,
+        borderWidth: 1,
+        borderColor: '#E2F1E8',
         ...shadows.small,
     },
 
-    leafContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
+    lockedCard: {
+        backgroundColor: '#F3F4F6',
+        borderColor: '#E5E7EB',
+        elevation: 0,
+        shadowOpacity: 0,
     },
 
-    level: {
-        marginTop: verticalScale(1),
-        fontSize: 10,
-        fontFamily: fonts.poppinsBold,
-        color: '#03624C',
+    lockedIcon: {
+        opacity: 0.4,
     },
 
     title: {
         marginTop: verticalScale(6),
         textAlign: 'center',
         fontSize: 11,
-        fontFamily: fonts.interRegular,
-        color: colors.black,
+        lineHeight: 14,
+        fontFamily: fonts.interMedium || fonts.interRegular,
+        color: colors.black || '#111827',
+        width: scale(70),
+    },
+
+    lockedTitle: {
+        color: '#9CA3AF',
     },
 });

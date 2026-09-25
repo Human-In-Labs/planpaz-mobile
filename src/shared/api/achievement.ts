@@ -15,3 +15,8 @@ export async function obterConquistasMe(): Promise<AchievementProgress[]> {
     const response = await api.get<AchievementProgress[]>('/achievements/me');
     return response.data;
 }
+
+export async function obterConquistasUsuario(userId: string): Promise<AchievementProgress[]> {
+    const response = await api.get<AchievementProgress[]>(`/achievements/user/${userId}`);
+    return response.data;
+}

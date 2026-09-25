@@ -12,27 +12,31 @@ import {
 
 export const styles = StyleSheet.create({
     container: {
-        marginTop: verticalScale(26),
-        paddingHorizontal: scale(spacing.md),
+        marginTop: verticalScale(20),
+        marginBottom: verticalScale(16),
+        paddingHorizontal: scale(spacing.md || 16),
     },
 
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginBottom: verticalScale(12),
     },
 
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontFamily: fonts.poppinsBold,
-        color: colors.black,
+        color: colors.black || '#111827',
         marginRight: scale(6),
     },
 
-    list: {
-        marginTop: verticalScale(12),
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    scrollView: {
         width: '100%',
-        paddingHorizontal: scale(2),
+    },
+
+    scrollList: {
+        paddingRight: scale(16),
+        paddingVertical: verticalScale(4),
+        alignItems: 'flex-start',
     },
 });

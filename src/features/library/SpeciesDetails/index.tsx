@@ -27,6 +27,7 @@ import {
     Plant,
 } from '../../../shared/api';
 import { getPlantTags } from '../../../shared/utils/tagMapper';
+import { getSpeciesCareGuide } from '../../../shared/utils/plantDataDatabase';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
 import { styles } from './styles';
 
@@ -334,46 +335,70 @@ export default function SpeciesDetailsScreen() {
                     )}
                 </View>
 
-                <View style={styles.careGuideCard}>
-                    <Text style={styles.sectionHeader}>
-                        Guia de cuidados:
-                    </Text>
+                {(() => {
+                    const guideData = getSpeciesCareGuide(species.name);
+                    return (
+                        <View style={styles.careGuideCard}>
+                            <Text style={styles.sectionHeader}>
+                                Guia de cuidados:
+                            </Text>
 
-                    {species.careGuide ? (
-                        <View style={styles.guideItem}>
-                            <Text style={styles.guideText}>{species.careGuide}</Text>
+                            {guideData.solo && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Solo: </Text>
+                                        {guideData.solo}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.clima && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Clima: </Text>
+                                        {guideData.clima}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.iluminacao && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Iluminação: </Text>
+                                        {guideData.iluminacao}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.rega && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Rega: </Text>
+                                        {guideData.rega}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.poda && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Poda: </Text>
+                                        {guideData.poda}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.dicas && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Dica de cultivo: </Text>
+                                        {guideData.dicas}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
-                    ) : (
-                        <>
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>
-                                        Solo:{' '}
-                                    </Text>
-                                    {CARE_GUIDE.solo}
-                                </Text>
-                            </View>
-
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>
-                                        Rega:{' '}
-                                    </Text>
-                                    {CARE_GUIDE.rega}
-                                </Text>
-                            </View>
-
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>
-                                        Poda:{' '}
-                                    </Text>
-                                    {CARE_GUIDE.poda}
-                                </Text>
-                            </View>
-                        </>
-                    )}
-                </View>
+                    );
+                })()}
             </Animated.ScrollView>
 
             <BottomActionOverlay

@@ -26,6 +26,8 @@ import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import ForbiddenContentModal from '../../../shared/components/ForbiddenContentModal';
 import HashtagInput from './HashtagInput';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
+import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
+import { Achievement } from '../../profile/AchievementsSection/types';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
 import { styles } from './styles';
 
@@ -63,6 +65,18 @@ export default function CreatePostScreen() {
         }
     };
 
+    const [unlockedQueue, setUnlockedQueue] = useState<Achievement[]>([]);
+
+    const handleCloseAchievementOverlay = () => {
+        setUnlockedQueue(prev => {
+            const next = prev.slice(1);
+            if (next.length === 0) {
+                navigation.goBack();
+            }
+            return next;
+        });
+    };
+
     const handlePublish = async () => {
         if (!title.trim() && !content.trim()) {
             Alert.alert('Campos obrigatórios', 'Por favor, preencha o título ou o texto da publicação.');
@@ -93,8 +107,20 @@ export default function CreatePostScreen() {
                 tags: formattedTags,
             });
 
-            const msg = (res as any)?.message || 'Publicação realizada com sucesso!';
-            showFeedback(msg);
+            const items = (res as any)?.unlockedAchievements && (res as any).unlockedAchievements.length > 0
+                ? (res as any).unlockedAchievements
+                : (res as any)?.unlockedAchievement
+                    ? [(res as any).unlockedAchievement]
+                    : [];
+
+            if (items.length > 0) {
+                items.forEach((item: any) => {
+                    showFeedback(`Você ganhou a conquista: ${item.name}! 🌿`);
+                });
+            } else {
+                const msg = (res as any)?.message || 'Publicação realizada com sucesso!';
+                showFeedback(msg);
+            }
             navigation.goBack();
         } catch (error: any) {
             console.log('[CREATE POST] Erro ao criar post na API:', error);
@@ -253,6 +279,12 @@ export default function CreatePostScreen() {
                 visible={isForbiddenModalVisible}
                 message={forbiddenMessage || undefined}
                 onClose={() => setIsForbiddenModalVisible(false)}
+            />
+
+            <AchievementDetailsOverlay
+                visible={unlockedQueue.length > 0}
+                onClose={handleCloseAchievementOverlay}
+                achievement={unlockedQueue.length > 0 ? unlockedQueue[0] : null}
             />
         </View>
     );

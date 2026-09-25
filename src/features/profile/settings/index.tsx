@@ -1011,8 +1011,13 @@ export default function SettingsScreen() {
                                     maximumDate={
                                         new Date()
                                     }
-                                    onChange={
+                                    onValueChange={
                                         handleDateChange
+                                    }
+                                    onDismiss={() =>
+                                        setShowDatePicker(
+                                            false,
+                                        )
                                     }
                                 />
                             )}

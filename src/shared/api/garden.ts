@@ -1,5 +1,6 @@
 import { api } from './client';
 import { Plant } from './plant';
+import { AchievementProgress } from './achievement';
 import { CultivatedPlant } from '../../features/garden/types';
 import { translateTagToPT, translateTagsToPT } from '../utils/tagMapper';
 
@@ -10,6 +11,10 @@ export interface GardenPlant {
     nickname: string;
     plantedAt?: string;
     lastWatering?: string;
+    lastFertilizing?: string;
+    lastPruning?: string;
+    streakDays?: number;
+    ecoscore?: number;
     wateringNotification?: boolean;
     stage?: {
         id: string;
@@ -22,6 +27,17 @@ export interface GardenPlant {
     directRain?: boolean;
     room?: string;
     imagePath?: string;
+}
+
+export interface PlantStats {
+    plantId: string;
+    co2Grams: number;
+    ecoScore: number;
+    cultivationDays: number;
+    streakDays: number;
+    lastWatering?: string | null;
+    lastFertilizing?: string | null;
+    lastPruning?: string | null;
 }
 
 export interface AddGardenPlantRequest {
@@ -109,6 +125,8 @@ export async function buscarPlantaDoJardim(
 export interface ApiResponse {
     message: string;
     success: boolean;
+    unlockedAchievement?: AchievementProgress;
+    unlockedAchievements?: AchievementProgress[];
 }
 
 // POST /api/garden/add
@@ -149,6 +167,30 @@ export async function regarPlanta(
     id: string,
 ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(`/garden/watering/${id}`);
+    return response.data;
+}
+
+// POST /api/garden/fertilize/{id}
+export async function adubarPlanta(
+    id: string,
+): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>(`/garden/fertilize/${id}`);
+    return response.data;
+}
+
+// POST /api/garden/prune/{id}
+export async function podarPlanta(
+    id: string,
+): Promise<ApiResponse> {
+    const response = await api.post<ApiResponse>(`/garden/prune/${id}`);
+    return response.data;
+}
+
+// GET /api/garden/{id}/stats
+export async function getPlantStats(
+    id: string,
+): Promise<PlantStats> {
+    const response = await api.get<PlantStats>(`/garden/${id}/stats`);
     return response.data;
 }
 

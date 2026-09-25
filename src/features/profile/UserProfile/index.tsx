@@ -34,6 +34,7 @@ import {
     seguirUsuario,
     UserSummary,
 } from '../../../shared/api/user';
+import { obterConquistasUsuario } from '../../../shared/api/achievement';
 
 import { styles } from './styles';
 
@@ -92,26 +93,31 @@ export default function UserProfileScreen() {
             setIsFollowing(data.isFollowing);
             setFollowersCount(data.followersCount);
 
+            const co2Display = data.carbonPoints >= 1000
+                ? `${(data.carbonPoints / 1000).toFixed(1)}kg`
+                : `${data.carbonPoints}g`;
+
             const stats: Statistic[] = [
                 {
                     id: '1',
-                    value: data.totalPlants,
-                    label: 'Plantas cultivadas',
+                    value: co2Display,
+                    label: 'CO² capturado',
                     icon: (
                         <AppIcon
-                            icon={AppIcons.PLANT}
+                            icon={AppIcons.CROSSHAIR}
                             size={22}
                             color="#000000"
                         />
                     ),
+                    isHighlighted: true,
                 },
                 {
                     id: '2',
-                    value: data.totalPosts,
-                    label: 'Posts na comunidade',
+                    value: data.ecoscore ?? 0,
+                    label: 'EcoScore',
                     icon: (
                         <AppIcon
-                            icon={AppIcons.CHAT}
+                            icon={AppIcons.TREE}
                             size={22}
                             color="#000000"
                         />
@@ -131,40 +137,81 @@ export default function UserProfileScreen() {
                 },
                 {
                     id: '4',
-                    value: data.carbonPoints,
-                    label: 'Pontos de carbono',
+                    value: data.totalPosts,
+                    label: 'Posts',
                     icon: (
                         <AppIcon
-                            icon={AppIcons.CROSSHAIR}
+                            icon={AppIcons.CHAT}
                             size={22}
                             color="#000000"
                         />
                     ),
-                    isHighlighted: true,
+                },
+                {
+                    id: '5',
+                    value: data.totalPlants,
+                    label: 'Plantas cultivadas',
+                    icon: (
+                        <AppIcon
+                            icon={AppIcons.PLANT}
+                            size={22}
+                            color="#000000"
+                        />
+                    ),
                 },
             ];
 
             setUserStatistics(stats);
 
-            if (
-                data.achievements &&
-                Array.isArray(data.achievements)
-            ) {
-                const mappedAchievements: Achievement[] =
-                    data.achievements.map((item: any) => ({
+            try {
+                const userAchData = await obterConquistasUsuario(userId);
+                if (Array.isArray(userAchData) && userAchData.length > 0) {
+                    const mappedAchievements: Achievement[] = userAchData.map((item: any) => ({
                         id: item.id,
                         title: item.name,
                         description: item.description,
                         icon: item.icon,
-                        level: item.level,
+                        unlocked: item.unlocked,
+                        progress: item.progress,
+                        maxProgress: item.maxProgress,
                         date: item.unlockedAt
                             ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
                             : undefined,
                     }));
-
-                setAchievements(mappedAchievements);
-            } else {
-                setAchievements([]);
+                    setAchievements(mappedAchievements);
+                } else if (data.achievements && Array.isArray(data.achievements)) {
+                    const mappedAchievements: Achievement[] = data.achievements.map((item: any) => ({
+                        id: item.id,
+                        title: item.name,
+                        description: item.description,
+                        icon: item.icon,
+                        unlocked: item.unlocked !== undefined ? item.unlocked : true,
+                        progress: item.progress,
+                        maxProgress: item.maxProgress,
+                        date: item.unlockedAt
+                            ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                            : undefined,
+                    }));
+                    setAchievements(mappedAchievements);
+                } else {
+                    setAchievements([]);
+                }
+            } catch (achErr) {
+                console.log('[USER_PROFILE] Erro ao buscar conquistas do usuário:', achErr);
+                if (data.achievements && Array.isArray(data.achievements)) {
+                    const mappedAchievements: Achievement[] = data.achievements.map((item: any) => ({
+                        id: item.id,
+                        title: item.name,
+                        description: item.description,
+                        icon: item.icon,
+                        unlocked: item.unlocked !== undefined ? item.unlocked : true,
+                        progress: item.progress,
+                        maxProgress: item.maxProgress,
+                    }));
+                    setAchievements(mappedAchievements);
+                } else {
+                    setAchievements([]);
+                }
             }
         } catch (error: any) {
             console.error(

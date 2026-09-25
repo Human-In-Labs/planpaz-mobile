@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    ScrollView,
     Text,
     TouchableOpacity,
     View,
@@ -36,19 +37,27 @@ export default function AchievementsSection({
                 />
             </TouchableOpacity>
 
-            <View style={styles.list}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.scrollList}
+                style={styles.scrollView}
+            >
                 {achievements.map(item => (
                     <AchievementCard
                         key={item.id}
                         icon={item.icon}
                         level={item.level}
                         title={item.title}
+                        description={item.description}
+                        date={item.date}
+                        unlocked={item.unlocked !== false}
                         onPress={() =>
                             onAchievementPress?.(item)
                         }
                     />
                 ))}
-            </View>
+            </ScrollView>
         </View>
     );
 }

@@ -34,6 +34,8 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
+import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
+import { Achievement } from '../../profile/AchievementsSection/types';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -119,8 +121,23 @@ export default function AddPlantScreen() {
 
     const [activeDropdown, setActiveDropdown] =
         useState<string | null>(null);
-    const [changePhotoVisible, setChangePhotoVisible] =
-        useState(false);
+    const [changePhotoVisible, setChangePhotoVisible] = useState(false);
+    const [unlockedQueue, setUnlockedQueue] = useState<Achievement[]>([]);
+
+    const handleCloseAchievementOverlay = () => {
+        setUnlockedQueue(prev => {
+            const next = prev.slice(1);
+            if (next.length === 0) {
+                (navigation as any).navigate('MainTabs', {
+                    screen: 'Garden',
+                    params: {
+                        screen: 'GardenMain',
+                    },
+                });
+            }
+            return next;
+        });
+    };
     const [showDatePicker, setShowDatePicker] = useState(false);
 
     const handleDateChange = (
@@ -251,8 +268,21 @@ export default function AddPlantScreen() {
                 imagePath: finalImagePath,
             });
 
-            const msg = res?.message || 'Planta adicionada com sucesso!';
-            showFeedback(msg);
+            const items = res?.unlockedAchievements && res.unlockedAchievements.length > 0
+                ? res.unlockedAchievements
+                : res?.unlockedAchievement
+                    ? [res.unlockedAchievement]
+                    : [];
+
+            if (items.length > 0) {
+                items.forEach(item => {
+                    showFeedback(`Você ganhou a conquista: ${item.name}! 🌿`);
+                });
+            } else {
+                const msg = res?.message || 'Planta adicionada com sucesso!';
+                showFeedback(msg);
+            }
+
             (navigation as any).navigate('MainTabs', {
                 screen: 'Garden',
                 params: {
@@ -507,7 +537,8 @@ export default function AddPlantScreen() {
                                     mode="date"
                                     display="default"
                                     maximumDate={new Date()}
-                                    onChange={handleDateChange}
+                                    onValueChange={handleDateChange}
+                                    onDismiss={() => setShowDatePicker(false)}
                                 />
                             )}
                         </View>
@@ -543,6 +574,12 @@ export default function AddPlantScreen() {
                         setSelectedPhoto({ uri: image.uri, base64: image.base64 });
                     }
                 }}
+            />
+
+            <AchievementDetailsOverlay
+                visible={unlockedQueue.length > 0}
+                onClose={handleCloseAchievementOverlay}
+                achievement={unlockedQueue.length > 0 ? unlockedQueue[0] : null}
             />
         </View>
     );

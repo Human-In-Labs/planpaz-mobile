@@ -4,6 +4,7 @@ import {
     Animated,
     Dimensions,
     Image,
+    Modal,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -21,16 +22,25 @@ import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import {
+    adubarPlanta,
     buscarPlantaDoJardim,
     buscarStagesDaEspecie,
+    excluirPlantaDoJardim,
+    getPlantStats,
     getProximasRegas,
+    podarPlanta,
     regarPlanta,
     GardenPlant,
     PlantStage,
+    PlantStats,
     WateringReminder,
 } from '../../../shared/api';
 import { styles } from './styles';
 import { getPlantTags } from '../../../shared/utils/tagMapper';
+import { getSpeciesCareGuide } from '../../../shared/utils/plantDataDatabase';
+import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
+import DeletePlantModal from '../DeletePlantModal';
+import { Achievement } from '../../profile/AchievementsSection/types';
 
 type NavigationProp = NativeStackNavigationProp<
     GardenStackParamList,
@@ -59,12 +69,6 @@ const CARE_GUIDE = {
     solo: 'Prefere solos bem drenados, ricos em matéria orgânica e com boa retenção de umidade.',
     rega: 'Regue quando a camada superficial do solo estiver seca, evitando o excesso de água.',
     poda: 'Realize podas de limpeza e remova folhas secas ou danificadas quando necessário.',
-};
-
-const MOCK_STATS = {
-    co2: 12,
-    ecoScore: 85,
-    cultivationDays: 30,
 };
 
 const formatWateringStatus = (
@@ -108,8 +112,35 @@ export default function PlantDetailsScreen() {
     const stagesScrollRef = useRef<ScrollView>(null);
 
     const [plant, setPlant] = useState<GardenPlant | null>(null);
+    const [plantStats, setPlantStats] = useState<PlantStats | null>(null);
     const [stages, setStages] = useState<PlantStage[]>([]);
-    const [isWatering, setIsWatering] = useState(false);
+    const [isCareLoading, setIsCareLoading] = useState(false);
+    const [unlockedQueue, setUnlockedQueue] = useState<Achievement[]>([]);
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleConfirmDelete = async () => {
+        if (!plant?.id || isDeleting) return;
+
+        try {
+            setIsDeleting(true);
+            await excluirPlantaDoJardim(plant.id);
+            setIsDeleteModalVisible(false);
+            (navigation as any).navigate('MainTabs', {
+                screen: 'Garden',
+                params: {
+                    screen: 'GardenMain',
+                },
+            });
+            showFeedback('Planta excluída com sucesso.');
+        } catch (error: any) {
+            console.error('[DELETE_PLANT] Erro ao excluir planta:', error);
+            const msg = error?.response?.data?.message || 'Não foi possível excluir a planta.';
+            Alert.alert('Aviso', msg);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
     const [actions, setActions] = useState<CareActionItem[]>([
         {
             id: 'c1',
@@ -123,7 +154,7 @@ export default function PlantDetailsScreen() {
             id: 'c2',
             type: 'poda',
             title: 'Poda de manutenção',
-            status: 'Hoje',
+            status: 'Pendente',
             isOverdue: false,
             completed: false,
         },
@@ -131,7 +162,7 @@ export default function PlantDetailsScreen() {
             id: 'c3',
             type: 'substrato',
             title: 'Adubação e substrato',
-            status: 'Em dia',
+            status: 'Pendente',
             isOverdue: false,
             completed: false,
         },
@@ -166,6 +197,13 @@ export default function PlantDetailsScreen() {
             }
 
             try {
+                const stats = await getPlantStats(plantId);
+                setPlantStats(stats);
+            } catch (err) {
+                console.error('Erro ao buscar estatísticas da planta:', err);
+            }
+
+            try {
                 const nextWaterings = await getProximasRegas(plantId);
                 const { status, isOverdue } = formatWateringStatus(
                     nextWaterings,
@@ -179,6 +217,22 @@ export default function PlantDetailsScreen() {
                                 status,
                                 isOverdue,
                                 completed: status === 'Regado hoje!',
+                            };
+                        }
+                        if (a.type === 'poda') {
+                            const isDoneToday = gardenPlant.lastPruning && new Date(gardenPlant.lastPruning).toDateString() === new Date().toDateString();
+                            return {
+                                ...a,
+                                status: isDoneToday ? 'Podado hoje!' : 'Pendente',
+                                completed: !!isDoneToday,
+                            };
+                        }
+                        if (a.type === 'substrato') {
+                            const isDoneToday = gardenPlant.lastFertilizing && new Date(gardenPlant.lastFertilizing).toDateString() === new Date().toDateString();
+                            return {
+                                ...a,
+                                status: isDoneToday ? 'Adubado hoje!' : 'Em dia',
+                                completed: !!isDoneToday,
                             };
                         }
                         return a;
@@ -218,60 +272,42 @@ export default function PlantDetailsScreen() {
 
     const handleToggleCareAction = async (actionId: string) => {
         const targetAction = actions.find(a => a.id === actionId);
-        if (!targetAction) return;
+        if (!targetAction || !plant?.id || isCareLoading) return;
 
-        if (targetAction.type === 'rega') {
-            if (isWatering || !plant?.id) return;
+        setIsCareLoading(true);
 
-            try {
-                const res = await regarPlanta(plant.id);
-
-                const msg = res?.message || 'Rega concluída';
-                showFeedback(msg);
-
-                setActions(prev =>
-                    prev.map(a => {
-                        if (a.id === actionId) {
-                            return {
-                                ...a,
-                                completed: true,
-                                status: 'Regado hoje!',
-                                isOverdue: false,
-                            };
-                        }
-                        return a;
-                    }),
-                );
-
-                const updatedPlant = await buscarPlantaDoJardim(plant.id);
-                if (updatedPlant) {
-                    setPlant(updatedPlant);
-                }
-
-                try {
-                    await getProximasRegas(plant.id);
-                } catch (e) {
-                    console.error('Erro ao atualizar próximas regas:', e);
-                }
-            } catch (error: any) {
-                console.error('Erro ao regar planta:', error);
-                const backendMsg = error?.response?.data?.message || 'Não foi possível registrar a rega.';
-                Alert.alert('Aviso', backendMsg);
-            } finally {
-                setIsWatering(false);
+        try {
+            let res;
+            if (targetAction.type === 'rega') {
+                res = await regarPlanta(plant.id);
+            } else if (targetAction.type === 'poda') {
+                res = await podarPlanta(plant.id);
+            } else if (targetAction.type === 'substrato') {
+                res = await adubarPlanta(plant.id);
             }
-        } else {
-            setActions(prev =>
-                prev.map(a => {
-                    if (a.id === actionId) {
-                        return {
-                            ...a,
-                            completed: !a.completed,
-                        };
-                    }
-                    return a;
-                }),
-            );
+
+            const items = res?.unlockedAchievements && res.unlockedAchievements.length > 0
+                ? res.unlockedAchievements
+                : res?.unlockedAchievement
+                    ? [res.unlockedAchievement]
+                    : [];
+
+            if (items.length > 0) {
+                items.forEach(item => {
+                    showFeedback(`Você ganhou a conquista: ${item.name}! 🌿`);
+                });
+            } else {
+                const msg = res?.message || 'Ação registrada com sucesso!';
+                showFeedback(msg);
+            }
+
+            await carregarDados();
+        } catch (error: any) {
+            console.log('[CARE_ACTION] Aviso ao realizar ação de cuidado:', error);
+            const backendMsg = error?.response?.data?.message || 'Não foi possível registrar a ação.';
+            showFeedback(backendMsg);
+        } finally {
+            setIsCareLoading(false);
         }
     };
 
@@ -500,7 +536,13 @@ export default function PlantDetailsScreen() {
 
                     <View style={styles.statsRow}>
                         <StatisticCard
-                            value={MOCK_STATS.co2}
+                            value={
+                                plantStats
+                                    ? plantStats.co2Grams >= 1000
+                                        ? `${(plantStats.co2Grams / 1000).toFixed(1)}kg`
+                                        : `${plantStats.co2Grams}g`
+                                    : '0g'
+                            }
                             label="CO² capturado"
                             isHighlighted
                             icon={
@@ -513,7 +555,7 @@ export default function PlantDetailsScreen() {
                         />
 
                         <StatisticCard
-                            value={MOCK_STATS.ecoScore}
+                            value={plantStats?.ecoScore ?? (plant.ecoscore ?? 0)}
                             label="EcoScore"
                             icon={
                                 <AppIcon
@@ -525,7 +567,7 @@ export default function PlantDetailsScreen() {
                         />
 
                         <StatisticCard
-                            value={cultivationDays}
+                            value={plantStats?.cultivationDays ?? cultivationDays}
                             label="Dias de cultivo"
                             icon={
                                 <AppIcon
@@ -538,40 +580,70 @@ export default function PlantDetailsScreen() {
                     </View>
                 </View>
 
-                <View style={styles.careGuideCard}>
-                    <Text style={styles.sectionHeader}>
-                        Guia de cuidados:
-                    </Text>
+                {(() => {
+                    const guideData = getSpeciesCareGuide(species.name || plant?.nickname);
+                    return (
+                        <View style={styles.careGuideCard}>
+                            <Text style={styles.sectionHeader}>
+                                Guia de cuidados:
+                            </Text>
 
-                    {species.careGuide ? (
-                        <View style={styles.guideItem}>
-                            <Text style={styles.guideText}>{species.careGuide}</Text>
+                            {guideData.solo && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Solo: </Text>
+                                        {guideData.solo}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.clima && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Clima: </Text>
+                                        {guideData.clima}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.iluminacao && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Iluminação: </Text>
+                                        {guideData.iluminacao}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.rega && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Rega: </Text>
+                                        {guideData.rega}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.poda && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Poda: </Text>
+                                        {guideData.poda}
+                                    </Text>
+                                </View>
+                            )}
+
+                            {guideData.dicas && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Dica de cultivo: </Text>
+                                        {guideData.dicas}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
-                    ) : (
-                        <>
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>Solo: </Text>
-                                    {CARE_GUIDE.solo}
-                                </Text>
-                            </View>
-
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>Rega: </Text>
-                                    {CARE_GUIDE.rega}
-                                </Text>
-                            </View>
-
-                            <View style={styles.guideItem}>
-                                <Text style={styles.guideText}>
-                                    <Text style={styles.guideLabel}>Poda: </Text>
-                                    {CARE_GUIDE.poda}
-                                </Text>
-                            </View>
-                        </>
-                    )}
-                </View>
+                    );
+                })()}
 
                 <View style={styles.careActionsSection}>
                     <ScrollView
@@ -631,7 +703,7 @@ export default function PlantDetailsScreen() {
                                             { backgroundColor: btnColor },
                                         ]}
                                         activeOpacity={0.8}
-                                        disabled={action.type === 'rega' && isWatering}
+                                        disabled={isCareLoading}
                                         onPress={() =>
                                             handleToggleCareAction(action.id)
                                         }
@@ -652,6 +724,15 @@ export default function PlantDetailsScreen() {
                         })}
                     </ScrollView>
                 </View>
+
+                {/* Link Discreto de Excluir Planta (Red Underline) */}
+                <TouchableOpacity
+                    style={styles.deletePlantLink}
+                    activeOpacity={0.7}
+                    onPress={() => setIsDeleteModalVisible(true)}
+                >
+                    <Text style={styles.deletePlantLinkText}>Excluir planta</Text>
+                </TouchableOpacity>
             </Animated.ScrollView>
 
             <TouchableOpacity
@@ -669,6 +750,21 @@ export default function PlantDetailsScreen() {
                     color={colors.primary}
                 />
             </TouchableOpacity>
+
+            <AchievementDetailsOverlay
+                visible={unlockedQueue.length > 0}
+                onClose={() => setUnlockedQueue(prev => prev.slice(1))}
+                achievement={unlockedQueue.length > 0 ? unlockedQueue[0] : null}
+            />
+
+            {/* Modal de Confirmação de Exclusão Padrão Design System */}
+            <DeletePlantModal
+                visible={isDeleteModalVisible}
+                plantName={plant?.nickname || plant?.plant?.name || 'esta planta'}
+                isDeleting={isDeleting}
+                onClose={() => setIsDeleteModalVisible(false)}
+                onConfirm={handleConfirmDelete}
+            />
         </SafeAreaView>
     );
 }
