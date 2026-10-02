@@ -1,5 +1,5 @@
-import { listarJardim } from '../api/garden';
-import { getUser } from '../services/storage';
+import { getFollowingActivities } from '../api/user';
+import { getCurrentAuthorId, getUser } from '../services/storage';
 import { ActivityCardData } from '../types/activity';
 
 const defaultBanner = require('../../assets/images/auth-banner.png');
@@ -7,66 +7,36 @@ const defaultBanner = require('../../assets/images/auth-banner.png');
 export const activityService = {
     async getAll(): Promise<ActivityCardData[]> {
         try {
-            const [plants, storedUser] = await Promise.all([
-                listarJardim(),
-                getUser(),
-            ]);
-
-            const username = storedUser?.username ? `@${storedUser.username}` : (storedUser?.name || 'Seu Jardim');
-
-            if (!plants || plants.length === 0) {
-                return [
-                    {
-                        id: 'act-welcome',
-                        userName: username,
-                        userAvatar: defaultBanner,
-                        activity: 'Comece seu cultivo adicionando sua primeira planta no Jardim Planpaz!',
-                        createdAt: 'Hoje',
-                        image: defaultBanner,
-                    },
-                ];
+            const currentUserId = await getCurrentAuthorId();
+            if (currentUserId) {
+                const apiActivities = await getFollowingActivities(currentUserId);
+                if (apiActivities && apiActivities.length > 0) {
+                    return apiActivities.map(item => ({
+                        id: item.id,
+                        userName: item.userUsername ? (item.userUsername.startsWith('@') ? item.userUsername : `@${item.userUsername}`) : item.userName,
+                        userAvatar: item.userAvatarUrl ? { uri: item.userAvatarUrl } : defaultBanner,
+                        activity: item.activityText,
+                        createdAt: item.timeText,
+                        image: item.imageUrl ? { uri: item.imageUrl } : defaultBanner,
+                    }));
+                }
             }
 
-            const activities: ActivityCardData[] = [];
+            const storedUser = await getUser();
+            const username = storedUser?.username ? `@${storedUser.username}` : (storedUser?.name || 'Seu Jardim');
 
-            plants.slice(0, 5).forEach((plant, index) => {
-                const speciesName = plant.plant?.name || plant.nickname || 'planta';
-                const plantImg = plant.imagePath
-                    ? { uri: plant.imagePath }
-                    : plant.plant?.imagePath
-                    ? { uri: plant.plant.imagePath }
-                    : defaultBanner;
-
-                let activityText = `Cultivando ${plant.nickname || speciesName} no cômodo ${plant.room || 'Quintal'}`;
-                let timeText = 'Recente';
-
-                if (plant.lastWatering) {
-                    const date = new Date(plant.lastWatering);
-                    if (!isNaN(date.getTime())) {
-                        activityText = `Realizou a rega de ${plant.nickname || speciesName}`;
-                        timeText = `Última rega em ${date.toLocaleDateString('pt-BR')}`;
-                    }
-                } else if (plant.plantedAt) {
-                    const date = new Date(plant.plantedAt);
-                    if (!isNaN(date.getTime())) {
-                        activityText = `Plantou ${plant.nickname || speciesName} em seu jardim`;
-                        timeText = `Plantado em ${date.toLocaleDateString('pt-BR')}`;
-                    }
-                }
-
-                activities.push({
-                    id: String(plant.id || index),
+            return [
+                {
+                    id: 'act-empty',
                     userName: username,
                     userAvatar: defaultBanner,
-                    activity: activityText,
-                    createdAt: timeText,
-                    image: plantImg,
-                });
-            });
-
-            return activities;
+                    activity: 'Seus amigos ainda não possuem atividades recentes no jardim.',
+                    createdAt: 'Hoje',
+                    image: defaultBanner,
+                },
+            ];
         } catch (error) {
-            console.error('[ACTIVITY_SERVICE] Erro ao carregar atividades:', error);
+            console.error('[ACTIVITY_SERVICE] Erro ao carregar atividades do backend:', error);
             return [];
         }
     },

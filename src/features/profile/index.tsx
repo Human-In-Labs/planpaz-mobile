@@ -109,6 +109,7 @@ export default function ProfileScreen() {
                         let daysInPlanpaz = 0;
                         let co2Display: string | number = '0g';
                         let ecoscoreVal = settings.ecoscore ?? 0;
+                        let streakCount = 0;
 
                         try {
                             const statsData = await getUserStats(settings.id);
@@ -117,6 +118,7 @@ export default function ProfileScreen() {
                                 postsCount = statsData.totalPosts;
                                 daysInPlanpaz = statsData.daysOnApp;
                                 ecoscoreVal = statsData.totalEcoScore;
+                                streakCount = statsData.streakCount ?? 0;
                                 co2Display = statsData.totalCo2Grams >= 1000
                                     ? `${(statsData.totalCo2Grams / 1000).toFixed(1)}kg`
                                     : `${statsData.totalCo2Grams}g`;
@@ -149,18 +151,24 @@ export default function ProfileScreen() {
                             },
                             {
                                 id: '3',
+                                value: `${streakCount} 🔥`,
+                                label: 'Dias de Ofensiva',
+                                icon: <AppIcon icon={AppIcons.SUN_FILL} size={22} color="#E25822" />,
+                            },
+                            {
+                                id: '4',
                                 value: daysInPlanpaz,
                                 label: 'Dias no Planpaz',
                                 icon: <AppIcon icon={AppIcons.CALENDAR_DOTS} size={22} color="#000000" />,
                             },
                             {
-                                id: '4',
+                                id: '5',
                                 value: postsCount,
                                 label: 'Posts',
                                 icon: <AppIcon icon={AppIcons.CHAT} size={22} color="#000000" />,
                             },
                             {
-                                id: '5',
+                                id: '6',
                                 value: plantsCount,
                                 label: 'Plantas cultivadas',
                                 icon: <AppIcon icon={AppIcons.PLANT} size={22} color="#000000" />,

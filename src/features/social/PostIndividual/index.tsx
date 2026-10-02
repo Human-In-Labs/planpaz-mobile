@@ -21,6 +21,7 @@ import {
     listarComentarios,
     criarComentario,
     excluirComentario,
+    excluirPost,
     listarRespostas,
     toggleCurtirPost,
     obterQuantidadeLikesPost,
@@ -51,13 +52,17 @@ function mapCommentResponseToPostComment(
         ? (item.authorUsername.startsWith('@') ? item.authorUsername : `@${item.authorUsername}`)
         : '@usuario';
 
+    const avatarSource = item.authorAvatarUrl
+        ? { uri: item.authorAvatarUrl }
+        : CURRENT_USER_AVATAR;
+
     return {
         id: item.id,
         author: {
             id: item.authorId,
             name: item.authorName || 'Usuário',
             username: authorUsername,
-            avatar: CURRENT_USER_AVATAR,
+            avatar: avatarSource,
         },
         content: item.content,
         likesCount: '0',
@@ -89,10 +94,20 @@ export default function PostIndividualScreen() {
     });
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [isReportModalVisible, setIsReportModalVisible] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [reportTarget, setReportTarget] = useState<{ contentType: 'POST' | 'COMMENT'; contentId: string }>({
         contentType: 'POST',
         contentId: post.id,
     });
+
+    useEffect(() => {
+        getCurrentAuthorId().then(id => {
+            if (id) setCurrentUserId(id);
+        });
+    }, []);
+
+    const postAuthorId = (post as any)?.authorId || (post.author as any)?.id;
+    const isPostOwner = Boolean(currentUserId && postAuthorId && currentUserId === postAuthorId);
 
     useEffect(() => {
         setReportTarget({ contentType: 'POST', contentId: post.id });
@@ -293,32 +308,40 @@ export default function PostIndividualScreen() {
             Alert.alert('Aviso', backendMsg);
         }
     };
-    const handleDeleteComment = useCallback((commentToDelete: PostComment) => {
-        Alert.alert(
-            'Excluir Comentário',
-            'Deseja excluir este comentário?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Excluir',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            const authorId = await getCurrentAuthorId();
-                            const res = await excluirComentario(commentToDelete.id, authorId);
-                            if (res && res.message) {
-                                Alert.alert('Sucesso', res.message);
-                            }
-                            setComments(prev => prev.filter(c => c.id !== commentToDelete.id));
-                        } catch (err: any) {
-                            console.log('[POST INDIVIDUAL] Erro ao excluir comentário:', err);
-                            const backendMsg = err?.response?.data?.message || 'Não foi possível excluir o comentário.';
-                            Alert.alert('Aviso', backendMsg);
-                        }
-                    },
-                },
-            ]
-        );
+    const handleDeletePost = useCallback(async () => {
+        try {
+            const authorId = await getCurrentAuthorId();
+            await excluirPost(post.id, authorId);
+            showFeedback('Publicação excluída com sucesso.');
+            navigation.goBack();
+        } catch (err: any) {
+            console.log('[POST INDIVIDUAL] Erro ao excluir post:', err);
+            const backendMsg = err?.response?.data?.message || 'Não foi possível excluir a publicação.';
+            Alert.alert('Aviso', backendMsg);
+        }
+    }, [post.id, navigation]);
+
+    const handleDeleteComment = useCallback(async (commentToDelete: PostComment) => {
+        try {
+            const authorId = await getCurrentAuthorId();
+            const res = await excluirComentario(commentToDelete.id, authorId);
+            showFeedback(res?.message || 'Comentário excluído com sucesso!');
+            setComments(prevComments =>
+                prevComments
+                    .filter(c => c.id !== commentToDelete.id)
+                    .map(c => {
+                        if (!c.replies || c.replies.length === 0) return c;
+                        return {
+                            ...c,
+                            replies: c.replies.filter(r => r.id !== commentToDelete.id),
+                        };
+                    })
+            );
+        } catch (err: any) {
+            console.log('[POST INDIVIDUAL] Erro ao excluir comentário:', err);
+            const backendMsg = err?.response?.data?.message || 'Não foi possível excluir o comentário.';
+            Alert.alert('Aviso', backendMsg);
+        }
     }, []);
 
     const handleUserPress = useCallback((userId?: string) => {
@@ -349,7 +372,7 @@ export default function PostIndividualScreen() {
                         contentContainerStyle={styles.scrollContent}
                         keyboardShouldPersistTaps="handled"
                     >
-                        {/* Card do Post (com botão vermelho sublinhado de denunciar no canto superior direito) */}
+                        {/* Card do Post */}
                         <PostCard
                             post={{
                                 ...post,
@@ -357,7 +380,9 @@ export default function PostIndividualScreen() {
                                 commentsCount: String(totalCommentsCount),
                             }}
                             isLiked={isPostLiked}
-                            showReportButton
+                            showReportButton={!isPostOwner}
+                            showDeleteButton={isPostOwner}
+                            onDeletePress={handleDeletePost}
                             isDetailed
                             onUserPress={handleUserPress}
                             onLikePress={handleLikePost}
@@ -383,22 +408,28 @@ export default function PostIndividualScreen() {
                             />
                         ) : comments.length > 0 ? (
                             <View style={styles.commentsContainer}>
-                                {comments.map(comment => (
-                                    <CommentItem
-                                        key={comment.id}
-                                        comment={comment}
-                                        activeReplyCommentId={activeReplyCommentId}
-                                        onUserPress={handleUserPress}
-                                        onLikePress={id =>
-                                            console.log(`[COMENTÁRIOS] Like no comentário: ${id}`)
-                                        }
-                                        onReplyPress={(commentId) => setActiveReplyCommentId(commentId)}
-                                        onSendReply={handleSendReply}
-                                        onCancelReply={() => setActiveReplyCommentId(null)}
-                                        onLongPress={handleDeleteComment}
-                                        onReportPress={handleReportComment}
-                                    />
-                                ))}
+                                {comments.map(comment => {
+                                    const commentAuthorId = (comment as any)?.authorId || (comment.author as any)?.id;
+                                    const canDeleteComment = Boolean(currentUserId && (commentAuthorId === currentUserId || postAuthorId === currentUserId));
+                                    const canReportComment = Boolean(currentUserId && commentAuthorId !== currentUserId);
+
+                                    return (
+                                        <CommentItem
+                                            key={comment.id}
+                                            comment={comment}
+                                            activeReplyCommentId={activeReplyCommentId}
+                                            onUserPress={handleUserPress}
+                                            onLikePress={id =>
+                                                console.log(`[COMENTÁRIOS] Like no comentário: ${id}`)
+                                            }
+                                            onReplyPress={(commentId) => setActiveReplyCommentId(commentId)}
+                                            onSendReply={handleSendReply}
+                                            onCancelReply={() => setActiveReplyCommentId(null)}
+                                            onDeletePress={canDeleteComment ? handleDeleteComment : undefined}
+                                            onReportPress={canReportComment ? handleReportComment : undefined}
+                                        />
+                                    );
+                                })}
                             </View>
                         ) : null}
                     </ScrollView>

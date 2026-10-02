@@ -115,6 +115,7 @@ export interface UserStats {
     totalPlants: number;
     totalPosts: number;
     daysOnApp: number;
+    streakCount: number;
 }
 
 export async function getUserStats(userId?: string): Promise<UserStats> {
@@ -138,10 +139,29 @@ export interface PublicUserProfile {
     daysOnApp: number;
     carbonPoints: number;
     ecoscore: number;
+    streakCount: number;
     achievements: any[];
 }
 
 export async function getPublicUserProfile(id: string): Promise<PublicUserProfile> {
     const response = await api.get<PublicUserProfile>(`/user/${id}/profile`);
+    return response.data;
+}
+
+export interface RecentActivityResponse {
+    id: string;
+    userId: string;
+    userName: string;
+    userUsername: string;
+    userAvatarUrl?: string | null;
+    activityType: string;
+    activityText: string;
+    timeText: string;
+    imageUrl?: string | null;
+    createdAt: string;
+}
+
+export async function getFollowingActivities(userId: string): Promise<RecentActivityResponse[]> {
+    const response = await api.get<RecentActivityResponse[]>(`/user/${userId}/activities`);
     return response.data;
 }

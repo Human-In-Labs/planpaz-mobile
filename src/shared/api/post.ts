@@ -11,6 +11,7 @@ export interface PostResponse {
     authorId: string;
     authorName: string;
     authorUsername: string;
+    authorAvatarUrl?: string | null;
     likesCount: number;
     likedByCurrentUser?: boolean;
     commentsCount: number;
@@ -43,9 +44,10 @@ export async function listarPosts(
     size?: number,
     authorId?: string,
     tag?: string,
+    followingOnly?: boolean,
 ): Promise<PageableResponse<PostResponse>> {
     const response = await api.get<PageableResponse<PostResponse>>('/posts', {
-        params: { page, size, currentUserId: authorId, tag },
+        params: { page, size, currentUserId: authorId, tag, followingOnly },
     });
 
     return response.data;
@@ -77,6 +79,7 @@ export interface CommentResponse {
     authorId: string;
     authorName: string;
     authorUsername: string;
+    authorAvatarUrl?: string | null;
     parentCommentId?: string | null;
     unlockedAchievement?: AchievementProgress;
     unlockedAchievements?: AchievementProgress[];
@@ -197,5 +200,15 @@ export async function excluirComentario(
     });
     return response.data;
 }
+
+export async function excluirPost(
+    postId: string,
+    authorId: string,
+): Promise<void> {
+    await api.delete(`/posts/${postId}`, {
+        params: { authorId },
+    });
+}
+
 
 

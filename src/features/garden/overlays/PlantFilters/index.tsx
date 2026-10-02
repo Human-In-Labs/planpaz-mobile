@@ -37,7 +37,9 @@ const FILTERS = [
         type: 'environment',
         icon: AppIcons.HOUSE_SIMPLE,
         options: [
+            'Sala',
             'Quarto',
+            'Varanda',
             'Quintal',
             'Cozinha',
             'Banheiro',

@@ -59,7 +59,7 @@ function mapPostResponseToPost(item: PostResponse): Post {
             id: item.authorId || 'u-unknown',
             name: item.authorName || 'Usuário',
             username: authorUsername,
-            avatar: DEFAULT_AVATAR,
+            avatar: item.authorAvatarUrl ? { uri: item.authorAvatarUrl } : DEFAULT_AVATAR,
         },
         title: item.title || undefined,
         description: item.content,
@@ -77,6 +77,7 @@ function mapPostResponseToPost(item: PostResponse): Post {
 export default function SocialScreen() {
     const navigation = useNavigation<NavigationProp>();
     const [searchQuery, setSearchQuery] = useState('');
+    const [feedTab, setFeedTab] = useState<'all' | 'following'>('all');
     const [filters, setFilters] = useState<{ id: string; label: string; removable?: boolean }[]>([]);
     const [activeTags, setActiveTags] = useState<string[]>([]);
     const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -95,7 +96,7 @@ export default function SocialScreen() {
     // Efeito de scroll para transição suave com fade no header
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const carregarPosts = useCallback(async (isPullToRefresh = false, tagsToFilter: string[] = activeTags) => {
+    const carregarPosts = useCallback(async (isPullToRefresh = false, tagsToFilter: string[] = activeTags, currentTab: 'all' | 'following' = feedTab) => {
         try {
             if (isPullToRefresh) {
                 setRefreshing(true);
@@ -109,7 +110,8 @@ export default function SocialScreen() {
                 console.log('[SOCIAL] Usuário logado não identificado para o feed:', err);
             }
             const tagParam = tagsToFilter.length > 0 ? tagsToFilter[0] : undefined;
-            const data = await listarPosts(0, 15, currentUserId, tagParam);
+            const followingOnly = currentTab === 'following';
+            const data = await listarPosts(0, 15, currentUserId, tagParam, followingOnly);
             if (data?.content && Array.isArray(data.content)) {
                 const mappedPosts = data.content.map(mapPostResponseToPost);
                 setPosts(mappedPosts);
@@ -121,6 +123,8 @@ export default function SocialScreen() {
                     }
                 });
                 setLikedPostIds(prev => new Set([...prev, ...initialLiked]));
+            } else {
+                setPosts([]);
             }
         } catch (error) {
             console.log('[SOCIAL] Erro ao listar posts da API, mantendo dados locais:', error);
@@ -131,7 +135,7 @@ export default function SocialScreen() {
                 setLoading(false);
             }
         }
-    }, [activeTags]);
+    }, [activeTags, feedTab]);
 
     // Busca de usuários por @ em tempo real (com debounce)
     useEffect(() => {
@@ -422,6 +426,31 @@ export default function SocialScreen() {
                                     />
                                 </View>
 
+                                {/* Abas Todos / Seguindo (RF29) */}
+                                <View style={styles.tabContainer}>
+                                    <TouchableOpacity
+                                        style={[styles.tabButton, feedTab === 'all' && styles.tabButtonActive]}
+                                        onPress={() => {
+                                            setFeedTab('all');
+                                            carregarPosts(false, activeTags, 'all');
+                                        }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={[styles.tabText, feedTab === 'all' && styles.tabTextActive]}>Todos</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={[styles.tabButton, feedTab === 'following' && styles.tabButtonActive]}
+                                        onPress={() => {
+                                            setFeedTab('following');
+                                            carregarPosts(false, activeTags, 'following');
+                                        }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={[styles.tabText, feedTab === 'following' && styles.tabTextActive]}>Seguindo</Text>
+                                    </TouchableOpacity>
+                                </View>
+
                                 {/* Linha de Filtros Ativos */}
                                 <View style={styles.filtersSection}>
                                     <View style={styles.filtersRow}>
@@ -455,9 +484,11 @@ export default function SocialScreen() {
                             loading ? (
                                 <LoadingSpinner />
                             ) : (
-                                <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-                                    <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
-                                        Nenhuma publicação encontrada no feed.
+                                <View style={{ paddingVertical: 40, alignItems: 'center', paddingHorizontal: 24 }}>
+                                    <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center' }}>
+                                        {feedTab === 'following'
+                                            ? 'Você ainda não segue ninguém ou os usuários que você segue não possuem publicações.'
+                                            : 'Nenhuma publicação encontrada no feed.'}
                                     </Text>
                                 </View>
                             )

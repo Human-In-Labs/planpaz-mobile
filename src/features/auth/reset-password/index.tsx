@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { verticalScale } from '../../../shared/theme/scale';
 import { colors } from '../../../shared/theme';
@@ -9,10 +9,17 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
 
+import { redefinirSenha } from '../../../shared/api/auth';
+
 type ResetPasswordNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ResetPassword'>;
+type ResetPasswordRouteProp = RouteProp<RootStackParamList, 'ResetPassword'>;
 
 export default function ResetPasswordScreen() {
   const navigation = useNavigation<ResetPasswordNavigationProp>();
+  const route = useRoute<ResetPasswordRouteProp>();
+  const email = route.params?.email || '';
+  const code = route.params?.code || '';
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,11 +29,12 @@ export default function ResetPasswordScreen() {
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
   const [passwordSubmittedError, setPasswordSubmittedError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!password && !confirmPassword) {
       setPasswordError(true);
       setConfirmPasswordError(true);
@@ -66,7 +74,21 @@ export default function ResetPasswordScreen() {
       return;
     }
 
-    navigation.navigate('Login');
+    setLoading(true);
+    try {
+      await redefinirSenha(email, code, password);
+      Alert.alert(
+        'Senha Redefinida!',
+        'Sua senha foi alterada com sucesso. Faça login com a nova senha.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Erro ao redefinir a senha.';
+      setPasswordError(true);
+      setErrorMessage(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

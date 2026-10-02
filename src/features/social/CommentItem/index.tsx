@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import AppIcon from '../../../shared/components/AppIcon';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
@@ -16,7 +16,7 @@ interface CommentItemProps {
     onReplyPress?: (commentId: string, username: string) => void;
     onSendReply?: (commentId: string, text: string) => void;
     onCancelReply?: () => void;
-    onLongPress?: (comment: PostComment) => void;
+    onDeletePress?: (comment: PostComment) => void;
     onUserPress?: (userId?: string) => void;
     onReportPress?: (comment: PostComment) => void;
 }
@@ -32,8 +32,9 @@ export default function CommentItem({
     onReplyPress,
     onSendReply,
     onCancelReply,
-    onLongPress,
+    onDeletePress,
     onUserPress,
+    onReportPress,
 }: CommentItemProps) {
     // Por padrão no design do Figma, os comentários aninhados vêm abertos e podem ser fechados
     const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
@@ -57,27 +58,20 @@ export default function CommentItem({
 
     const authorUserId = (comment as any)?.authorId || (comment.author as any)?.id;
 
-    const handleLongPress = () => {
-        const options: Array<{ text: string; style?: 'default' | 'cancel' | 'destructive'; onPress?: () => void }> = [];
-
-        if (onReportPress) {
-            options.push({
-                text: 'Denunciar comentário',
-                style: 'destructive',
-                onPress: () => onReportPress(comment),
-            });
-        }
-
-        if (onLongPress) {
-            options.push({
-                text: 'Excluir comentário',
-                onPress: () => onLongPress(comment),
-            });
-        }
-
-        options.push({ text: 'Cancelar', style: 'cancel' });
-
-        Alert.alert('Opções do Comentário', 'Escolha uma ação:', options);
+    const handleDeleteClick = () => {
+        if (!onDeletePress) return;
+        Alert.alert(
+            'Excluir Comentário',
+            'Deseja realmente excluir este comentário?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Excluir',
+                    style: 'destructive',
+                    onPress: () => onDeletePress(comment),
+                },
+            ]
+        );
     };
 
     return (
@@ -113,11 +107,7 @@ export default function CommentItem({
                     />
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={styles.contentArea}
-                    onLongPress={handleLongPress}
-                >
+                <View style={styles.contentArea}>
                     {/* Cabeçalho do Usuário com timestamp relativo dinâmico imediatamente após o username */}
                     <View style={styles.authorHeaderRow}>
                         <Text style={styles.username}>{comment.author.username}</Text>
@@ -164,8 +154,30 @@ export default function CommentItem({
                                 <Text style={styles.replyText}>Responder</Text>
                             </TouchableOpacity>
                         )}
+
+                        {/* Botão Denunciar Comentário */}
+                        {onReportPress && (
+                            <TouchableOpacity
+                                style={styles.replyButton}
+                                activeOpacity={0.7}
+                                onPress={() => onReportPress(comment)}
+                            >
+                                <Text style={[styles.replyText, { color: colors.warning }]}>Denunciar</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Botão Excluir Comentário */}
+                        {onDeletePress && (
+                            <TouchableOpacity
+                                style={styles.replyButton}
+                                activeOpacity={0.7}
+                                onPress={handleDeleteClick}
+                            >
+                                <Text style={[styles.replyText, { color: '#FF3B30' }]}>Excluir</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
-                </TouchableOpacity>
+                </View>
             </View>
 
             {/* Input inline de resposta montado diretamente abaixo deste comentário (RespostaComentario.svg) */}
@@ -192,6 +204,9 @@ export default function CommentItem({
                                 onReplyPress={onReplyPress}
                                 onSendReply={onSendReply}
                                 onCancelReply={onCancelReply}
+                                onUserPress={onUserPress}
+                                onDeletePress={onDeletePress}
+                                onReportPress={onReportPress}
                             />
                         ))}
                     </View>

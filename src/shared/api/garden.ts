@@ -91,7 +91,7 @@ export const ROOM_LABEL_TO_ENUM: Record<string, string> = {
     'Sala': 'LIVING_ROOM',
     'Quarto': 'BEDROOM',
     'Cozinha': 'KITCHEN',
-    'Varanda': 'YARD',
+    'Varanda': 'BALCONY',
     'Quintal': 'YARD',
     'Banheiro': 'BATHROOM',
     'Sala de Jantar': 'DINING_ROOM',
@@ -102,7 +102,8 @@ export const ROOM_ENUM_TO_LABEL: Record<string, string> = {
     'LIVING_ROOM': 'Sala',
     'BEDROOM': 'Quarto',
     'KITCHEN': 'Cozinha',
-    'YARD': 'Varanda',
+    'BALCONY': 'Varanda',
+    'YARD': 'Quintal',
     'BATHROOM': 'Banheiro',
     'DINING_ROOM': 'Sala de Jantar',
     'OTHER': 'Outro',
@@ -233,11 +234,23 @@ export function mapGardenPlantToCultivatedPlant(item: GardenPlant): CultivatedPl
     let daysCultivated = 0;
     let plantingDateStr = '';
     if (item.plantedAt) {
-        const plantedDate = new Date(item.plantedAt);
-        if (!isNaN(plantedDate.getTime())) {
+        const datePart = item.plantedAt.split('T')[0];
+        const [yStr, mStr, dStr] = datePart.split('-');
+        const y = parseInt(yStr, 10);
+        const m = parseInt(mStr, 10);
+        const d = parseInt(dStr, 10);
+        if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            const plantedDate = new Date(y, m - 1, d, 12, 0, 0);
             const diffTime = Math.abs(Date.now() - plantedDate.getTime());
             daysCultivated = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
-            plantingDateStr = `${String(plantedDate.getDate()).padStart(2, '0')}/${String(plantedDate.getMonth() + 1).padStart(2, '0')}/${plantedDate.getFullYear()}`;
+            plantingDateStr = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+        } else {
+            const plantedDate = new Date(item.plantedAt);
+            if (!isNaN(plantedDate.getTime())) {
+                const diffTime = Math.abs(Date.now() - plantedDate.getTime());
+                daysCultivated = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+                plantingDateStr = `${String(plantedDate.getDate()).padStart(2, '0')}/${String(plantedDate.getMonth() + 1).padStart(2, '0')}/${plantedDate.getFullYear()}`;
+            }
         }
     }
 

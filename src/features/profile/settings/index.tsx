@@ -294,7 +294,7 @@ export default function SettingsScreen() {
         selectedDate?: Date,
     ) => {
         setShowDatePicker(false);
-        if (event.type === 'set' && selectedDate) {
+        if (selectedDate && (event.type === 'set' || event.type === undefined || (event as any).type !== 'dismissed')) {
             const day = String(selectedDate.getDate()).padStart(2, '0');
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const year = selectedDate.getFullYear();
@@ -1011,7 +1011,7 @@ export default function SettingsScreen() {
                                     maximumDate={
                                         new Date()
                                     }
-                                    onValueChange={
+                                    onChange={
                                         handleDateChange
                                     }
                                     onDismiss={() =>

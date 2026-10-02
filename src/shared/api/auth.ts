@@ -86,3 +86,18 @@ export async function logout(): Promise<void> {
     await removeUser();
     await removeUserId();
 }
+
+export async function solicitarRecuperacaoSenha(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/forgot-password', { email });
+    return response.data;
+}
+
+export async function validarCodigoRecuperacao(email: string, code: string): Promise<{ valid: boolean; message: string }> {
+    const response = await api.post<{ valid: boolean; message: string }>('/auth/verify-reset-code', { email, code });
+    return response.data;
+}
+
+export async function redefinirSenha(email: string, code: string, newPassword: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/reset-password', { email, code, newPassword });
+    return response.data;
+}

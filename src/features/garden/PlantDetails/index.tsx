@@ -34,6 +34,7 @@ import {
     PlantStage,
     PlantStats,
     WateringReminder,
+    ROOM_ENUM_TO_LABEL,
 } from '../../../shared/api';
 import { styles } from './styles';
 import { getPlantTags } from '../../../shared/utils/tagMapper';
@@ -357,6 +358,14 @@ export default function PlantDetailsScreen() {
     const species = plant.plant;
 
     const tags = getPlantTags(species);
+    if (plant.room) {
+        const roomLabel = ROOM_ENUM_TO_LABEL[plant.room] || plant.room;
+        tags.unshift({
+            label: roomLabel,
+            icon: AppIcons.HOUSE_SIMPLE,
+            category: 'room' as any,
+        });
+    }
 
     const cultivationDays = plant.plantedAt
         ? Math.max(

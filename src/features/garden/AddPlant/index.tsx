@@ -22,7 +22,7 @@ import AppIcon from '../../../shared/components/AppIcon';
 import DropdownField from '../../profile/settings/components/DropdownField';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
-import { adicionarAoJardim, uploadImagem } from '../../../shared/api';
+import { adicionarAoJardim, uploadImagem, ROOM_LABEL_TO_ENUM } from '../../../shared/api';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
 import {
@@ -51,7 +51,7 @@ type RouteType = RouteProp<
 const ROOM_MAP: Record<string, string> = {
     Sala: 'LIVING_ROOM',
     Quarto: 'BEDROOM',
-    Varanda: 'OTHER',
+    Varanda: 'BALCONY',
     Quintal: 'YARD',
     Cozinha: 'KITCHEN',
 };
@@ -96,7 +96,7 @@ function parseDateStringToDate(dateStr?: string): Date {
 const formatDateForBackend = (date: string) => {
     const [day, month, year] = date.split('/');
 
-    return `${year}-${month}-${day}T00:00:00`;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T12:00:00`;
 };
 
 export default function AddPlantScreen() {
@@ -145,7 +145,7 @@ export default function AddPlantScreen() {
         selectedDate?: Date,
     ) => {
         setShowDatePicker(false);
-        if (event.type === 'set' && selectedDate) {
+        if (selectedDate && (event.type === 'set' || event.type === undefined || (event as any).type !== 'dismissed')) {
             const day = String(selectedDate.getDate()).padStart(2, '0');
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const year = selectedDate.getFullYear();
@@ -264,7 +264,7 @@ export default function AddPlantScreen() {
                 plantedAt: formatDateForBackend(plantingDate),
                 wateringNotification: true,
                 directRain: directRain === 'Sim',
-                room: ROOM_MAP[room] || 'OTHER',
+                room: ROOM_LABEL_TO_ENUM[room] || 'OTHER',
                 imagePath: finalImagePath,
             });
 
@@ -537,7 +537,7 @@ export default function AddPlantScreen() {
                                     mode="date"
                                     display="default"
                                     maximumDate={new Date()}
-                                    onValueChange={handleDateChange}
+                                    onChange={handleDateChange}
                                     onDismiss={() => setShowDatePicker(false)}
                                 />
                             )}

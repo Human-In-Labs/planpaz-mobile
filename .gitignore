@@ -83,3 +83,6 @@ planpaz-api/
 # Expo & Logs
 .expo/
 *.log
+
+DOCUMENTACAO_E_TESTES_PLANPAZ.md
+DOCUMENTACAO_TOPICOS_VAZIOS_PLANPAZ.md

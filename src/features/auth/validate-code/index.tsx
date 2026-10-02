@@ -1,22 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { verticalScale } from '../../../shared/theme/scale';
 import { colors } from '../../../shared/theme';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
 
+import RateLimitModal from '../../../shared/components/RateLimitModal';
+import { validarCodigoRecuperacao, solicitarRecuperacaoSenha } from '../../../shared/api/auth';
+
 type ValidateCodeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ValidateCode'>;
+type ValidateCodeRouteProp = RouteProp<RootStackParamList, 'ValidateCode'>;
 
 export default function ValidateCodeScreen() {
   const navigation = useNavigation<ValidateCodeNavigationProp>();
+  const route = useRoute<ValidateCodeRouteProp>();
+  const email = route.params?.email || '';
+
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [rateLimitModalVisible, setRateLimitModalVisible] = useState(false);
 
-  const handleValidateCode = () => {
+  const handleValidateCode = async () => {
     const cleanCode = code.trim();
 
     if (!cleanCode) {
@@ -25,11 +34,38 @@ export default function ValidateCodeScreen() {
       return;
     }
 
-    navigation.navigate('ResetPassword');
+    setLoading(true);
+    try {
+      await validarCodigoRecuperacao(email, cleanCode);
+      navigation.navigate('ResetPassword', { email, code: cleanCode });
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Código inválido ou expirado.';
+      setCodeError(true);
+      setErrorMessage(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResendCode = () => {
-    // Ação de reenvio sem inventar endpoints
+  const handleResendCode = async () => {
+    if (!email) {
+      setErrorMessage('E-mail não identificado para reenvio.');
+      return;
+    }
+    try {
+      await solicitarRecuperacaoSenha(email);
+      Alert.alert(
+        'Código Reenviado!',
+        'Confira sua caixa de entrada para obter o novo código.'
+      );
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || '';
+      if (msg.includes('RATE_LIMIT_EXCEEDED') || msg.includes('15 minutos') || msg.includes('recentemente')) {
+        setRateLimitModalVisible(true);
+      } else {
+        setErrorMessage(msg || 'Erro ao reenviar código.');
+      }
+    }
   };
 
   return (
@@ -86,6 +122,10 @@ export default function ValidateCodeScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      <RateLimitModal
+        visible={rateLimitModalVisible}
+        onClose={() => setRateLimitModalVisible(false)}
+      />
     </View>
   );
 }

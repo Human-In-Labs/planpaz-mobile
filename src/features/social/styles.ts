@@ -79,4 +79,27 @@ export const styles = StyleSheet.create({
         color: colors.primary,
         fontWeight: '500',
     },
+    tabContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: scale(16),
+        marginBottom: verticalScale(12),
+    },
+    tabButton: {
+        paddingVertical: verticalScale(6),
+        paddingHorizontal: scale(16),
+        borderRadius: radius.pill || 20,
+        backgroundColor: '#E8F0EC',
+        marginRight: scale(8),
+    },
+    tabButtonActive: {
+        backgroundColor: colors.primary,
+    },
+    tabText: {
+        fontSize: scale(13),
+        fontWeight: '600',
+        color: colors.textSecondary,
+    },
+    tabTextActive: {
+        color: colors.white,
+    },
 });

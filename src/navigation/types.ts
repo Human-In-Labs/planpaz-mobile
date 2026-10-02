@@ -6,8 +6,8 @@ export type RootStackParamList = {
     Register: undefined;
     RegisterStep2: { email: string; password: string; };
     ForgotPassword: undefined;
-    ValidateCode: undefined;
-    ResetPassword: undefined;
+    ValidateCode: { email?: string; } | undefined;
+    ResetPassword: { email?: string; code?: string; } | undefined;
     MainTabs: undefined;
     Library: undefined;
     SpeciesDetails: { speciesId: string; };

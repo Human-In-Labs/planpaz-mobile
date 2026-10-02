@@ -125,6 +125,18 @@ export default function UserProfileScreen() {
                 },
                 {
                     id: '3',
+                    value: `${data.streakCount ?? 0} 🔥`,
+                    label: 'Dias de Ofensiva',
+                    icon: (
+                        <AppIcon
+                            icon={AppIcons.SUN_FILL}
+                            size={22}
+                            color="#E25822"
+                        />
+                    ),
+                },
+                {
+                    id: '4',
                     value: data.daysOnApp,
                     label: 'Dias no Planpaz',
                     icon: (
@@ -136,7 +148,7 @@ export default function UserProfileScreen() {
                     ),
                 },
                 {
-                    id: '4',
+                    id: '5',
                     value: data.totalPosts,
                     label: 'Posts',
                     icon: (
@@ -148,7 +160,7 @@ export default function UserProfileScreen() {
                     ),
                 },
                 {
-                    id: '5',
+                    id: '6',
                     value: data.totalPlants,
                     label: 'Plantas cultivadas',
                     icon: (

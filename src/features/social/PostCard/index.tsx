@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import AppIcon from '../../../shared/components/AppIcon';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
@@ -11,6 +11,7 @@ interface PostCardProps {
     post: Post;
     isLiked?: boolean;
     showReportButton?: boolean;
+    showDeleteButton?: boolean;
     isDetailed?: boolean;
     onPress?: () => void;
     onUserPress?: (userId?: string) => void;
@@ -18,6 +19,7 @@ interface PostCardProps {
     onCommentPress?: () => void;
     onSharePress?: () => void;
     onReportPress?: () => void;
+    onDeletePress?: () => void;
 }
 
 const ACTION_ICON_COLOR = '#1C1C1E';
@@ -27,6 +29,7 @@ export default function PostCard({
     post,
     isLiked = false,
     showReportButton = false,
+    showDeleteButton = false,
     isDetailed = false,
     onPress,
     onUserPress,
@@ -34,6 +37,7 @@ export default function PostCard({
     onCommentPress,
     onSharePress,
     onReportPress,
+    onDeletePress,
 }: PostCardProps) {
     const postTitle =
         post.title ||
@@ -48,13 +52,29 @@ export default function PostCard({
 
     const authorUserId = (post as any)?.authorId || (post.author as any)?.id;
 
+    const handleDeleteClick = () => {
+        if (!onDeletePress) return;
+        Alert.alert(
+            'Excluir publicação',
+            'Deseja realmente excluir esta publicação? Esta ação não pode ser desfeita.',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Excluir',
+                    style: 'destructive',
+                    onPress: onDeletePress,
+                },
+            ]
+        );
+    };
+
     return (
         <TouchableOpacity
             style={styles.card}
             activeOpacity={0.95}
             onPress={onPress}
         >
-            {/* Header: Avatar, Username, Timestamp e Botão Denunciar (no post individual) */}
+            {/* Header: Avatar, Username, Timestamp e Botão Denunciar/Excluir */}
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.headerLeft}
@@ -81,15 +101,27 @@ export default function PostCard({
                     </View>
                 </TouchableOpacity>
 
-                {showReportButton && (
-                    <TouchableOpacity
-                        style={styles.reportButton}
-                        activeOpacity={0.7}
-                        onPress={onReportPress}
-                    >
-                        <Text style={styles.reportText}>Denunciar</Text>
-                    </TouchableOpacity>
-                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {showDeleteButton && onDeletePress && (
+                        <TouchableOpacity
+                            style={styles.reportButton}
+                            activeOpacity={0.7}
+                            onPress={handleDeleteClick}
+                        >
+                            <Text style={[styles.reportText, { color: '#FF3B30' }]}>Excluir</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    {showReportButton && (
+                        <TouchableOpacity
+                            style={styles.reportButton}
+                            activeOpacity={0.7}
+                            onPress={onReportPress}
+                        >
+                            <Text style={styles.reportText}>Denunciar</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {/* Título */}

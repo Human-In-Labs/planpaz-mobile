@@ -8,6 +8,9 @@ import { colors } from '../../../shared/theme';
 import { ErrorPopup } from '../errors';
 import { styles } from './styles';
 
+import RateLimitModal from '../../../shared/components/RateLimitModal';
+import { solicitarRecuperacaoSenha } from '../../../shared/api/auth';
+
 type ForgotPasswordNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ForgotPassword'>;
 
 const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
@@ -17,8 +20,10 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [rateLimitModalVisible, setRateLimitModalVisible] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const cleanEmail = email.trim();
 
     if (!cleanEmail) {
@@ -33,7 +38,21 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    navigation.navigate('ValidateCode');
+    setLoading(true);
+    try {
+      await solicitarRecuperacaoSenha(cleanEmail);
+      navigation.navigate('ValidateCode', { email: cleanEmail });
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || '';
+      if (msg.includes('RATE_LIMIT_EXCEEDED') || msg.includes('15 minutos') || msg.includes('recentemente')) {
+        setRateLimitModalVisible(true);
+      } else {
+        setEmailError(true);
+        setErrorMessage(msg || 'Erro ao enviar e-mail de recuperação.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,6 +109,10 @@ export default function ForgotPasswordScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      <RateLimitModal
+        visible={rateLimitModalVisible}
+        onClose={() => setRateLimitModalVisible(false)}
+      />
     </View>
   );
 }
