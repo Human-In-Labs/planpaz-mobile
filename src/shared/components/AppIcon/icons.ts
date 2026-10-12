@@ -43,6 +43,8 @@ import PlantFill from '../../../assets/icons/plant-fill.svg';
 import PottedPlant from '../../../assets/icons/potted-plant.svg';
 import PottedPlantFill from '../../../assets/icons/potted-plant-fill.svg';
 
+import Sun from '../../../assets/icons/sun.svg';
+import SunFill from '../../../assets/icons/sun-fill.svg';
 import SunDim from '../../../assets/icons/sun-dim.svg';
 import SunDimFill from '../../../assets/icons/sun-dim-fill.svg';
 
@@ -144,6 +146,8 @@ export const icons = {
     pottedPlant: PottedPlant,
     pottedPlantFill: PottedPlantFill,
 
+    sun: Sun,
+    sunFill: SunFill,
     sunDim: SunDim,
     sunDimFill: SunDimFill,
 
