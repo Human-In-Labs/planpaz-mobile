@@ -9,8 +9,12 @@ export interface ReminderCardData {
     action?: string;
     referenceDay?: string;
     isOverdue?: boolean;
+    canComplete?: boolean;
     buttonText: string;
     cultivatedDays?: number;
     reminderLabel?: string;
     reminderValue?: string;
+    date?: string;
+    isBeyond36Hours?: boolean;
+    reminderTimestamp?: number;
 }

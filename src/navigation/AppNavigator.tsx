@@ -26,6 +26,7 @@ import LibraryScreen from '../features/library';
 import SpeciesDetailsScreen from '../features/library/SpeciesDetails';
 import AddPlantScreen from '../features/garden/AddPlant';
 import UserProfileScreen from '../features/profile/UserProfile';
+import RemindersScreen from '../features/home/Reminders';
 
 import { RootStackParamList } from './types';
 
@@ -182,6 +183,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="UserProfile"
                     component={UserProfileScreen}
+                />
+
+                <Stack.Screen
+                    name="Reminders"
+                    component={RemindersScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

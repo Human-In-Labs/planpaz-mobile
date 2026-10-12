@@ -13,6 +13,7 @@ export type RootStackParamList = {
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
     UserProfile: { userId: string; };
+    Reminders: undefined;
 };
 
 export type ProfileStackParamList = {

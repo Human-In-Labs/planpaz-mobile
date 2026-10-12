@@ -7,6 +7,8 @@ import ReminderCard from './ReminderCard';
 import { ReminderCardData } from '../../../shared/types/reminder';
 import { reminderService } from '../../../shared/services/reminderService';
 import SectionHeader from '../../../shared/components/SectionHeader';
+import EmptySectionCard from '../../../shared/components/EmptySectionCard';
+import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
 
@@ -19,6 +21,7 @@ function Separator() {
 export default function ReminderSection() {
     const navigation = useNavigation<NavigationProp>();
     const [reminders, setReminders] = useState<ReminderCardData[]>([]);
+    const [totalPlantsCount, setTotalPlantsCount] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
@@ -27,8 +30,12 @@ export default function ReminderSection() {
         setLoading(true);
         setErrorMsg('');
         try {
-            const data = await reminderService.getAll();
-            setReminders(data || []);
+            const [remindersData, gardenPlants] = await Promise.all([
+                reminderService.getAll(),
+                reminderService.getGardenPlantsCount(),
+            ]);
+            setReminders(remindersData || []);
+            setTotalPlantsCount(gardenPlants);
         } catch (error) {
             console.error('[REMINDER_SECTION] Erro ao carregar lembretes:', error);
             setErrorMsg('Não foi possível carregar os lembretes.');
@@ -52,9 +59,18 @@ export default function ReminderSection() {
             await reminderService.completeWatering(targetId);
             showFeedback('Rega concluída');
             await carregarLembretes();
-        } catch (err) {
+        } catch (err: any) {
             console.error('[REMINDER_SECTION] Erro ao regar planta:', err);
-            Alert.alert('Erro', 'Não foi possível registrar a rega da planta.');
+            const errorCode = err?.response?.data?.errorCode;
+            const backendMsg = err?.response?.data?.message;
+
+            if (errorCode === 'WATERING_TOO_EARLY') {
+                showFeedback(backendMsg || 'Não é possível marcar lembretes muito distantes como concluídos.');
+            } else if (backendMsg) {
+                showFeedback(backendMsg);
+            } else {
+                showFeedback('Não foi possível registrar a rega da planta.');
+            }
         } finally {
             setActionLoadingId(null);
         }
@@ -65,7 +81,7 @@ export default function ReminderSection() {
             <SectionHeader
                 title="Próximos lembretes"
                 onPress={() => {
-                    navigation.navigate('Garden');
+                    navigation.navigate('Reminders');
                 }}
             />
 
@@ -78,18 +94,21 @@ export default function ReminderSection() {
                     <Text style={{ color: colors.warning, fontSize: 13 }}>{errorMsg}</Text>
                 </View>
             ) : reminders.length === 0 ? (
-                <View style={{ paddingVertical: 16, paddingHorizontal: 16, backgroundColor: colors.white, borderRadius: 12, marginHorizontal: 16, alignItems: 'center' }}>
-                    <Text style={{ color: colors.black, fontSize: 14, textAlign: 'center', marginBottom: 8 }}>
-                        Nenhum lembrete pendente no momento.
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('Library')}
-                        activeOpacity={0.7}
-                        style={{ paddingVertical: 6, paddingHorizontal: 12, backgroundColor: colors.primary, borderRadius: 8 }}
-                    >
-                        <Text style={{ color: colors.white, fontSize: 13, fontWeight: '600' }}>Adicionar Planta</Text>
-                    </TouchableOpacity>
-                </View>
+                totalPlantsCount === 0 ? (
+                    <EmptySectionCard
+                        icon={AppIcons.POTTED_PLANT}
+                        title="Seu jardim está vazio"
+                        description="Que tal adicionar sua primeira planta e começar essa jornada verde?"
+                        buttonText="Adicionar planta"
+                        onButtonPress={() => navigation.navigate('Library')}
+                    />
+                ) : (
+                    <EmptySectionCard
+                        icon={AppIcons.POTTED_PLANT}
+                        title="Nenhum lembrete próximo"
+                        description="Todas as suas plantas estão em dia! Não há lembretes de rega programados para as próximas 36h."
+                    />
+                )
             ) : (
                 <FlatList
                     horizontal
