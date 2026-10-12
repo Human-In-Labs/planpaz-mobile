@@ -24,11 +24,12 @@ import { criarPost, uploadImagem } from '../../../shared/api';
 import { getCurrentAuthorId } from '../../../shared/services/storage';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
 import ForbiddenContentModal from '../../../shared/components/ForbiddenContentModal';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import HashtagInput from './HashtagInput';
 import ChangePhotoOverlay from '../../profile/overlays/ChangePhoto';
 import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
 import { Achievement } from '../../profile/AchievementsSection/types';
-import { pickImageFromGallery, takePhotoWithCamera } from '../../../shared/utils/imagePicker';
+import { pickImageFromGallery, takePhotoWithCamera, SelectedImage } from '../../../shared/utils/imagePicker';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<SocialStackParamList, 'CreatePost'>;
@@ -43,17 +44,18 @@ export default function CreatePostScreen() {
     const [title, setTitle] = useState('');
     const [tags, setTags] = useState<string[]>(['Ornamental']);
     const [content, setContent] = useState('');
-    const [selectedImage, setSelectedImage] = useState<{ uri: string; base64?: string } | null>(null);
+    const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null);
     const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isForbiddenModalVisible, setIsForbiddenModalVisible] = useState(false);
     const [forbiddenMessage, setForbiddenMessage] = useState('');
+    const [isRequiredFieldsModalVisible, setIsRequiredFieldsModalVisible] = useState(false);
 
     const handleSelectGallery = async () => {
         setIsImagePickerVisible(false);
         const image = await pickImageFromGallery();
         if (image) {
-            setSelectedImage({ uri: image.uri, base64: image.base64 });
+            setSelectedImage(image);
         }
     };
 
@@ -61,7 +63,7 @@ export default function CreatePostScreen() {
         setIsImagePickerVisible(false);
         const image = await takePhotoWithCamera();
         if (image) {
-            setSelectedImage({ uri: image.uri, base64: image.base64 });
+            setSelectedImage(image);
         }
     };
 
@@ -79,7 +81,7 @@ export default function CreatePostScreen() {
 
     const handlePublish = async () => {
         if (!title.trim() && !content.trim()) {
-            Alert.alert('Campos obrigatórios', 'Por favor, preencha o título ou o texto da publicação.');
+            setIsRequiredFieldsModalVisible(true);
             return;
         }
 
@@ -93,9 +95,9 @@ export default function CreatePostScreen() {
             let mediaUrl: string | null = null;
             if (selectedImage?.uri) {
                 try {
-                    mediaUrl = await uploadImagem(selectedImage.uri);
+                    mediaUrl = await uploadImagem(selectedImage);
                 } catch (uploadErr) {
-                    console.log('[CREATE POST] Erro ao fazer upload da mídia para o Cloudinary:', uploadErr);
+                    console.log('[CREATE POST] Erro ao fazer upload da mídia:', uploadErr);
                 }
             }
 
@@ -179,7 +181,11 @@ export default function CreatePostScreen() {
                             {selectedImage ? (
                                 <>
                                     <Image
-                                        source={selectedImage}
+                                        source={
+                                            selectedImage.base64
+                                                ? { uri: selectedImage.base64 }
+                                                : { uri: selectedImage.uri }
+                                        }
                                         style={styles.uploadedImage}
                                         resizeMode="cover"
                                     />
@@ -279,6 +285,18 @@ export default function CreatePostScreen() {
                 visible={isForbiddenModalVisible}
                 message={forbiddenMessage || undefined}
                 onClose={() => setIsForbiddenModalVisible(false)}
+            />
+
+            {/* Modal de campos obrigatórios não preenchidos */}
+            <ConfirmationModal
+                visible={isRequiredFieldsModalVisible}
+                title="Campos obrigatórios"
+                message="Por favor, preencha o título ou o texto da publicação."
+                confirmText="Entendi"
+                showCancel={false}
+                confirmVariant="primary"
+                onConfirm={() => setIsRequiredFieldsModalVisible(false)}
+                onClose={() => setIsRequiredFieldsModalVisible(false)}
             />
 
             <AchievementDetailsOverlay

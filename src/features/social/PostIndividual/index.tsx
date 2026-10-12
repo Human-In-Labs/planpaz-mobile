@@ -37,6 +37,7 @@ import PostCard from '../PostCard';
 import CommentItem from '../CommentItem';
 import CommentInput from '../CommentInput';
 import ReportModal from '../ReportModal';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<SocialStackParamList, 'PostIndividual'>;
@@ -308,40 +309,74 @@ export default function PostIndividualScreen() {
             Alert.alert('Aviso', backendMsg);
         }
     };
-    const handleDeletePost = useCallback(async () => {
+    const [isDeletePostModalVisible, setIsDeletePostModalVisible] = useState(false);
+    const [isDeletingPost, setIsDeletingPost] = useState(false);
+    const [commentToDelete, setCommentToDelete] = useState<PostComment | null>(null);
+    const [isDeletingComment, setIsDeletingComment] = useState(false);
+
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [errorModalMessage, setErrorModalMessage] = useState('');
+
+    const showErrorModal = (message: string) => {
+        setErrorModalMessage(message);
+        setErrorModalVisible(true);
+    };
+
+    const handleConfirmDeletePost = useCallback(async () => {
         try {
+            setIsDeletingPost(true);
             const authorId = await getCurrentAuthorId();
             await excluirPost(post.id, authorId);
+            setIsDeletePostModalVisible(false);
             showFeedback('Publicação excluída com sucesso.');
             navigation.goBack();
         } catch (err: any) {
             console.log('[POST INDIVIDUAL] Erro ao excluir post:', err);
             const backendMsg = err?.response?.data?.message || 'Não foi possível excluir a publicação.';
-            Alert.alert('Aviso', backendMsg);
+            setIsDeletePostModalVisible(false);
+            showErrorModal(backendMsg);
+        } finally {
+            setIsDeletingPost(false);
         }
     }, [post.id, navigation]);
 
-    const handleDeleteComment = useCallback(async (commentToDelete: PostComment) => {
+    const handleConfirmDeleteComment = useCallback(async () => {
+        if (!commentToDelete) return;
         try {
+            setIsDeletingComment(true);
             const authorId = await getCurrentAuthorId();
             const res = await excluirComentario(commentToDelete.id, authorId);
-            showFeedback(res?.message || 'Comentário excluído com sucesso!');
+            const targetId = commentToDelete.id;
+            const isReply = Boolean(commentToDelete.parentId);
+            setCommentToDelete(null);
+            showFeedback(res?.message || (isReply ? 'Resposta excluída com sucesso!' : 'Comentário excluído com sucesso!'));
             setComments(prevComments =>
                 prevComments
-                    .filter(c => c.id !== commentToDelete.id)
+                    .filter(c => c.id !== targetId)
                     .map(c => {
                         if (!c.replies || c.replies.length === 0) return c;
                         return {
                             ...c,
-                            replies: c.replies.filter(r => r.id !== commentToDelete.id),
+                            replies: c.replies.filter(r => r.id !== targetId),
                         };
                     })
             );
         } catch (err: any) {
             console.log('[POST INDIVIDUAL] Erro ao excluir comentário:', err);
             const backendMsg = err?.response?.data?.message || 'Não foi possível excluir o comentário.';
-            Alert.alert('Aviso', backendMsg);
+            setCommentToDelete(null);
+            showErrorModal(backendMsg);
+        } finally {
+            setIsDeletingComment(false);
         }
+    }, [commentToDelete]);
+
+    const handleDeletePostClick = useCallback(() => {
+        setIsDeletePostModalVisible(true);
+    }, []);
+
+    const handleDeleteCommentClick = useCallback((targetComment: PostComment) => {
+        setCommentToDelete(targetComment);
     }, []);
 
     const handleUserPress = useCallback((userId?: string) => {
@@ -382,7 +417,7 @@ export default function PostIndividualScreen() {
                             isLiked={isPostLiked}
                             showReportButton={!isPostOwner}
                             showDeleteButton={isPostOwner}
-                            onDeletePress={handleDeletePost}
+                            onDeletePress={handleDeletePostClick}
                             isDetailed
                             onUserPress={handleUserPress}
                             onLikePress={handleLikePost}
@@ -425,7 +460,7 @@ export default function PostIndividualScreen() {
                                             onReplyPress={(commentId) => setActiveReplyCommentId(commentId)}
                                             onSendReply={handleSendReply}
                                             onCancelReply={() => setActiveReplyCommentId(null)}
-                                            onDeletePress={canDeleteComment ? handleDeleteComment : undefined}
+                                            onDeletePress={canDeleteComment ? handleDeleteCommentClick : undefined}
                                             onReportPress={canReportComment ? handleReportComment : undefined}
                                         />
                                     );
@@ -451,6 +486,52 @@ export default function PostIndividualScreen() {
                 onConfirmReport={(reason, message) => {
                     console.log(`[POST INDIVIDUAL] Denúncia enviada para ${reportTarget.contentType} ${reportTarget.contentId}`);
                 }}
+            />
+
+            {/* Modal de confirmação de exclusão do post */}
+            <ConfirmationModal
+                visible={isDeletePostModalVisible}
+                title="Excluir publicação?"
+                message="Deseja realmente excluir esta publicação? Essa ação não poderá ser desfeita."
+                confirmText="Excluir publicação"
+                cancelText="Fechar"
+                isSubmitting={isDeletingPost}
+                confirmVariant="danger"
+                onConfirm={handleConfirmDeletePost}
+                onClose={() => {
+                    if (!isDeletingPost) setIsDeletePostModalVisible(false);
+                }}
+            />
+
+            {/* Modal de confirmação de exclusão de comentário ou resposta */}
+            <ConfirmationModal
+                visible={Boolean(commentToDelete)}
+                title={commentToDelete?.parentId ? 'Excluir resposta?' : 'Excluir comentário?'}
+                message={
+                    commentToDelete?.parentId
+                        ? 'Deseja realmente excluir esta resposta? Essa ação não poderá ser desfeita.'
+                        : 'Deseja realmente excluir este comentário? Essa ação não poderá ser desfeita.'
+                }
+                confirmText={commentToDelete?.parentId ? 'Excluir resposta' : 'Excluir comentário'}
+                cancelText="Fechar"
+                isSubmitting={isDeletingComment}
+                confirmVariant="danger"
+                onConfirm={handleConfirmDeleteComment}
+                onClose={() => {
+                    if (!isDeletingComment) setCommentToDelete(null);
+                }}
+            />
+
+            {/* Modal de erro/aviso */}
+            <ConfirmationModal
+                visible={errorModalVisible}
+                title="Aviso"
+                message={errorModalMessage}
+                confirmText="Entendi"
+                showCancel={false}
+                confirmVariant="primary"
+                onConfirm={() => setErrorModalVisible(false)}
+                onClose={() => setErrorModalVisible(false)}
             />
 
             <AchievementDetailsOverlay

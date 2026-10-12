@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import AppIcon from '../../../shared/components/AppIcon';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
@@ -60,18 +60,7 @@ export default function CommentItem({
 
     const handleDeleteClick = () => {
         if (!onDeletePress) return;
-        Alert.alert(
-            'Excluir Comentário',
-            'Deseja realmente excluir este comentário?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Excluir',
-                    style: 'destructive',
-                    onPress: () => onDeletePress(comment),
-                },
-            ]
-        );
+        onDeletePress(comment);
     };
 
     return (
@@ -173,7 +162,7 @@ export default function CommentItem({
                                 activeOpacity={0.7}
                                 onPress={handleDeleteClick}
                             >
-                                <Text style={[styles.replyText, { color: '#FF3B30' }]}>Excluir</Text>
+                                <Text style={[styles.replyText, { color: colors.warning, textDecorationLine: 'underline' }]}>Excluir</Text>
                             </TouchableOpacity>
                         )}
                     </View>

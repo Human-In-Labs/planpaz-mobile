@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import AppIcon from '../../../shared/components/AppIcon';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
@@ -54,18 +54,7 @@ export default function PostCard({
 
     const handleDeleteClick = () => {
         if (!onDeletePress) return;
-        Alert.alert(
-            'Excluir publicação',
-            'Deseja realmente excluir esta publicação? Esta ação não pode ser desfeita.',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Excluir',
-                    style: 'destructive',
-                    onPress: onDeletePress,
-                },
-            ]
-        );
+        onDeletePress();
     };
 
     return (
@@ -108,7 +97,7 @@ export default function PostCard({
                             activeOpacity={0.7}
                             onPress={handleDeleteClick}
                         >
-                            <Text style={[styles.reportText, { color: '#FF3B30' }]}>Excluir</Text>
+                            <Text style={[styles.reportText, { color: colors.warning }]}>Excluir</Text>
                         </TouchableOpacity>
                     )}
 
