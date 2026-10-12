@@ -6,4 +6,5 @@ export interface AchievementCardProps {
     date?: string;
     unlocked?: boolean;
     onPress?: () => void;
+    style?: any;
 }

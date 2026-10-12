@@ -4,89 +4,59 @@ import { scale, verticalScale } from '../../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     modalContainer: {
-        width: scale(340),
-        borderRadius: 24,
-        backgroundColor: '#FAFFFA',
+        width: scale(358),
+        borderRadius: radius.xxl || 32,
+        backgroundColor: colors.background || '#FAFFFA',
         alignItems: 'center',
         paddingHorizontal: scale(20),
-        paddingTop: verticalScale(24),
-        paddingBottom: verticalScale(20),
+        paddingTop: verticalScale(20),
+        paddingBottom: verticalScale(24),
         borderWidth: 1,
         borderColor: '#E2F1E8',
         ...shadows.medium,
     },
 
-    headerTag: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: scale(6),
-        backgroundColor: '#D2E6DD',
-        paddingHorizontal: scale(12),
-        paddingVertical: verticalScale(6),
-        borderRadius: radius.md || 12,
-        marginBottom: verticalScale(16),
-    },
-
-    headerTagText: {
-        fontSize: 12,
+    title: {
+        fontSize: 14,
         fontFamily: fonts.poppinsBold,
-        color: '#03624C',
+        color: colors.black || '#000000',
+        textAlign: 'center',
+        marginBottom: verticalScale(48),
     },
 
-    iconContainer: {
-        width: scale(80),
-        height: scale(80),
-        borderRadius: 40,
-        backgroundColor: '#E8F5E9',
+    iconWrapper: {
+        width: scale(102),
+        height: scale(102),
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: verticalScale(14),
+        marginBottom: verticalScale(42),
     },
 
-    title: {
-        fontSize: 18,
-        fontFamily: fonts.poppinsBold,
-        color: colors.black || '#111827',
+    datePill: {
+        minWidth: scale(97),
+        height: verticalScale(34),
+        paddingHorizontal: scale(16),
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#115634',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: verticalScale(34),
+    },
+
+    dateText: {
+        fontSize: 13,
+        fontFamily: fonts.interMedium || fonts.interRegular,
+        color: colors.black || '#000000',
         textAlign: 'center',
-        marginBottom: verticalScale(6),
     },
 
     description: {
         fontSize: 13,
         lineHeight: 18,
         fontFamily: fonts.interRegular,
-        color: '#4B5563',
+        color: colors.black || '#000000',
         textAlign: 'center',
-        paddingHorizontal: scale(8),
-        marginBottom: verticalScale(14),
-    },
-
-    dateBadge: {
-        backgroundColor: '#F3F4F6',
-        paddingHorizontal: scale(10),
-        paddingVertical: verticalScale(4),
-        borderRadius: 8,
-        marginBottom: verticalScale(18),
-    },
-
-    dateText: {
-        fontSize: 11,
-        fontFamily: fonts.interRegular,
-        color: '#6B7280',
-    },
-
-    closeButton: {
-        width: '100%',
-        height: verticalScale(44),
-        backgroundColor: colors.primary || '#03624C',
-        borderRadius: radius.md || 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    closeButtonText: {
-        fontSize: 14,
-        fontFamily: fonts.poppinsBold,
-        color: colors.white || '#FFFFFF',
+        paddingHorizontal: scale(16),
     },
 });

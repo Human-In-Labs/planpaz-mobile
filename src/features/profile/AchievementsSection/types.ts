@@ -6,6 +6,9 @@ export interface Achievement {
     level?: string;
     date?: string;
     description?: string;
+    unlocked?: boolean;
+    progress?: number;
+    maxProgress?: number;
 }
 
 export interface AchievementsSectionProps {

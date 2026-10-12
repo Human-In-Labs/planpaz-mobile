@@ -14,7 +14,7 @@ import { AppIcons } from '../../../shared/constants/appIcons';
 import AchievementCard from '../AchievementCard';
 import { Achievement } from '../AchievementsSection/types';
 import AchievementDetailsOverlay from '../overlays/AchievementDetails';
-import { obterConquistasMe } from '../../../shared/api';
+import { obterConquistasMe, obterConquistasUsuario } from '../../../shared/api';
 import { getPublicUserProfile } from '../../../shared/api/user';
 import { colors } from '../../../shared/theme';
 import { styles } from './styles';
@@ -57,6 +57,16 @@ export default function AchievementsScreen() {
             setLoading(true);
 
             if (userId) {
+                try {
+                    const userAchData = await obterConquistasUsuario(userId);
+                    if (Array.isArray(userAchData) && userAchData.length > 0) {
+                        setAchievements(mapAchievements(userAchData));
+                        return;
+                    }
+                } catch {
+                    // fallback to getPublicUserProfile
+                }
+
                 const profile = await getPublicUserProfile(userId);
                 const data = Array.isArray(profile.achievements)
                     ? profile.achievements
@@ -132,16 +142,18 @@ export default function AchievementsScreen() {
                 ) : (
                     <View style={styles.gridContainer}>
                         {achievements.map(item => (
-                            <AchievementCard
-                                key={item.id}
-                                icon={item.icon}
-                                level={item.level}
-                                title={item.title}
-                                description={item.description}
-                                date={item.date}
-                                unlocked={item.unlocked}
-                                onPress={() => setSelectedAchievement(item)}
-                            />
+                            <View key={item.id} style={styles.gridItem}>
+                                <AchievementCard
+                                    icon={item.icon}
+                                    level={item.level}
+                                    title={item.title}
+                                    description={item.description}
+                                    date={item.date}
+                                    unlocked={item.unlocked}
+                                    style={styles.cardContainer}
+                                    onPress={() => setSelectedAchievement(item)}
+                                />
+                            </View>
                         ))}
                     </View>
                 )}

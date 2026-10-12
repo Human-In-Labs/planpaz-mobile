@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
         width: scale(72),
         alignItems: 'center',
         marginRight: scale(10),
-        marginBottom: verticalScale(8),
+        // marginBottom: verticalScale(8),
     },
 
     card: {

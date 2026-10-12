@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 import AppIcon from '../../../../shared/components/AppIcon';
 import Overlay from '../../../../shared/components/Overlay';
 import { AppIcons } from '../../../../shared/constants/appIcons';
@@ -50,7 +50,6 @@ export default function AchievementDetailsOverlay({
         ? `${achievement.title} ${achievement.level === 'I' ? '1' : achievement.level === 'II' ? '2' : achievement.level === 'III' ? '3' : achievement.level}`
         : achievement.title;
 
-    const displayDate = achievement.date || new Date().toLocaleDateString('pt-BR');
     const displayDescription =
         achievement.description ||
         `Você alcançou a conquista ${fullTitle}`;
@@ -61,40 +60,29 @@ export default function AchievementDetailsOverlay({
             onClose={onClose}
             containerStyle={styles.modalContainer}
         >
-            <View style={styles.headerTag}>
-                <AppIcon icon={AppIcons.CHECK_CIRCLE} size={14} color="#03624C" />
-                <Text style={styles.headerTagText}>Conquista Desbloqueada! 🌿</Text>
-            </View>
+            <Text style={styles.title} numberOfLines={1}>
+                {fullTitle}
+            </Text>
 
-            <View style={styles.iconContainer}>
+            <View style={styles.iconWrapper}>
                 <AppIcon
                     icon={iconName}
-                    size={56}
-                    color="#03624C"
+                    size={102}
+                    color="#115634"
                 />
             </View>
 
-            <Text style={styles.title}>
-                {fullTitle}
-            </Text>
+            {achievement.date ? (
+                <View style={styles.datePill}>
+                    <Text style={styles.dateText}>
+                        {achievement.date}
+                    </Text>
+                </View>
+            ) : null}
 
             <Text style={styles.description}>
                 {displayDescription}
             </Text>
-
-            <View style={styles.dateBadge}>
-                <Text style={styles.dateText}>
-                    Conquistada em {displayDate}
-                </Text>
-            </View>
-
-            <TouchableOpacity
-                style={styles.closeButton}
-                activeOpacity={0.8}
-                onPress={onClose}
-            >
-                <Text style={styles.closeButtonText}>Incrível! 🌿</Text>
-            </TouchableOpacity>
         </Overlay>
     );
 }

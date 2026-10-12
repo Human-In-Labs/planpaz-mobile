@@ -151,9 +151,9 @@ export default function ProfileScreen() {
                             },
                             {
                                 id: '3',
-                                value: `${streakCount} 🔥`,
-                                label: 'Dias de Ofensiva',
-                                icon: <AppIcon icon={AppIcons.SUN_FILL} size={22} color="#E25822" />,
+                                value: `${streakCount} dias`,
+                                label: 'Ofensiva',
+                                icon: <AppIcon icon={AppIcons.SUN} size={22} color="#000000" />,
                             },
                             {
                                 id: '4',
@@ -213,8 +213,13 @@ export default function ProfileScreen() {
                             unlocked: item.unlocked,
                             progress: item.progress,
                             maxProgress: item.maxProgress,
+                            date: item.unlockedAt
+                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                                : undefined,
                         }));
-                        setAchievements(mapped);
+
+                        const unlockedAchievements = mapped.filter(item => Boolean(item.unlocked));
+                        setAchievements(unlockedAchievements);
                     }
                 } catch (achErr) {
                     console.log('[PROFILE] Erro ao buscar conquistas do backend:', achErr);

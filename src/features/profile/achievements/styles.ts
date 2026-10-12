@@ -43,7 +43,16 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'flex-start',
-        gap: scale(12),
+        rowGap: verticalScale(14),
+    },
+
+    gridItem: {
+        width: '25%',
+        alignItems: 'center',
+    },
+
+    cardContainer: {
+        marginRight: 0,
     },
 
     emptyContainer: {

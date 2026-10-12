@@ -36,12 +36,13 @@ export default function AchievementCard({
     title,
     unlocked = true,
     onPress,
+    style,
 }: AchievementCardProps) {
     const iconName = getAchievementIcon(icon, title);
     const iconColor = unlocked ? '#03624C' : '#9CA3AF';
 
     const content = (
-        <View style={styles.container}>
+        <View style={[styles.container, style]}>
             <View style={[styles.card, !unlocked && styles.lockedCard]}>
                 <AppIcon
                     icon={iconName}

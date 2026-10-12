@@ -125,13 +125,13 @@ export default function UserProfileScreen() {
                 },
                 {
                     id: '3',
-                    value: `${data.streakCount ?? 0} 🔥`,
-                    label: 'Dias de Ofensiva',
+                    value: `${data.streakCount ?? 0} dias`,
+                    label: 'Ofensiva',
                     icon: (
                         <AppIcon
-                            icon={AppIcons.SUN_FILL}
+                            icon={AppIcons.SUN}
                             size={22}
-                            color="#E25822"
+                            color="#000000"
                         />
                     ),
                 },
@@ -178,32 +178,36 @@ export default function UserProfileScreen() {
             try {
                 const userAchData = await obterConquistasUsuario(userId);
                 if (Array.isArray(userAchData) && userAchData.length > 0) {
-                    const mappedAchievements: Achievement[] = userAchData.map((item: any) => ({
-                        id: item.id,
-                        title: item.name,
-                        description: item.description,
-                        icon: item.icon,
-                        unlocked: item.unlocked,
-                        progress: item.progress,
-                        maxProgress: item.maxProgress,
-                        date: item.unlockedAt
-                            ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
-                            : undefined,
-                    }));
+                    const mappedAchievements: Achievement[] = userAchData
+                        .filter((item: any) => Boolean(item.unlocked))
+                        .map((item: any) => ({
+                            id: item.id,
+                            title: item.name,
+                            description: item.description,
+                            icon: item.icon,
+                            unlocked: true,
+                            progress: item.progress,
+                            maxProgress: item.maxProgress,
+                            date: item.unlockedAt
+                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                                : undefined,
+                        }));
                     setAchievements(mappedAchievements);
                 } else if (data.achievements && Array.isArray(data.achievements)) {
-                    const mappedAchievements: Achievement[] = data.achievements.map((item: any) => ({
-                        id: item.id,
-                        title: item.name,
-                        description: item.description,
-                        icon: item.icon,
-                        unlocked: item.unlocked !== undefined ? item.unlocked : true,
-                        progress: item.progress,
-                        maxProgress: item.maxProgress,
-                        date: item.unlockedAt
-                            ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
-                            : undefined,
-                    }));
+                    const mappedAchievements: Achievement[] = data.achievements
+                        .filter((item: any) => Boolean(item.unlocked))
+                        .map((item: any) => ({
+                            id: item.id,
+                            title: item.name,
+                            description: item.description,
+                            icon: item.icon,
+                            unlocked: true,
+                            progress: item.progress,
+                            maxProgress: item.maxProgress,
+                            date: item.unlockedAt
+                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                                : undefined,
+                        }));
                     setAchievements(mappedAchievements);
                 } else {
                     setAchievements([]);
@@ -211,15 +215,20 @@ export default function UserProfileScreen() {
             } catch (achErr) {
                 console.log('[USER_PROFILE] Erro ao buscar conquistas do usuário:', achErr);
                 if (data.achievements && Array.isArray(data.achievements)) {
-                    const mappedAchievements: Achievement[] = data.achievements.map((item: any) => ({
-                        id: item.id,
-                        title: item.name,
-                        description: item.description,
-                        icon: item.icon,
-                        unlocked: item.unlocked !== undefined ? item.unlocked : true,
-                        progress: item.progress,
-                        maxProgress: item.maxProgress,
-                    }));
+                    const mappedAchievements: Achievement[] = data.achievements
+                        .filter((item: any) => Boolean(item.unlocked))
+                        .map((item: any) => ({
+                            id: item.id,
+                            title: item.name,
+                            description: item.description,
+                            icon: item.icon,
+                            unlocked: true,
+                            progress: item.progress,
+                            maxProgress: item.maxProgress,
+                            date: item.unlockedAt
+                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                                : undefined,
+                        }));
                     setAchievements(mappedAchievements);
                 } else {
                     setAchievements([]);
@@ -344,11 +353,6 @@ export default function UserProfileScreen() {
                 setFollowersCount(
                     prev => Math.max(0, prev - 1),
                 );
-
-                Alert.alert(
-                    'Sucesso',
-                    'Você deixou de seguir este usuário.',
-                );
             } else {
                 await seguirUsuario(userId);
 
@@ -356,11 +360,6 @@ export default function UserProfileScreen() {
 
                 setFollowersCount(
                     prev => prev + 1,
-                );
-
-                Alert.alert(
-                    'Sucesso',
-                    'Você começou a seguir este usuário.',
                 );
             }
         } catch (error: any) {
