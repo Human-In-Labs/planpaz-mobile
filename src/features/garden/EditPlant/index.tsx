@@ -166,7 +166,7 @@ export default function EditPlantScreen() {
             let finalImagePath: string | undefined = undefined;
             if (selectedPhoto?.uri) {
                 try {
-                    finalImagePath = await uploadImagem(selectedPhoto.uri);
+                    finalImagePath = await uploadImagem(selectedPhoto);
                 } catch (uploadErr) {
                     console.error('[EDIT_PLANT] Erro no upload da imagem da planta:', uploadErr);
                 }

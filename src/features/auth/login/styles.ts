@@ -56,6 +56,7 @@ export const styles = StyleSheet.create({
     height: verticalScale(72),
     backgroundColor: colors.white,
     borderRadius: radius.xl,
+    ...typography.bodyStrong,
     ...shadows.medium,
     marginBottom: spacing.xs,
     paddingStart: spacing.md,
@@ -86,7 +87,7 @@ export const styles = StyleSheet.create({
   inputPassword: {
     flex: 1,
     height: '100%',
-    color: colors.black,
+    ...typography.bodyStrong,
     paddingVertical: 0,
     backgroundColor: 'transparent',
   },

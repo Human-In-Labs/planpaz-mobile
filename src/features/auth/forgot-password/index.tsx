@@ -59,7 +59,7 @@ export default function ForgotPasswordScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={require('../../../assets/images/auth-banner.png')}
+          source={require('../../../assets/images/onboarding-3.png')}
           resizeMode="cover"
           style={styles.banner}
         />
@@ -74,7 +74,7 @@ export default function ForgotPasswordScreen() {
           />
           <Text style={styles.title}>Email</Text>
           <Text style={styles.subtitle}>
-            Digite seu Email para receber um código de redefinição de sua senha
+            Digite seu email para receber um código de redefinição de sua senha
           </Text>
 
           <TextInput

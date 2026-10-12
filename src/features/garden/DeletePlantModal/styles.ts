@@ -58,7 +58,7 @@ export const styles = StyleSheet.create({
     primaryButton: {
         width: '100%',
         height: verticalScale(48),
-        borderRadius: radius.xxl, // 24px
+        borderRadius: radius.md,
         backgroundColor: '#8B0000', // Vinho / vermelho escuro
         justifyContent: 'center',
         alignItems: 'center',

@@ -653,7 +653,7 @@ export default function SettingsScreen() {
 
             if (selectedAvatarPhoto?.uri) {
                 try {
-                    const uploadedUrl = await uploadImagem(selectedAvatarPhoto.uri);
+                    const uploadedUrl = await uploadImagem(selectedAvatarPhoto);
                     payload.avatarUrl = uploadedUrl;
                 } catch (uploadErr) {
                     console.error('[SETTINGS] Erro no upload da foto de perfil:', uploadErr);

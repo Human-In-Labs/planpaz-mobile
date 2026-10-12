@@ -247,7 +247,7 @@ export default function AddPlantScreen() {
             let finalImagePath: string | null = null;
             if (selectedPhoto?.uri) {
                 try {
-                    finalImagePath = await uploadImagem(selectedPhoto.uri);
+                    finalImagePath = await uploadImagem(selectedPhoto);
                 } catch (uploadErr) {
                     console.error('[ADD_PLANT] Erro ao fazer upload da imagem da planta:', uploadErr);
                 }
@@ -336,7 +336,11 @@ export default function AddPlantScreen() {
                     >
                         {selectedPhoto ? (
                             <Image
-                                source={selectedPhoto}
+                                source={
+                                    selectedPhoto.base64
+                                        ? { uri: selectedPhoto.base64 }
+                                        : { uri: selectedPhoto.uri }
+                                }
                                 style={styles.uploadedImage}
                                 resizeMode="cover"
                             />
@@ -564,14 +568,14 @@ export default function AddPlantScreen() {
                     setChangePhotoVisible(false);
                     const image = await pickImageFromGallery();
                     if (image) {
-                        setSelectedPhoto({ uri: image.uri, base64: image.base64 });
+                        setSelectedPhoto(image);
                     }
                 }}
                 onTakePhoto={async () => {
                     setChangePhotoVisible(false);
                     const image = await takePhotoWithCamera();
                     if (image) {
-                        setSelectedPhoto({ uri: image.uri, base64: image.base64 });
+                        setSelectedPhoto(image);
                     }
                 }}
             />

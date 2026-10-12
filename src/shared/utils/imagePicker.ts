@@ -1,4 +1,9 @@
-import { Alert } from 'react-native';
+import { Alert, PermissionsAndroid, Platform } from 'react-native';
+import {
+    launchCamera,
+    launchImageLibrary,
+    ImagePickerResponse,
+} from 'react-native-image-picker';
 
 export interface SelectedImage {
     uri: string;
@@ -7,93 +12,74 @@ export interface SelectedImage {
     fileName?: string;
 }
 
+export async function requestCameraPermission(): Promise<boolean> {
+    if (Platform.OS !== 'android') return true;
+
+    try {
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            {
+                title: 'Permissão para Câmera',
+                message: 'O PlanPaz precisa de permissão para acessar a câmera para tirar fotos.',
+                buttonNeutral: 'Depois',
+                buttonNegative: 'Cancelar',
+                buttonPositive: 'Permitir',
+            },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+        console.warn('[IMAGE_PICKER] Erro ao solicitar permissão da câmera:', err);
+        return false;
+    }
+}
+
 export async function pickImageFromGallery(
-    options: { allowsEditing?: boolean; aspect?: [number, number]; quality?: number } = {}
+    options: { allowsEditing?: boolean; aspect?: [number, number]; quality?: number } = {},
 ): Promise<SelectedImage | null> {
     try {
-        let ImagePicker: any = null;
-        try {
-            ImagePicker = require('expo-image-picker');
-        } catch (e) {
-            console.warn('[IMAGE_PICKER] expo-image-picker não instalado:', e);
-            Alert.alert(
-                'Módulo Ausente',
-                'Para habilitar o envio de fotos, execute no terminal: npx expo install expo-image-picker',
-            );
-            return null;
-        }
-
-        if (!ImagePicker || !ImagePicker.requestMediaLibraryPermissionsAsync) {
-            Alert.alert(
-                'Aviso',
-                'A seleção de imagens da galeria não está disponível neste ambiente.',
-            );
-            return null;
-        }
-
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-        if (status !== 'granted') {
-            Alert.alert(
-                'Permissão Necessária',
-                'Para selecionar uma foto, precisamos da sua permissão para acessar a galeria de imagens.',
-            );
-            return null;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaType?.Images ?? ImagePicker.MediaType?.images ?? ['images'],
-            allowsEditing: options.allowsEditing ?? false,
-            aspect: options.aspect,
-            quality: options.quality ?? 0.8,
-            base64: true,
+        const response: ImagePickerResponse = await launchImageLibrary({
+            mediaType: 'photo',
+            quality: (options.quality as any) ?? 0.8,
+            includeBase64: true,
+            selectionLimit: 1,
         });
 
-        if (result.canceled || !result.assets || result.assets.length === 0) {
+        if (response.didCancel || !response.assets || response.assets.length === 0) {
             return null;
         }
 
-        const asset = result.assets[0];
+        if (response.errorCode) {
+            console.error('[IMAGE_PICKER] Erro ao selecionar imagem da galeria:', response.errorMessage);
+            Alert.alert('Erro', response.errorMessage || 'Não foi possível selecionar a foto da galeria.');
+            return null;
+        }
+
+        const asset = response.assets[0];
+        if (!asset.uri) return null;
+
         const base64Data = asset.base64
-            ? `data:${asset.mimeType || 'image/jpeg'};base64,${asset.base64}`
+            ? `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`
             : undefined;
 
         return {
             uri: asset.uri,
             base64: base64Data,
-            mimeType: asset.mimeType || 'image/jpeg',
-            fileName: asset.fileName || 'image.jpg',
+            mimeType: asset.type || 'image/jpeg',
+            fileName: asset.fileName || `gallery_${Date.now()}.jpg`,
         };
     } catch (error) {
-        console.error('[IMAGE_PICKER] Erro ao selecionar imagem da galeria:', error);
+        console.error('[IMAGE_PICKER] Exceção ao selecionar imagem da galeria:', error);
         Alert.alert('Erro', 'Não foi possível acessar a galeria de fotos.');
         return null;
     }
 }
 
 export async function takePhotoWithCamera(
-    options: { allowsEditing?: boolean; aspect?: [number, number]; quality?: number } = {}
+    options: { allowsEditing?: boolean; aspect?: [number, number]; quality?: number } = {},
 ): Promise<SelectedImage | null> {
     try {
-        let ImagePicker: any = null;
-        try {
-            ImagePicker = require('expo-image-picker');
-        } catch (e) {
-            console.warn('[IMAGE_PICKER] expo-image-picker não instalado:', e);
-            Alert.alert(
-                'Módulo Ausente',
-                'Para habilitar o envio de fotos, execute no terminal: npx expo install expo-image-picker',
-            );
-            return null;
-        }
-
-        if (!ImagePicker || !ImagePicker.requestCameraPermissionsAsync) {
-            return pickImageFromGallery(options);
-        }
-
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
-        if (status !== 'granted') {
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) {
             Alert.alert(
                 'Permissão Necessária',
                 'Para tirar uma foto, precisamos da sua permissão para acessar a câmera.',
@@ -101,30 +87,39 @@ export async function takePhotoWithCamera(
             return null;
         }
 
-        const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: options.allowsEditing ?? false,
-            aspect: options.aspect,
-            quality: options.quality ?? 0.8,
-            base64: true,
+        const response: ImagePickerResponse = await launchCamera({
+            mediaType: 'photo',
+            quality: (options.quality as any) ?? 0.8,
+            includeBase64: true,
+            saveToPhotos: false,
         });
 
-        if (result.canceled || !result.assets || result.assets.length === 0) {
+        if (response.didCancel || !response.assets || response.assets.length === 0) {
             return null;
         }
 
-        const asset = result.assets[0];
+        if (response.errorCode) {
+            console.error('[IMAGE_PICKER] Erro ao tirar foto com a câmera:', response.errorMessage);
+            Alert.alert('Erro', response.errorMessage || 'Não foi possível tirar a foto.');
+            return null;
+        }
+
+        const asset = response.assets[0];
+        if (!asset.uri) return null;
+
         const base64Data = asset.base64
-            ? `data:${asset.mimeType || 'image/jpeg'};base64,${asset.base64}`
+            ? `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`
             : undefined;
 
         return {
             uri: asset.uri,
             base64: base64Data,
-            mimeType: asset.mimeType || 'image/jpeg',
-            fileName: asset.fileName || 'camera_photo.jpg',
+            mimeType: asset.type || 'image/jpeg',
+            fileName: asset.fileName || `camera_${Date.now()}.jpg`,
         };
     } catch (error) {
-        console.error('[IMAGE_PICKER] Erro ao capturar foto com a câmera:', error);
-        return pickImageFromGallery(options);
+        console.error('[IMAGE_PICKER] Exceção ao capturar foto com a câmera:', error);
+        Alert.alert('Erro', 'Não foi possível acessar a câmera.');
+        return null;
     }
 }

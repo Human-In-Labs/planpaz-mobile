@@ -197,7 +197,7 @@ export default function RegisterScreen() {
             <TextInput
               ref={passwordInputRef}
               style={styles.inputPassword}
-              placeholder="Password"
+              placeholder="Senha"
               placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
               secureTextEntry={!showPassword}
               value={password}
@@ -232,7 +232,7 @@ export default function RegisterScreen() {
             <TextInput
               ref={confirmPasswordInputRef}
               style={styles.inputPassword}
-              placeholder="Confirm password"
+              placeholder="Confirme a senha"
               placeholderTextColor={confirmPasswordError && !confirmPassword ? colors.warning : colors.black}
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}

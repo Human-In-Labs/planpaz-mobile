@@ -177,7 +177,7 @@ export default function LoginScreen() {
             <View style={[styles.passwordContainer, passwordError && styles.inputError]}>
               <TextInput
                 style={styles.inputPassword}
-                placeholder="Password"
+                placeholder="Senha"
                 placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
                 secureTextEntry={!showPassword}
                 value={password}

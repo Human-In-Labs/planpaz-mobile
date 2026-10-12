@@ -114,7 +114,7 @@ export default function ResetPasswordScreen() {
           <View style={[styles.inputContainer, passwordError && styles.inputError]}>
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder="Senha"
               placeholderTextColor={passwordError && !password ? colors.warning : colors.black}
               value={password}
               onChangeText={(text) => {
@@ -145,7 +145,7 @@ export default function ResetPasswordScreen() {
           <View style={[styles.inputContainer, confirmPasswordError && styles.inputError]}>
             <TextInput
               style={styles.input}
-              placeholder="Confirm New Password"
+              placeholder="Confirme Nova Senha"
               placeholderTextColor={confirmPasswordError && !confirmPassword ? colors.warning : colors.black}
               value={confirmPassword}
               onChangeText={(text) => {

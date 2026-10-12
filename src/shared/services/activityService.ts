@@ -22,19 +22,7 @@ export const activityService = {
                 }
             }
 
-            const storedUser = await getUser();
-            const username = storedUser?.username ? `@${storedUser.username}` : (storedUser?.name || 'Seu Jardim');
-
-            return [
-                {
-                    id: 'act-empty',
-                    userName: username,
-                    userAvatar: defaultBanner,
-                    activity: 'Seus amigos ainda não possuem atividades recentes no jardim.',
-                    createdAt: 'Hoje',
-                    image: defaultBanner,
-                },
-            ];
+            return [];
         } catch (error) {
             console.error('[ACTIVITY_SERVICE] Erro ao carregar atividades do backend:', error);
             return [];
