@@ -110,6 +110,17 @@ export async function clearSession(): Promise<void> {
   await removeUserId();
 }
 
+// Sugestão de estágio ignorada (por planta do jardim → id do estágio sugerido)
+const IGNORED_STAGE_SUGGESTION_KEY = '@planpaz:ignored_stage_suggestion:';
+
+export async function saveIgnoredStageSuggestion(gardenPlantId: string, stageId: string): Promise<void> {
+  await safeSetItem(IGNORED_STAGE_SUGGESTION_KEY + gardenPlantId, stageId);
+}
+
+export async function getIgnoredStageSuggestion(gardenPlantId: string): Promise<string | null> {
+  return safeGetItem(IGNORED_STAGE_SUGGESTION_KEY + gardenPlantId);
+}
+
 export function decodeBase64(input: string): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
   const str = input.replace(/=+$/, '');

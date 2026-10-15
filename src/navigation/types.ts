@@ -1,4 +1,5 @@
 import { Post } from '../shared/types/social';
+import { StageSuggestion } from '../shared/api/garden';
 
 export type RootStackParamList = {
     Onboarding: undefined;
@@ -29,6 +30,7 @@ export type GardenStackParamList = {
     GardenMain: undefined;
     PlantDetails: { plantId: string; };
     EditPlant: { plantId: string; };
+    StageSuggestion: { plantId: string; suggestion: StageSuggestion; };
     Library: undefined;
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;

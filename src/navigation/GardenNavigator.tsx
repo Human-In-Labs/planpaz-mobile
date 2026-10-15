@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import GardenScreen from '../features/garden';
 import PlantDetailsScreen from '../features/garden/PlantDetails';
 import EditPlantScreen from '../features/garden/EditPlant';
+import StageSuggestionScreen from '../features/garden/StageSuggestion';
 import LibraryScreen from '../features/library';
 import SpeciesDetailsScreen from '../features/library/SpeciesDetails';
 import AddPlantScreen from '../features/garden/AddPlant';
@@ -29,6 +30,10 @@ export default function GardenNavigator() {
             <Stack.Screen
                 name="EditPlant"
                 component={EditPlantScreen}
+            />
+            <Stack.Screen
+                name="StageSuggestion"
+                component={StageSuggestionScreen}
             />
             <Stack.Screen
                 name="Library"

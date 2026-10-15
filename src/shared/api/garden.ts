@@ -1,5 +1,5 @@
 import { api } from './client';
-import { Plant } from './plant';
+import { Plant, PlantStage } from './plant';
 import { AchievementProgress } from './achievement';
 import { CultivatedPlant } from '../../features/garden/types';
 import { translateTagToPT, translateTagsToPT } from '../utils/tagMapper';
@@ -38,6 +38,14 @@ export interface PlantStats {
     lastWatering?: string | null;
     lastFertilizing?: string | null;
     lastPruning?: string | null;
+}
+
+// Espelha com.humanin.planpaz.dto.StageSuggestionDTO
+export interface StageSuggestion {
+    gardenPlantId: string;
+    cultivationDays: number;
+    currentStage: PlantStage;
+    suggestedStage: PlantStage;
 }
 
 export interface AddGardenPlantRequest {
@@ -193,6 +201,14 @@ export async function getPlantStats(
 ): Promise<PlantStats> {
     const response = await api.get<PlantStats>(`/garden/${id}/stats`);
     return response.data;
+}
+
+// GET /api/garden/{id}/stage-suggestion (204 = sem sugestão)
+export async function getStageSuggestion(
+    id: string,
+): Promise<StageSuggestion | null> {
+    const response = await api.get<StageSuggestion>(`/garden/${id}/stage-suggestion`);
+    return response.status === 204 ? null : response.data;
 }
 
 // GET /api/garden/next-watering/{id}

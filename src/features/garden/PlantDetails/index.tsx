@@ -28,6 +28,7 @@ import {
     excluirPlantaDoJardim,
     getPlantStats,
     getProximasRegas,
+    getStageSuggestion,
     podarPlanta,
     regarPlanta,
     GardenPlant,
@@ -36,6 +37,7 @@ import {
     WateringReminder,
     ROOM_ENUM_TO_LABEL,
 } from '../../../shared/api';
+import { getIgnoredStageSuggestion } from '../../../shared/services/storage';
 import { styles } from './styles';
 import { getPlantTags } from '../../../shared/utils/tagMapper';
 import { getSpeciesCareGuide } from '../../../shared/utils/plantDataDatabase';
@@ -111,6 +113,7 @@ export default function PlantDetailsScreen() {
     );
 
     const stagesScrollRef = useRef<ScrollView>(null);
+    const stageSuggestionCheckedRef = useRef(false);
 
     const [plant, setPlant] = useState<GardenPlant | null>(null);
     const [plantStats, setPlantStats] = useState<PlantStats | null>(null);
@@ -204,6 +207,21 @@ export default function PlantDetailsScreen() {
                 console.error('Erro ao buscar estatísticas da planta:', err);
             }
 
+            if (!stageSuggestionCheckedRef.current) {
+                stageSuggestionCheckedRef.current = true;
+                try {
+                    const suggestion = await getStageSuggestion(plantId);
+                    if (suggestion) {
+                        const ignoredStageId = await getIgnoredStageSuggestion(plantId);
+                        if (ignoredStageId !== suggestion.suggestedStage.id) {
+                            navigation.navigate('StageSuggestion', { plantId, suggestion });
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erro ao buscar sugestão de estágio:', err);
+                }
+            }
+
             try {
                 const nextWaterings = await getProximasRegas(plantId);
                 const { status, isOverdue } = formatWateringStatus(
@@ -263,7 +281,7 @@ export default function PlantDetailsScreen() {
             setPlant(null);
             setStages([]);
         }
-    }, [plantId]);
+    }, [plantId, navigation]);
 
     useFocusEffect(
         useCallback(() => {
