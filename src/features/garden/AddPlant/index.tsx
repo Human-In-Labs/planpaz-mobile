@@ -547,6 +547,39 @@ export default function AddPlantScreen() {
                             )}
                         </View>
                     </View>
+
+                    <TouchableOpacity
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingVertical: 12,
+                            marginTop: 12,
+                            marginBottom: 24,
+                            gap: 6,
+                        }}
+                        activeOpacity={0.7}
+                        onPress={() =>
+                            navigation.navigate('PlantingGuide', {
+                                speciesName: species || undefined,
+                            })
+                        }
+                    >
+                        <AppIcon
+                            icon={AppIcons.POTTED_PLANT}
+                            size={16}
+                            color={colors.primary}
+                        />
+                        <Text
+                            style={{
+                                fontFamily: 'Inter-Medium',
+                                fontSize: 13,
+                                color: colors.primary,
+                            }}
+                        >
+                            Dúvidas sobre o plantio? Consulte o Guia de Cultivo
+                        </Text>
+                    </TouchableOpacity>
                 </ScrollView>
 
                 <BottomActionOverlay

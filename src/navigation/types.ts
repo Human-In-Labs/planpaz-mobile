@@ -15,6 +15,7 @@ export type RootStackParamList = {
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
     UserProfile: { userId: string; };
     Reminders: undefined;
+    PlantingGuide: { method?: 'seed' | 'cutting' | 'seedling'; speciesName?: string; speciesId?: string; } | undefined;
 };
 
 export type ProfileStackParamList = {
@@ -35,6 +36,7 @@ export type GardenStackParamList = {
     SpeciesDetails: { speciesId: string; };
     AddPlant: { speciesId?: string; speciesName?: string; } | undefined;
     UserProfile: { userId: string; };
+    PlantingGuide: { method?: 'seed' | 'cutting' | 'seedling'; speciesName?: string; speciesId?: string; } | undefined;
 };
 
 export type SocialStackParamList = {

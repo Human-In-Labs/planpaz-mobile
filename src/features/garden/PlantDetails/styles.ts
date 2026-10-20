@@ -196,6 +196,26 @@ export const styles = StyleSheet.create({
         ...shadows.medium,
     },
 
+    guideHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: verticalScale(10),
+    },
+
+    guideMethodBadge: {
+        backgroundColor: '#E6F3EC',
+        borderRadius: radius.sm,
+        paddingHorizontal: scale(8),
+        paddingVertical: verticalScale(3),
+    },
+
+    guideMethodBadgeText: {
+        fontFamily: 'Inter-SemiBold',
+        fontSize: scale(11),
+        color: colors.primary,
+    },
+
     guideItem: {
         marginBottom: verticalScale(8),
     },
@@ -206,6 +226,47 @@ export const styles = StyleSheet.create({
 
     guideText: {
         ...typography.textLight2,
+    },
+
+    guideAlertBox: {
+        backgroundColor: '#FFF2F0',
+        borderRadius: radius.md,
+        padding: scale(10),
+        borderLeftWidth: 3,
+        borderLeftColor: colors.warning,
+        marginVertical: verticalScale(8),
+    },
+
+    guideAlertLabel: {
+        fontFamily: 'Poppins-SemiBold',
+        fontSize: scale(11),
+        color: colors.warning,
+        marginBottom: verticalScale(2),
+    },
+
+    guideAlertText: {
+        fontFamily: 'Inter-Regular',
+        fontSize: scale(11.5),
+        color: '#61160C',
+        lineHeight: scale(16),
+    },
+
+    guideTutorialButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.primary,
+        borderRadius: radius.lg,
+        paddingVertical: verticalScale(10),
+        paddingHorizontal: scale(14),
+        marginTop: verticalScale(10),
+        gap: scale(8),
+    },
+
+    guideTutorialButtonText: {
+        fontFamily: 'Poppins-SemiBold',
+        fontSize: scale(13),
+        color: colors.white,
     },
 
     // Care Actions Section

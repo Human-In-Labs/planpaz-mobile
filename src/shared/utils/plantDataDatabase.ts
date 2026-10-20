@@ -1,3 +1,8 @@
+import {
+    CultivationMethodKey,
+    getSpeciesCultivationInfo,
+} from '../constants/plantingGuideData';
+
 export interface PlantCareGuideData {
     solo: string;
     clima: string;
@@ -5,6 +10,13 @@ export interface PlantCareGuideData {
     rega: string;
     poda?: string;
     dicas?: string;
+    metodo?: string;
+    metodoKey?: CultivationMethodKey;
+    alertas?: string[];
+    dificuldade?: string;
+    porte?: string;
+    tipo?: string;
+    instrucoesPropagacao?: string;
 }
 
 const PLANT_CARE_DATABASE: Record<string, PlantCareGuideData> = {
@@ -228,7 +240,20 @@ const DEFAULT_GUIDE: PlantCareGuideData = {
 };
 
 export function getSpeciesCareGuide(plantNameOrSpecies?: string): PlantCareGuideData {
-    if (!plantNameOrSpecies) return DEFAULT_GUIDE;
+    const cultInfo = getSpeciesCultivationInfo(plantNameOrSpecies);
+
+    if (!plantNameOrSpecies) {
+        return {
+            ...DEFAULT_GUIDE,
+            metodo: cultInfo?.methodLabel,
+            metodoKey: cultInfo?.method,
+            alertas: cultInfo?.alerts,
+            dificuldade: cultInfo?.difficulty,
+            porte: cultInfo?.size,
+            tipo: cultInfo?.type,
+            instrucoesPropagacao: cultInfo?.keyGuideline,
+        };
+    }
 
     const normalized = plantNameOrSpecies
         .toLowerCase()
@@ -242,9 +267,27 @@ export function getSpeciesCareGuide(plantNameOrSpecies?: string): PlantCareGuide
             .replace(/[\u0300-\u036f]/g, '');
 
         if (normalized.includes(normalizedKey) || normalizedKey.includes(normalized)) {
-            return guide;
+            return {
+                ...guide,
+                metodo: cultInfo?.methodLabel,
+                metodoKey: cultInfo?.method,
+                alertas: cultInfo?.alerts,
+                dificuldade: cultInfo?.difficulty,
+                porte: cultInfo?.size,
+                tipo: cultInfo?.type,
+                instrucoesPropagacao: cultInfo?.keyGuideline,
+            };
         }
     }
 
-    return DEFAULT_GUIDE;
+    return {
+        ...DEFAULT_GUIDE,
+        metodo: cultInfo?.methodLabel,
+        metodoKey: cultInfo?.method,
+        alertas: cultInfo?.alerts,
+        dificuldade: cultInfo?.difficulty,
+        porte: cultInfo?.size,
+        tipo: cultInfo?.type,
+        instrucoesPropagacao: cultInfo?.keyGuideline,
+    };
 }
