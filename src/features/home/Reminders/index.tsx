@@ -57,6 +57,18 @@ export default function RemindersScreen() {
         carregarLembretes();
     };
 
+    const handlePressCard = (item: ReminderCardData) => {
+        const targetId = item.gardenPlantId || item.id;
+        if (!targetId) return;
+        (navigation as any).navigate('MainTabs', {
+            screen: 'Garden',
+            params: {
+                screen: 'PlantDetails',
+                params: { plantId: targetId },
+            },
+        });
+    };
+
     const handleConcluirRega = async (item: ReminderCardData) => {
         // Se o lembrete for para daqui a mais de 36 horas, abrir o modal de aviso
         if (item.isBeyond36Hours) {
@@ -145,6 +157,7 @@ export default function RemindersScreen() {
                                             hideDate={true}
                                             disabledEffect={!!item.isBeyond36Hours}
                                             loading={actionLoadingId === (item.gardenPlantId || item.id)}
+                                            onPressCard={handlePressCard}
                                             onPressButton={handleConcluirRega}
                                         />
                                     )}

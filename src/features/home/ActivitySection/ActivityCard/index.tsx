@@ -1,15 +1,21 @@
 import React from 'react';
-import { View, Text, Image, } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { styles } from './styles';
 import { ActivityCardProps } from './types';
 
 export default function ActivityCard({
     activity,
+    onPress,
 }: ActivityCardProps) {
 
     return (
 
-        <View style={styles.container}>
+        <TouchableOpacity
+            style={styles.container}
+            activeOpacity={onPress ? 0.85 : 1}
+            disabled={!onPress}
+            onPress={() => onPress?.(activity)}
+        >
             <View style={styles.leftContainer}>
                 <View style={styles.header}>
                     <Image
@@ -43,6 +49,6 @@ export default function ActivityCard({
                 style={styles.image}
                 resizeMode="cover"
             />
-        </View>
+        </TouchableOpacity>
     );
 }

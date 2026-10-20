@@ -10,6 +10,7 @@ import { colors } from '../../theme';
 
 export default function FloatingActionButton({
     icon,
+    size = 32,
     onPress,
 }: FloatingActionButtonProps) {
 
@@ -21,7 +22,7 @@ export default function FloatingActionButton({
         >
             <AppIcon
                 icon={icon}
-                size={32}
+                size={size}
                 color={colors.primary}
             />
         </TouchableOpacity>

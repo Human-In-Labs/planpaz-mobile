@@ -5,9 +5,10 @@ import {
     removeUser,
     removeUserId,
 } from '../services/storage';
+import { showConnectionError } from '../components/ConnectionErrorModal';
 
 // Host da API – ajuste para o IP/porta da sua máquina de desenvolvimento.
-export const API_HOST = 'https://debunk-quail-revert.ngrok-free.dev';
+export const API_HOST = 'http://localhost:8080';
 
 export const api = axios.create({
     baseURL: `${API_HOST}/api`,
@@ -40,11 +41,13 @@ api.interceptors.request.use(
     error => Promise.reject(error),
 );
 
-// ---------- Handler de desautenticação ----------
+// ---------- Handler de desautenticação e conexão ----------
 
 type UnauthorizedHandler = () => void;
+type ConnectionErrorHandler = (message?: string) => void;
 
 let onUnauthorized: UnauthorizedHandler | null = null;
+let onConnectionError: ConnectionErrorHandler | null = null;
 
 export function setUnauthorizedHandler(
     handler: UnauthorizedHandler | null,
@@ -52,7 +55,15 @@ export function setUnauthorizedHandler(
     onUnauthorized = handler;
 }
 
+export function setConnectionErrorHandler(
+    handler: ConnectionErrorHandler | null,
+): void {
+    onConnectionError = handler;
+}
+
 let isHandlingUnauthorized = false;
+let lastConnectionErrorTime = 0;
+const CONNECTION_ERROR_THROTTLE_MS = 2500;
 
 // ---------- Interceptor de response ----------
 
@@ -92,6 +103,42 @@ api.interceptors.response.use(
                 setTimeout(() => {
                     isHandlingUnauthorized = false;
                 }, 3000);
+            }
+        }
+
+        const isNetworkOrTimeout =
+            error.code === 'ERR_NETWORK' ||
+            error.code === 'ECONNABORTED' ||
+            error.code === 'ETIMEDOUT' ||
+            (!error.response && Boolean(error.request)) ||
+            error.message === 'Network Error';
+
+        const isServerErrorOrGateway =
+            error.response?.status === 502 ||
+            error.response?.status === 503 ||
+            error.response?.status === 504;
+
+        const isConnectionError = isNetworkOrTimeout || isServerErrorOrGateway;
+
+        if (isConnectionError && !(error.config as any)?.skipConnectionErrorModal) {
+            const now = Date.now();
+            if (now - lastConnectionErrorTime > CONNECTION_ERROR_THROTTLE_MS) {
+                lastConnectionErrorTime = now;
+                const connectionMsg =
+                    error.response?.data?.message ||
+                    error.response?.data?.error ||
+                    (isServerErrorOrGateway
+                        ? 'O servidor ou serviço externo está temporariamente indisponível. Tente novamente em instantes.'
+                        : 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.');
+
+                if (onConnectionError) {
+                    onConnectionError(connectionMsg);
+                } else {
+                    showConnectionError({
+                        title: 'Erro de conexão',
+                        message: connectionMsg,
+                    });
+                }
             }
         }
 

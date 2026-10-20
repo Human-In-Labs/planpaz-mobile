@@ -824,7 +824,7 @@ export default function SettingsScreen() {
                                         ? { uri: selectedAvatarPhoto.uri }
                                         : avatarUrl
                                         ? { uri: avatarUrl }
-                                        : require('../../../assets/images/auth-banner.png')
+                                        : require('../../../assets/images/blank-avatar.png')
                                 }
                                 style={
                                     styles.avatarImage

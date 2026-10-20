@@ -91,7 +91,8 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
                 </TouchableOpacity>
 
             </View>
-
+            
+            {notifications.length > 0 ? (
             <FlatList
                 data={notifications}
                 keyExtractor={(item) => item.id}
@@ -134,7 +135,9 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
                 style={styles.list}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
-            />
+            />) : (
+                <Text style={styles.simpleText}>Não há notificações pendentes</Text>
+            )}
         </Overlay>
     );
 }

@@ -6,6 +6,7 @@ import { colors } from '../../../../shared/theme';
 
 export default function ReminderCard({
     reminder,
+    onPressCard,
     onPressButton,
     loading = false,
     hidePlantName = false,
@@ -24,7 +25,12 @@ export default function ReminderCard({
     const buttonTextColor = disabledEffect ? '#6B7280' : colors.white;
 
     return (
-        <View style={styles.container}>
+        <TouchableOpacity
+            style={styles.container}
+            activeOpacity={onPressCard ? 0.85 : 1}
+            disabled={!onPressCard}
+            onPress={() => onPressCard?.(reminder)}
+        >
             <Image
                 source={reminder.image}
                 style={styles.image}
@@ -114,6 +120,6 @@ export default function ReminderCard({
                     </Text>
                 )}
             </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
     );
 }

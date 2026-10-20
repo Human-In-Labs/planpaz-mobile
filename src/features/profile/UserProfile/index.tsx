@@ -76,7 +76,7 @@ export default function UserProfileScreen() {
         useState<FollowerUser[]>([]);
 
     const defaultAvatar =
-        require('../../../assets/images/auth-banner.png');
+        require('../../../assets/images/blank-avatar.png');
 
     const carregarPerfil = useCallback(async () => {
         if (!userId) {
@@ -287,7 +287,7 @@ export default function UserProfileScreen() {
                                 ? u.username
                                 : `@${u.username}`,
                         name: u.name,
-                        avatar: defaultAvatar,
+                        avatar: u.avatarUrl ? { uri: u.avatarUrl } : defaultAvatar,
                         isFollowing: true,
                     }));
 
@@ -325,7 +325,7 @@ export default function UserProfileScreen() {
                                 ? u.username
                                 : `@${u.username}`,
                         name: u.name,
-                        avatar: defaultAvatar,
+                        avatar: u.avatarUrl ? { uri: u.avatarUrl } : defaultAvatar,
                         isFollowing: true,
                     }));
 

@@ -3,10 +3,11 @@ import { colors, fonts, radius, shadows, spacing, typography } from '../../share
 import { scale, verticalScale } from '../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
-    container: { 
-        flex: 1, 
-        backgroundColor: 
-        colors.background, 
+
+    container: {
+        flex: 1,
+        backgroundColor:
+        colors.background,
     },
 
     content: {
@@ -45,7 +46,6 @@ export const styles = StyleSheet.create({
     filtersContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-
         marginTop: verticalScale(spacing.xs),
         paddingHorizontal: scale(spacing.md),
     },
@@ -81,53 +81,46 @@ export const styles = StyleSheet.create({
         ...shadows.small,
     },
 
-    floatingButton: {
+    fabBackdrop: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'transparent',
+        zIndex: 9,
+    },
+
+    fabContainer: {
         position: 'absolute',
         right: scale(16),
         bottom: verticalScale(106),
+        alignItems: 'flex-end',
+        zIndex: 10,
     },
 
-    guideBanner: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#E7F2EB',
-        marginHorizontal: scale(16),
+    fabOptionsContainer: {
+        alignItems: 'flex-end',
         marginBottom: verticalScale(12),
-        paddingHorizontal: scale(14),
-        paddingVertical: verticalScale(10),
-        borderRadius: radius.lg,
-        borderWidth: 1,
-        borderColor: '#D4E6DC',
+        rowGap: verticalScale(12),
     },
 
-    guideBannerContent: {
+    fabOptionButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: scale(10),
-        flex: 1,
-    },
-
-    guideIconWrap: {
-        width: scale(34),
-        height: scale(34),
-        borderRadius: scale(17),
+        width: scale(151),
+        height: verticalScale(36),
+        paddingHorizontal: scale(12),
+        columnGap: scale(8),
+        borderRadius: radius.md,
         backgroundColor: colors.white,
-        alignItems: 'center',
-        justifyContent: 'center',
-        ...shadows.light,
+        ...shadows.small,
     },
 
-    guideBannerTitle: {
-        fontFamily: fonts.poppinsSemiBold,
-        fontSize: scale(13),
-        color: colors.primaryDark,
-    },
-
-    guideBannerSubtitle: {
-        fontFamily: fonts.interRegular,
-        fontSize: scale(11),
+    fabOptionText: {
+        fontFamily: fonts.interSemiBold,
+        fontSize: scale(12),
         color: colors.primary,
-        marginTop: verticalScale(1),
     },
+
 });

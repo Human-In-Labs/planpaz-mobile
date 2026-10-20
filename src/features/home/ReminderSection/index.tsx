@@ -50,6 +50,15 @@ export default function ReminderSection() {
         }, [carregarLembretes]),
     );
 
+    const handlePressCard = (item: ReminderCardData) => {
+        const targetId = item.gardenPlantId || item.id;
+        if (!targetId) return;
+        (navigation as any).navigate('Garden', {
+            screen: 'PlantDetails',
+            params: { plantId: targetId },
+        });
+    };
+
     const handleConcluirRega = async (item: ReminderCardData) => {
         const targetId = item.gardenPlantId || item.id;
         if (!targetId || actionLoadingId) return;
@@ -118,6 +127,7 @@ export default function ReminderSection() {
                         <ReminderCard
                             reminder={item}
                             loading={actionLoadingId === (item.gardenPlantId || item.id)}
+                            onPressCard={handlePressCard}
                             onPressButton={handleConcluirRega}
                         />
                     )}

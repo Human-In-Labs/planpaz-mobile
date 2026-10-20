@@ -12,7 +12,7 @@ import AppIcon from '../../../../shared/components/AppIcon';
 import Overlay from '../../../../shared/components/Overlay';
 import { AppIcons } from '../../../../shared/constants/appIcons';
 import { scale, verticalScale } from '../../../../shared/theme/scale';
-import { FollowerUser, followersMock } from '../../../../shared/mock/followersMock';
+import { FollowerUser } from '../../../../shared/mock/followersMock';
 import FollowerActionsPopup from './FollowerActionsPopup';
 import { styles } from './styles';
 
@@ -23,6 +23,7 @@ interface FollowersOverlayProps {
     users?: FollowerUser[];
     onOptionsPress?: (user: FollowerUser) => void;
     onUserPress?: (userId: string) => void;
+    onRemoveFollower?: (user: FollowerUser) => void;
 }
 
 interface FollowerItemProps {
@@ -95,6 +96,7 @@ export default function FollowersOverlay({
     users = [],
     onOptionsPress,
     onUserPress,
+    onRemoveFollower,
 }: FollowersOverlayProps) {
     const containerRef = useRef<View>(null);
 
@@ -105,18 +107,18 @@ export default function FollowersOverlay({
         setActiveUser(null);
     }
 
+    const showRemove = Boolean(onRemoveFollower);
+
     function handleToggleOptions(item: FollowerUser, cardTopInModal: number, cardHeight: number) {
         if (activeUser?.id === item.id) {
             setActiveUser(null);
             return;
         }
 
-        const popupHeight = verticalScale(94);
+        const popupHeight = showRemove ? verticalScale(64) : verticalScale(36);
         const modalHeight = verticalScale(613);
         const cardBottomInModal = cardTopInModal + cardHeight;
 
-        // Se o popup couber abaixo do box (com espaçamento de 4pt), posiciona abaixo.
-        // Caso ultrapasse a área do modal, posiciona 4pt acima do box correspondente.
         let calculatedTop: number;
         if (cardBottomInModal + 4 + popupHeight <= modalHeight - verticalScale(16)) {
             calculatedTop = cardBottomInModal + 4;
@@ -184,6 +186,7 @@ export default function FollowersOverlay({
                             onToggleOptions={handleToggleOptions}
                             containerNodeRef={containerRef}
                             onUserPress={(userId) => {
+                                handleCloseSubpopup();
                                 onClose();
                                 onUserPress?.(userId);
                             }}
@@ -203,9 +206,18 @@ export default function FollowersOverlay({
                                 top: popupTop,
                                 right: scale(21),
                             }}
-                            onViewProfile={handleCloseSubpopup}
-                            onRemove={handleCloseSubpopup}
-                            onReport={handleCloseSubpopup}
+                            showRemove={showRemove}
+                            onViewProfile={() => {
+                                const targetId = activeUser.id;
+                                handleCloseSubpopup();
+                                onClose();
+                                onUserPress?.(targetId);
+                            }}
+                            onRemove={() => {
+                                const targetUser = activeUser;
+                                handleCloseSubpopup();
+                                onRemoveFollower?.(targetUser);
+                            }}
                         />
                     </>
                 )}

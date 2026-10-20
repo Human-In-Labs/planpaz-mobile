@@ -33,6 +33,12 @@ export default function ActivitySection() {
         }, [carregarAtividades]),
     );
 
+    const handlePressActivity = (item: ActivityCardData) => {
+        if (item.userId) {
+            navigation.navigate('UserProfile', { userId: item.userId });
+        }
+    };
+
     return (
         <View style={styles.container}>
             <SectionHeader
@@ -56,7 +62,7 @@ export default function ActivitySection() {
                     data={activities}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                        <ActivityCard activity={item} />
+                        <ActivityCard activity={item} onPress={handlePressActivity} />
                     )}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.listContent}

@@ -18,6 +18,7 @@ export const AppIcons = {
     NOTE_PENCIL: 'notePencil',
     NOTE_PENCIL_FILL: 'notePencilFill',
     PENCIL_SIMPLE: 'pencilSimple',
+    BOOK_OPEN: 'bookOpen',
 
     // Garden
     PLANT: 'plant',
@@ -82,6 +83,7 @@ export const AppIcons = {
     HOUSE_SIMPLE: 'houseSimple',
     WARNING: 'warning',
     CHECK_CIRCLE: 'checkCircle',
+    ERROR_CONNECTION: 'errorConnection',
 } as const;
 
 export type IconName = typeof AppIcons[keyof typeof AppIcons];

@@ -1,9 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AppHeader from '../../shared/components/AppHeader';
+import ConfirmationModal from '../../shared/components/ConfirmationModal';
+import { showFeedback } from '../../shared/components/FeedbackPopup';
 import { ProfileStackParamList } from '../../navigation/types';
 import ProfileHeader from './ProfileHeader';
 import AchievementsSection from './AchievementsSection';
@@ -24,20 +26,27 @@ import {
     listarJardim,
     listarPosts,
     obterConquistasMe,
-    UserSummary
+    UserSummary,
+    deixarDeSeguirUsuario
 } from '../../shared/api';
 import { getUser } from '../../shared/services/storage';
+import { notificationService } from '../../shared/services/notificationService';
 import { Profile } from './types';
 import { styles } from './styles';
+
+const DEFAULT_AVATAR = require('../../assets/images/blank-avatar.png');
 
 export default function ProfileScreen() {
     type NavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
     const navigation = useNavigation<NavigationProp>();
 
     const [activeOverlay, setActiveOverlay] = useState<'followers' | 'notification' | null>(null);
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
     const [followersTitle, setFollowersTitle] = useState('Meus seguidores');
     const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
     const [achievements, setAchievements] = useState<Achievement[]>([]);
+    const [userToUnfollow, setUserToUnfollow] = useState<FollowerUser | null>(null);
+    const [unfollowingLoading, setUnfollowingLoading] = useState(false);
     const [followersList, setFollowersList] = useState<FollowerUser[]>([]);
     const [followingList, setFollowingList] = useState<FollowerUser[]>([]);
     const [userStatistics, setUserStatistics] = useState<Statistic[]>([]);
@@ -46,11 +55,22 @@ export default function ProfileScreen() {
         username: '',
         name: '',
         bio: '',
-        avatar: require('../../assets/images/auth-banner.png'),
+        avatar: DEFAULT_AVATAR,
         followers: 0,
         following: 0,
     });
 
+
+    const verificarNotificacoesLocais = useCallback(async () => {
+        const list = await notificationService.getAll();
+        setHasUnreadNotifications(list.length > 0);
+    }, []);
+
+    useEffect(() => {
+        verificarNotificacoesLocais();
+        const unsubscribe = notificationService.subscribe(verificarNotificacoesLocais);
+        return unsubscribe;
+    }, [verificarNotificacoesLocais]);
 
     useFocusEffect(
         useCallback(() => {
@@ -76,7 +96,7 @@ export default function ProfileScreen() {
                                         id: u.id,
                                         username: u.username.startsWith('@') ? u.username : `@${u.username}`,
                                         name: u.name,
-                                        avatar: require('../../assets/images/auth-banner.png'),
+                                        avatar: u.avatarUrl ? { uri: u.avatarUrl } : DEFAULT_AVATAR,
                                         isFollowing: true,
                                     }));
                                 }
@@ -92,7 +112,7 @@ export default function ProfileScreen() {
                                         id: u.id,
                                         username: u.username.startsWith('@') ? u.username : `@${u.username}`,
                                         name: u.name,
-                                        avatar: require('../../assets/images/auth-banner.png'),
+                                        avatar: u.avatarUrl ? { uri: u.avatarUrl } : DEFAULT_AVATAR,
                                         isFollowing: true,
                                     }));
                                 }
@@ -182,7 +202,7 @@ export default function ProfileScreen() {
                             username: cleanUsername || prev.username,
                             name: settings.name || prev.name,
                             bio: settings.bio ?? '',
-                            avatar: settings.avatarUrl ? { uri: settings.avatarUrl } : prev.avatar,
+                            avatar: settings.avatarUrl ? { uri: settings.avatarUrl } : DEFAULT_AVATAR,
                             followers: followersCount,
                             following: followingCount,
                         }));
@@ -230,12 +250,29 @@ export default function ProfileScreen() {
         }, [])
     );
 
+    const handleConfirmUnfollow = async () => {
+        if (!userToUnfollow) return;
+        try {
+            setUnfollowingLoading(true);
+            await deixarDeSeguirUsuario(userToUnfollow.id);
+            setFollowingList(prev => prev.filter(u => u.id !== userToUnfollow.id));
+            setProfile(prev => ({ ...prev, following: Math.max(0, prev.following - 1) }));
+            showFeedback(`Você deixou de seguir ${userToUnfollow.username}`);
+            setUserToUnfollow(null);
+        } catch (err) {
+            console.log('[PROFILE] Erro ao deixar de seguir:', err);
+            showFeedback('Não foi possível deixar de seguir.');
+        } finally {
+            setUnfollowingLoading(false);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <SafeAreaView edges={['top']} style={styles.container}>
                 <AppHeader
                     title={`@${profile.username}`}
-                    hasNotifications={activeOverlay === null && selectedAchievement === null}
+                    hasNotifications={hasUnreadNotifications && activeOverlay === null && selectedAchievement === null}
                     onNotificationPress={() =>
                         setActiveOverlay(prev =>
                             prev === 'notification' ? null : 'notification'
@@ -288,6 +325,21 @@ export default function ProfileScreen() {
                 users={followersTitle === 'Meus seguidores' ? followersList : followingList}
                 onClose={() => setActiveOverlay(null)}
                 onUserPress={(userId) => (navigation as any).navigate('UserProfile', { userId })}
+                onRemoveFollower={followersTitle === 'Todos que eu sigo' ? (user) => setUserToUnfollow(user) : undefined}
+            />
+
+            <ConfirmationModal
+                visible={userToUnfollow !== null}
+                title="Deixar de seguir?"
+                message={userToUnfollow ? `Deseja parar de seguir ${userToUnfollow.username}?` : ''}
+                confirmText="Deixar de seguir"
+                cancelText="Cancelar"
+                isSubmitting={unfollowingLoading}
+                confirmVariant="danger"
+                onConfirm={handleConfirmUnfollow}
+                onClose={() => {
+                    if (!unfollowingLoading) setUserToUnfollow(null);
+                }}
             />
 
             <NotificationOverlay

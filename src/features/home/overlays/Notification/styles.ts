@@ -46,6 +46,12 @@ export const styles = StyleSheet.create({
         color: colors.primary,
     },
 
+    simpleText: {
+        ...typography.bodyMedium2,
+        marginTop: scale(10),
+        textAlign: "center"
+    },
+
     list: {
         maxHeight: verticalScale(320),
     },
@@ -53,7 +59,7 @@ export const styles = StyleSheet.create({
     listContent: {
         paddingHorizontal: scale(spacing.lg),
         paddingBottom: verticalScale(spacing.md),
-        rowGap: verticalScale(spacing.lg),
+        rowGap: verticalScale(spacing.md),
     },
 
     notificationCard: {

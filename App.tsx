@@ -9,6 +9,7 @@ import {
 } from '@react-native-firebase/messaging';
 import AppNavigator from './src/navigation/AppNavigator';
 import { FeedbackPopup, showFeedback } from './src/shared/components/FeedbackPopup';
+import ConnectionErrorModal from './src/shared/components/ConnectionErrorModal';
 import { notificationService } from './src/shared/services/notificationService';
 import { getToken } from './src/shared/services/storage';
 import { atualizarPreferencias } from './src/shared/api/user';
@@ -67,6 +68,7 @@ export default function App() {
     <SafeAreaProvider>
       <AppNavigator />
       <FeedbackPopup />
+      <ConnectionErrorModal />
     </SafeAreaProvider>
   );
 }

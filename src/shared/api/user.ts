@@ -50,6 +50,7 @@ export interface UserSummary {
     name: string;
     username: string;
     email: string;
+    avatarUrl?: string | null;
 }
 
 // Backend: @RequestMapping("/api/user") em UserController

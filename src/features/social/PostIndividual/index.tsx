@@ -29,6 +29,7 @@ import {
     CommentResponse,
 } from '../../../shared/api';
 import { getCurrentAuthorId } from '../../../shared/services/storage';
+import { notificationService } from '../../../shared/services/notificationService';
 import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
 import { Achievement } from '../../profile/AchievementsSection/types';
 import { formatRelativeTime } from '../../../shared/utils/date';
@@ -43,7 +44,7 @@ import { styles } from './styles';
 type NavigationProp = NativeStackNavigationProp<SocialStackParamList, 'PostIndividual'>;
 type RouteType = RouteProp<SocialStackParamList, 'PostIndividual'>;
 
-const CURRENT_USER_AVATAR = require('../../../assets/images/user-avatar-sample.png');
+const CURRENT_USER_AVATAR = require('../../../assets/images/blank-avatar.png');
 
 function mapCommentResponseToPostComment(
     item: CommentResponse,
@@ -94,6 +95,7 @@ export default function PostIndividualScreen() {
         return isNaN(parsed) ? 0 : parsed;
     });
     const [notificationVisible, setNotificationVisible] = useState(false);
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
     const [isReportModalVisible, setIsReportModalVisible] = useState(false);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const [reportTarget, setReportTarget] = useState<{ contentType: 'POST' | 'COMMENT'; contentId: string }>({

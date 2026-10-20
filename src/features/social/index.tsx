@@ -34,13 +34,14 @@ import {
     UserSummary,
 } from '../../shared/api';
 import { getCurrentAuthorId } from '../../shared/services/storage';
+import { notificationService } from '../../shared/services/notificationService';
 import { formatRelativeTime } from '../../shared/utils/date';
 import { SocialStackParamList } from '../../navigation/types';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<SocialStackParamList, 'SocialMain'>;
 
-const DEFAULT_AVATAR = require('../../assets/images/user-avatar-sample.png');
+const DEFAULT_AVATAR = require('../../assets/images/blank-avatar.png');
 
 function mapPostResponseToPost(item: PostResponse): Post {
     const formattedTags = (item.tags || []).map((tag, idx) => ({
@@ -84,6 +85,7 @@ export default function SocialScreen() {
     const [posts, setPosts] = useState<Post[]>(mockPosts);
     const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
     const [notificationVisible, setNotificationVisible] = useState(false);
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -183,6 +185,17 @@ export default function SocialScreen() {
 
         return unsubscribe;
     }, []);
+
+    const verificarNotificacoesLocais = useCallback(async () => {
+        const list = await notificationService.getAll();
+        setHasUnreadNotifications(list.length > 0);
+    }, []);
+
+    useEffect(() => {
+        verificarNotificacoesLocais();
+        const unsubscribe = notificationService.subscribe(verificarNotificacoesLocais);
+        return unsubscribe;
+    }, [verificarNotificacoesLocais]);
 
     useFocusEffect(
         useCallback(() => {
@@ -348,7 +361,7 @@ export default function SocialScreen() {
                 <AppHeader
                     title="Comunidade"
                     scrollY={scrollY}
-                    hasNotifications={!notificationVisible}
+                    hasNotifications={hasUnreadNotifications && !notificationVisible}
                     onNotificationPress={() => setNotificationVisible(true)}
                 />
 
@@ -385,7 +398,7 @@ export default function SocialScreen() {
                                 activeOpacity={0.7}
                                 onPress={() => handleUserPress(item.id)}
                             >
-                                <Image source={DEFAULT_AVATAR} style={styles.userAvatar} />
+                                <Image source={item.avatarUrl ? { uri: item.avatarUrl } : DEFAULT_AVATAR} style={styles.userAvatar} />
                                 <View style={styles.userInfo}>
                                     <Text style={styles.userName}>{item.name}</Text>
                                     <Text style={styles.userUsername}>
