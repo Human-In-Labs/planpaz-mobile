@@ -3,5 +3,5 @@ export interface NotificationData {
     title: string;
     description: string;
     createdAt: string;
-    type: 'notification' | 'request';
+    type: 'notification' | 'request' | 'WATERING' | 'NEW_FOLLOWER' | 'NEW_PLANT';
 }

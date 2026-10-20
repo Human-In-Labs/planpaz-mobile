@@ -20,6 +20,9 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
     }
 
     function toggleSelectAll() {
+        if (notifications.length === 0) {
+            return;
+        }
         if (selectedNotifications.length === notifications.length) {
             setSelectedNotifications([]);
             return;
@@ -30,14 +33,28 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
         );
     }
 
+    async function handleMarkAsRead() {
+        if (selectedNotifications.length === 0) {
+            return;
+        }
+        const updated = await notificationService.markAsRead(selectedNotifications);
+        setNotifications(updated);
+        setSelectedNotifications([]);
+    }
+
     useEffect(() => {
         async function loadNotifications() {
             const data = await notificationService.getAll();
             setNotifications(data);
         }
-        loadNotifications();
 
-    }, []);
+        if (visible) {
+            loadNotifications();
+        }
+
+        const unsubscribe = notificationService.subscribe(loadNotifications);
+        return unsubscribe;
+    }, [visible]);
 
     return (
         <Overlay
@@ -54,7 +71,8 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
                     onPress={toggleSelectAll}
                 >
                     <Text style={styles.secondaryActionText}>
-                        {selectedNotifications.length === notifications.length
+                        {notifications.length > 0 &&
+                        selectedNotifications.length === notifications.length
                             ? 'Desmarcar todas'
                             : 'Selecionar todas'}
                     </Text>
@@ -65,6 +83,7 @@ export default function NotificationOverlay({ visible, onClose, }: Props) {
                         styles.actionButton,
                         styles.primaryActionButton,
                     ]}
+                    onPress={handleMarkAsRead}
                 >
                     <Text style={styles.primaryActionText}>
                         Marcar como lida

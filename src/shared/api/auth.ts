@@ -6,6 +6,7 @@ import {
     removeUser,
     removeUserId,
 } from '../services/storage';
+import { notificationService } from '../services/notificationService';
 
 export interface LoginRequest {
     email: string;
@@ -81,6 +82,7 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
 }
 
 export async function logout(): Promise<void> {
+    await notificationService.clearTokenOnBackend();
     delete api.defaults.headers.common.Authorization;
     await removeToken();
     await removeUser();

@@ -43,6 +43,7 @@ import { getPlantTags } from '../../../shared/utils/tagMapper';
 import { getSpeciesCareGuide } from '../../../shared/utils/plantDataDatabase';
 import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
 import DeletePlantModal from '../DeletePlantModal';
+import ConfirmationModal from '../../../shared/components/ConfirmationModal';
 import { Achievement } from '../../profile/AchievementsSection/types';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -122,6 +123,7 @@ export default function PlantDetailsScreen() {
     const [unlockedQueue, setUnlockedQueue] = useState<Achievement[]>([]);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [warningModalVisible, setWarningModalVisible] = useState(false);
 
     const handleConfirmDelete = async () => {
         if (!plant?.id || isDeleting) return;
@@ -323,8 +325,14 @@ export default function PlantDetailsScreen() {
             await carregarDados();
         } catch (error: any) {
             console.log('[CARE_ACTION] Aviso ao realizar ação de cuidado:', error);
+            const errorCode = error?.response?.data?.errorCode;
             const backendMsg = error?.response?.data?.message || 'Não foi possível registrar a ação.';
-            showFeedback(backendMsg);
+
+            if (errorCode === 'WATERING_TOO_EARLY') {
+                setWarningModalVisible(true);
+            } else {
+                showFeedback(backendMsg);
+            }
         } finally {
             setIsCareLoading(false);
         }
@@ -791,6 +799,19 @@ export default function PlantDetailsScreen() {
                 isDeleting={isDeleting}
                 onClose={() => setIsDeleteModalVisible(false)}
                 onConfirm={handleConfirmDelete}
+            />
+
+            <ConfirmationModal
+                visible={warningModalVisible}
+                title="Lembrete futuro"
+                message="Não é possível marcar lembretes para mais de 36 horas como concluído."
+                confirmText="Entendi"
+                showCancel={false}
+                confirmVariant="primary"
+                icon={AppIcons.WARNING}
+                iconColor="#D97706"
+                onConfirm={() => setWarningModalVisible(false)}
+                onClose={() => setWarningModalVisible(false)}
             />
         </SafeAreaView>
     );

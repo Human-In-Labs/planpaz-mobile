@@ -1,5 +1,6 @@
 import React, {
     useCallback,
+    useEffect,
     useRef,
     useState,
 } from 'react';
@@ -23,6 +24,7 @@ import NotificationOverlay from './overlays/Notification';
 
 import { getUserSettings } from '../../shared/api/user';
 import { getUser } from '../../shared/services/storage';
+import { notificationService } from '../../shared/services/notificationService';
 
 import { LocationData } from '../../shared/types/location';
 import { LocationSearchData } from '../../shared/types/locationSearch';
@@ -40,8 +42,20 @@ export default function HomeScreen() {
     const [activeOverlay, setActiveOverlay] = useState<
         'location' | 'notification' | null
     >(null);
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState<boolean>(false);
 
     const scrollY = useRef(new Animated.Value(0)).current;
+
+    const verificarNotificacoesLocais = useCallback(async () => {
+        const list = await notificationService.getAll();
+        setHasUnreadNotifications(list.length > 0);
+    }, []);
+
+    useEffect(() => {
+        verificarNotificacoesLocais();
+        const unsubscribe = notificationService.subscribe(verificarNotificacoesLocais);
+        return unsubscribe;
+    }, [verificarNotificacoesLocais]);
 
     const carregarUsuario = useCallback(async () => {
         try {
@@ -74,7 +88,9 @@ export default function HomeScreen() {
     useFocusEffect(
         useCallback(() => {
             carregarUsuario();
-        }, [carregarUsuario]),
+            verificarNotificacoesLocais();
+            notificationService.requestPermissionAndSyncToken();
+        }, [carregarUsuario, verificarNotificacoesLocais]),
     );
 
     const handleSelectLocation = (selected: LocationSearchData) => {
@@ -96,7 +112,7 @@ export default function HomeScreen() {
                     title=""
                     userName={userName || 'Cultivador'}
                     scrollY={scrollY}
-                    hasNotifications={activeOverlay === null}
+                    hasNotifications={hasUnreadNotifications && activeOverlay === null}
                     onNotificationPress={() =>
                         setActiveOverlay(prev =>
                             prev === 'notification' ? null : 'notification',
