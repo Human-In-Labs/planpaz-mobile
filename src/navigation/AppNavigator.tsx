@@ -25,6 +25,7 @@ import MainTabNavigator from './MainTabNavigator';
 import LibraryScreen from '../features/library';
 import SpeciesDetailsScreen from '../features/library/SpeciesDetails';
 import AddPlantScreen from '../features/garden/AddPlant';
+import PlantingGuideScreen from '../features/garden/PlantingGuide';
 import UserProfileScreen from '../features/profile/UserProfile';
 import RemindersScreen from '../features/home/Reminders';
 
@@ -188,6 +189,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="Reminders"
                     component={RemindersScreen}
+                />
+
+                <Stack.Screen
+                    name="PlantingGuide"
+                    component={PlantingGuideScreen}
                 />
             </Stack.Navigator>
         </NavigationContainer>

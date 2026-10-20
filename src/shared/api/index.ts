@@ -9,3 +9,4 @@ export * from './achievement';
 export * from './location';
 export * from './upload';
 export * from './report';
+export * from './plantCare';

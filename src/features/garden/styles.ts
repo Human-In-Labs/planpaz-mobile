@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, shadows, spacing, typography, } from '../../shared/theme';
-import { scale, verticalScale, } from '../../shared/theme/scale';
+import { colors, fonts, radius, shadows, spacing, typography } from '../../shared/theme';
+import { scale, verticalScale } from '../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: { 
@@ -85,5 +85,49 @@ export const styles = StyleSheet.create({
         position: 'absolute',
         right: scale(16),
         bottom: verticalScale(106),
+    },
+
+    guideBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#E7F2EB',
+        marginHorizontal: scale(16),
+        marginBottom: verticalScale(12),
+        paddingHorizontal: scale(14),
+        paddingVertical: verticalScale(10),
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: '#D4E6DC',
+    },
+
+    guideBannerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: scale(10),
+        flex: 1,
+    },
+
+    guideIconWrap: {
+        width: scale(34),
+        height: scale(34),
+        borderRadius: scale(17),
+        backgroundColor: colors.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...shadows.light,
+    },
+
+    guideBannerTitle: {
+        fontFamily: fonts.poppinsSemiBold,
+        fontSize: scale(13),
+        color: colors.primaryDark,
+    },
+
+    guideBannerSubtitle: {
+        fontFamily: fonts.interRegular,
+        fontSize: scale(11),
+        color: colors.primary,
+        marginTop: verticalScale(1),
     },
 });

@@ -611,9 +611,41 @@ export default function PlantDetailsScreen() {
                     const guideData = getSpeciesCareGuide(species.name || plant?.nickname);
                     return (
                         <View style={styles.careGuideCard}>
-                            <Text style={styles.sectionHeader}>
-                                Guia de cuidados:
-                            </Text>
+                            <View style={styles.guideHeaderRow}>
+                                <Text style={styles.sectionHeader}>
+                                    Guia de cuidados:
+                                </Text>
+                                {guideData.metodo && (
+                                    <View style={styles.guideMethodBadge}>
+                                        <Text style={styles.guideMethodBadgeText}>
+                                            {guideData.metodo}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* Alertas Críticos da Espécie se houver */}
+                            {guideData.alertas && guideData.alertas.length > 0 && (
+                                <View style={styles.guideAlertBox}>
+                                    <Text style={styles.guideAlertLabel}>
+                                        ⚠️ Alerta Crítico desta Espécie:
+                                    </Text>
+                                    {guideData.alertas.map((al, idx) => (
+                                        <Text key={idx} style={styles.guideAlertText}>
+                                            • {al}
+                                        </Text>
+                                    ))}
+                                </View>
+                            )}
+
+                            {guideData.instrucoesPropagacao && (
+                                <View style={styles.guideItem}>
+                                    <Text style={styles.guideText}>
+                                        <Text style={styles.guideLabel}>Como propagar: </Text>
+                                        {guideData.instrucoesPropagacao}
+                                    </Text>
+                                </View>
+                            )}
 
                             {guideData.solo && (
                                 <View style={styles.guideItem}>
@@ -668,6 +700,28 @@ export default function PlantDetailsScreen() {
                                     </Text>
                                 </View>
                             )}
+
+                            {/* Botão de Ação para o Tutorial Interativo */}
+                            <TouchableOpacity
+                                style={styles.guideTutorialButton}
+                                activeOpacity={0.85}
+                                onPress={() =>
+                                    navigation.navigate('PlantingGuide', {
+                                        method: guideData.metodoKey || 'seedling',
+                                        speciesName: species.name || plant?.nickname,
+                                        speciesId: species.id,
+                                    })
+                                }
+                            >
+                                <AppIcon
+                                    icon={AppIcons.POTTED_PLANT}
+                                    size={18}
+                                    color={colors.white}
+                                />
+                                <Text style={styles.guideTutorialButtonText}>
+                                    Ver Tutorial Completo de Cultivo
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     );
                 })()}

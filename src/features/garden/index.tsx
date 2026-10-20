@@ -178,6 +178,35 @@ export default function GardenScreen() {
                                 />
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity
+                            style={styles.guideBanner}
+                            activeOpacity={0.8}
+                            onPress={() => navigation.navigate('PlantingGuide')}
+                        >
+                            <View style={styles.guideBannerContent}>
+                                <View style={styles.guideIconWrap}>
+                                    <AppIcon
+                                        icon={AppIcons.POTTED_PLANT}
+                                        size={18}
+                                        color={colors.primary}
+                                    />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.guideBannerTitle}>
+                                        Guia de Plantio & Cultivo
+                                    </Text>
+                                    <Text style={styles.guideBannerSubtitle}>
+                                        Aprenda o passo a passo por sementes, mudas e estacas
+                                    </Text>
+                                </View>
+                            </View>
+                            <AppIcon
+                                icon={AppIcons.CHEVRON_RIGHT}
+                                size={14}
+                                color={colors.primary}
+                            />
+                        </TouchableOpacity>
                     </>
                 }
                 ListEmptyComponent={

@@ -7,6 +7,7 @@ import StageSuggestionScreen from '../features/garden/StageSuggestion';
 import LibraryScreen from '../features/library';
 import SpeciesDetailsScreen from '../features/library/SpeciesDetails';
 import AddPlantScreen from '../features/garden/AddPlant';
+import PlantingGuideScreen from '../features/garden/PlantingGuide';
 import { GardenStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<GardenStackParamList>();
@@ -46,6 +47,10 @@ export default function GardenNavigator() {
             <Stack.Screen
                 name="AddPlant"
                 component={AddPlantScreen}
+            />
+            <Stack.Screen
+                name="PlantingGuide"
+                component={PlantingGuideScreen}
             />
         </Stack.Navigator>
     );
