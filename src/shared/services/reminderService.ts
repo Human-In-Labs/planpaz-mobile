@@ -72,7 +72,10 @@ export const reminderService = {
                             continue;
                         }
 
-                        const refDay = isOverdue
+                        const isOptional = !!reminder.isOptional || statusLower.includes('opcional');
+                        const refDay = isOptional
+                            ? 'Opcional'
+                            : isOverdue
                             ? 'Atrasado'
                             : isToday
                             ? 'Hoje'
@@ -90,11 +93,13 @@ export const reminderService = {
                             image: imageSource,
                             plantName: plant.nickname || plant.plant?.name || 'Planta',
                             dueTime: reminder.time || '12:00',
-                            action: 'Rega',
+                            action: isOptional ? 'Rega Opcional' : 'Rega',
                             referenceDay: refDay,
                             isOverdue: isOverdue,
                             canComplete: true,
                             buttonText: 'Concluir',
+                            isOptional: isOptional,
+                            message: reminder.message,
                         });
                     }
                 } catch (err) {
@@ -216,7 +221,10 @@ export const reminderService = {
                         // Verificar se é daqui a mais de 36 horas
                         const isBeyond36Hours = reminderTimestamp > maxFutureTime;
 
-                        const refDay = isOverdue
+                        const isOptional = !!reminder.isOptional || statusLower.includes('opcional');
+                        const refDay = isOptional
+                            ? 'Opcional'
+                            : isOverdue
                             ? 'Atrasado'
                             : isToday
                             ? 'Hoje'
@@ -239,7 +247,7 @@ export const reminderService = {
                             image: imageSource,
                             plantName: plantDisplayName,
                             dueTime: reminder.time || '12:00',
-                            action: 'Rega',
+                            action: isOptional ? 'Rega Opcional' : 'Rega',
                             referenceDay: refDay,
                             date: reminder.date,
                             isOverdue: isOverdue,
@@ -250,6 +258,8 @@ export const reminderService = {
                             groupKey: groupKey,
                             groupTitle: groupTitle,
                             groupTimestamp: dateStartTimestamp,
+                            isOptional: isOptional,
+                            message: reminder.message,
                         });
                     }
                 } catch (err) {

@@ -14,11 +14,15 @@ import { showFeedback } from '../../../shared/components/FeedbackPopup';
 
 type NavigationProp = NativeStackNavigationProp<any>;
 
+interface ReminderSectionProps {
+    refreshTrigger?: number;
+}
+
 function Separator() {
     return <View style={styles.separator} />;
 }
 
-export default function ReminderSection() {
+export default function ReminderSection({ refreshTrigger }: ReminderSectionProps) {
     const navigation = useNavigation<NavigationProp>();
     const [reminders, setReminders] = useState<ReminderCardData[]>([]);
     const [totalPlantsCount, setTotalPlantsCount] = useState<number>(0);
@@ -49,6 +53,12 @@ export default function ReminderSection() {
             carregarLembretes();
         }, [carregarLembretes]),
     );
+
+    useEffect(() => {
+        if (refreshTrigger) {
+            carregarLembretes();
+        }
+    }, [refreshTrigger, carregarLembretes]);
 
     const handlePressCard = (item: ReminderCardData) => {
         const targetId = item.gardenPlantId || item.id;

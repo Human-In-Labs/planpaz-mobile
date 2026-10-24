@@ -71,3 +71,38 @@ export async function getWeatherForecast(
     const response = await api.get<WeatherForecastResponse[]>('/clima/forecast', { params });
     return response.data || [];
 }
+
+// ==========================================
+// RF24: Sincronização de Clima e Lembretes
+// ==========================================
+
+export interface WeatherRemindersSync {
+    isChovendo: boolean;
+    isArSeco: boolean;
+    umidade?: number | null;
+    temperatura?: number | null;
+    cidade?: string;
+    plantasExternasRegadasPelaChuva: number;
+    lembretesOpcionaisAdicionados: number;
+    mensagemAviso: string;
+    instrucaoClimatica: string;
+}
+
+export async function syncWeatherReminders(params?: {
+    latitude?: number;
+    longitude?: number;
+    cidade?: string;
+}): Promise<WeatherRemindersSync> {
+    const response = await api.post<WeatherRemindersSync>('/clima/sync-reminders', null, { params });
+    return response.data;
+}
+
+export async function getWeatherInstructions(params?: {
+    latitude?: number;
+    longitude?: number;
+    cidade?: string;
+}): Promise<WeatherRemindersSync> {
+    const response = await api.get<WeatherRemindersSync>('/clima/instructions', { params });
+    return response.data;
+}
+

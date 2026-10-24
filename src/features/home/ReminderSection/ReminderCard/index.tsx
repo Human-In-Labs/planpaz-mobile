@@ -14,11 +14,12 @@ export default function ReminderCard({
     disabledEffect = false,
 }: ReminderCardProps) {
     const isOverdue = !!reminder.isOverdue;
-    const statusColor = isOverdue ? colors.warning : colors.primary;
+    const isOptional = !!reminder.isOptional;
+    const statusColor = isOverdue ? colors.warning : isOptional ? '#0284C7' : colors.primary;
 
     const actionText = reminder.action || reminder.reminderLabel || 'Rega';
     const dueTimeText = reminder.dueTime || reminder.reminderValue;
-    const referenceDayText = reminder.referenceDay;
+    const referenceDayText = isOptional ? 'Opcional (Ar Seco)' : reminder.referenceDay;
 
     // Botão desabilitado: fundo cinza e texto mais claro
     const buttonBgColor = disabledEffect ? '#D1D5DB' : statusColor;

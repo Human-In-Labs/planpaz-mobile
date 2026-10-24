@@ -4,7 +4,7 @@ import { AchievementProgress } from './achievement';
 import { CultivatedPlant } from '../../features/garden/types';
 import { translateTagToPT, translateTagsToPT } from '../utils/tagMapper';
 
-// Espelha com.humanin.planpaz.model.GardenPlant
+// Espelha com.humanin.planpaz.dto.GardenPlantResponseDTO
 export interface GardenPlant {
     id: string;
     plant: Plant;
@@ -16,14 +16,7 @@ export interface GardenPlant {
     streakDays?: number;
     ecoscore?: number;
     wateringNotification?: boolean;
-    stage?: {
-        id: string;
-        name: string;
-        order: number;
-        days: number;
-        description?: string;
-        imagePath?: string;
-    } | null;
+    stage?: PlantStage | null;
     directRain?: boolean;
     room?: string;
     imagePath?: string;
@@ -49,13 +42,15 @@ export interface StageSuggestion {
 }
 
 export interface AddGardenPlantRequest {
-    plant: {
+    plant?: {
         id: string;
     };
+    plantId?: string;
     nickname: string;
     stage?: {
         id: string;
     };
+    stageId?: string;
     room?: string;
     directRain?: boolean;
     wateringNotification?: boolean;
@@ -72,6 +67,7 @@ export interface EditGardenPlantRequest {
     stage?: {
         id: string;
     };
+    stageId?: string;
     imagePath?: string | null;
 }
 
@@ -83,6 +79,8 @@ export interface WateringReminder {
     date: string;
     time: string;
     status: string;
+    isOptional?: boolean;
+    message?: string;
 }
 
 export interface WateringStatus {

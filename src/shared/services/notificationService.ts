@@ -61,6 +61,35 @@ export const notificationService = {
         }
     },
 
+    async notifyAndRecord(
+        title: string,
+        body: string,
+        type: NotificationData['type'] = 'notification',
+    ): Promise<NotificationData | null> {
+        this.showSystemNotification(title, body);
+
+        try {
+            const key = await getStorageKey();
+            const current = await this.getAll();
+            const id = `weather-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const newItem: NotificationData = {
+                id,
+                title: title || 'PlanPaz Clima',
+                description: body,
+                createdAt: formatNotificationTime(),
+                type,
+            };
+
+            const updated = [newItem, ...current].slice(0, MAX_LOCAL_NOTIFICATIONS);
+            await AsyncStorage.setItem(key, JSON.stringify(updated));
+            notifyListeners();
+            return newItem;
+        } catch (error) {
+            console.warn('[NOTIFICATIONS] Erro ao gravar notificação local:', error);
+            return null;
+        }
+    },
+
     async getAll(): Promise<NotificationData[]> {
         try {
             const key = await getStorageKey();

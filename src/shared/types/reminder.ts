@@ -17,4 +17,6 @@ export interface ReminderCardData {
     date?: string;
     isBeyond36Hours?: boolean;
     reminderTimestamp?: number;
+    isOptional?: boolean;
+    message?: string;
 }
