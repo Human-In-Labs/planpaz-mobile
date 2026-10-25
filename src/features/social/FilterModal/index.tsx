@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
     Text,
@@ -12,29 +13,47 @@ import { AppIcons } from '../../../shared/constants/appIcons';
 import { colors } from '../../../shared/theme';
 import { styles } from './styles';
 
+type FeedTab = 'all' | 'following';
+
 export interface FilterModalProps {
     visible: boolean;
     onClose: () => void;
     activeTags: string[];
-    onApplyFilters: (tags: string[]) => void;
+    feedTab: FeedTab;
+    onApplyFilters: (tags: string[], feedTab: FeedTab) => void;
     maxTags?: number;
 }
 
-const SUGGESTED_TAGS = ['Dica', 'Orquídea', 'Jiboia', 'Samambaia', 'Babosa', 'Lírio-da-paz'];
+const SUGGESTED_TAGS = [
+    'Dica',
+    'Orquídea',
+    'Jiboia',
+    'Samambaia',
+    'Babosa',
+    'Lírio-da-paz',
+    'Cultivo',
+    'Cuidados',
+];
 
 export default function FilterModal({
     visible,
     onClose,
     activeTags = [],
+    feedTab,
     onApplyFilters,
     maxTags = 3,
 }: FilterModalProps) {
     const [selectedTags, setSelectedTags] = useState<string[]>(activeTags);
+    const [selectedFeedTab, setSelectedFeedTab] = useState<FeedTab>(feedTab);
     const [inputTag, setInputTag] = useState('');
 
     useEffect(() => {
-        setSelectedTags(activeTags);
-    }, [activeTags, visible]);
+        if (visible) {
+            setSelectedTags(activeTags);
+            setSelectedFeedTab(feedTab);
+            setInputTag('');
+        }
+    }, [activeTags, feedTab, visible]);
 
     const sanitizeTag = (tag: string) => tag.replace(/^#+/, '').trim();
 
@@ -48,7 +67,10 @@ export default function FilterModal({
         }
 
         if (selectedTags.length >= maxTags) {
-            Alert.alert('Limite Atingido', `Você pode selecionar no máximo ${maxTags} tags para filtrar.`);
+            Alert.alert(
+                'Limite Atingido',
+                `Você pode selecionar no máximo ${maxTags} tags para filtrar.`
+            );
             return;
         }
 
@@ -57,7 +79,9 @@ export default function FilterModal({
     };
 
     const handleRemoveTag = (tagToRemove: string) => {
-        setSelectedTags(prev => prev.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()));
+        setSelectedTags(prev =>
+            prev.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase())
+        );
     };
 
     const handleToggleSuggestion = (suggestion: string) => {
@@ -73,11 +97,12 @@ export default function FilterModal({
 
     const handleClearAll = () => {
         setSelectedTags([]);
+        setSelectedFeedTab('all');
         setInputTag('');
     };
 
     const handleApply = () => {
-        onApplyFilters(selectedTags);
+        onApplyFilters(selectedTags, selectedFeedTab);
         onClose();
     };
 
@@ -89,15 +114,66 @@ export default function FilterModal({
         >
             <View style={styles.header}>
                 <Text style={styles.title}>Selecionar Filtros</Text>
+
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={styles.limitBadge}>{selectedTags.length}/{maxTags}</Text>
+                    <Text style={styles.limitBadge}>
+                        {selectedTags.length}/{maxTags}
+                    </Text>
+
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <AppIcon icon={AppIcons.X} size={18} color="#115634" />
                     </TouchableOpacity>
                 </View>
             </View>
 
-            {/* Input para adicionar nova tag */}
+            {/* Filtro de publicações */}
+            <View style={styles.feedTabsSection}>
+                <Text style={styles.sectionTitle}>Publicações</Text>
+
+                <View style={styles.feedTabsRow}>
+                    <TouchableOpacity
+                        style={[
+                            styles.feedTabButton,
+                            selectedFeedTab === 'all' && styles.feedTabButtonActive,
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => setSelectedFeedTab('all')}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: selectedFeedTab === 'all' }}
+                    >
+                        <Text
+                            style={[
+                                styles.feedTabText,
+                                selectedFeedTab === 'all' && styles.feedTabTextActive,
+                            ]}
+                        >
+                            Todos
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            styles.feedTabButton,
+                            selectedFeedTab === 'following' && styles.feedTabButtonActive,
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => setSelectedFeedTab('following')}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: selectedFeedTab === 'following' }}
+                    >
+                        <Text
+                            style={[
+                                styles.feedTabText,
+                                selectedFeedTab === 'following' && styles.feedTabTextActive,
+                            ]}
+                        >
+                            Seguindo
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Campo para adicionar uma hashtag */}
             <View style={styles.inputSection}>
                 <View style={styles.inputRow}>
                     <TextInput
@@ -110,6 +186,7 @@ export default function FilterModal({
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
+
                     <TouchableOpacity
                         style={styles.addButton}
                         activeOpacity={0.7}
@@ -120,19 +197,27 @@ export default function FilterModal({
                 </View>
             </View>
 
-            {/* Tags Ativas */}
+            {/* Hashtags ativas */}
             {selectedTags.length > 0 && (
                 <View style={{ marginBottom: 12 }}>
                     <Text style={styles.sectionTitle}>Tags Ativas</Text>
+
                     <View style={styles.activeTagsRow}>
                         {selectedTags.map(tag => (
                             <View key={tag} style={styles.activeChip}>
                                 <Text style={styles.activeChipText}>#{tag}</Text>
+
                                 <TouchableOpacity
                                     onPress={() => handleRemoveTag(tag)}
                                     style={styles.removeButton}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Remover tag ${tag}`}
                                 >
-                                    <AppIcon icon={AppIcons.X} size={14} color={colors.primary} />
+                                    <AppIcon
+                                        icon={AppIcons.X}
+                                        size={14}
+                                        color={colors.primary}
+                                    />
                                 </TouchableOpacity>
                             </View>
                         ))}
@@ -140,14 +225,16 @@ export default function FilterModal({
                 </View>
             )}
 
-            {/* Sugestões de Tags */}
+            {/* Sugestões de hashtags */}
             <View style={styles.suggestionsSection}>
                 <Text style={styles.sectionTitle}>Sugestões</Text>
+
                 <View style={styles.suggestionsRow}>
                     {SUGGESTED_TAGS.map(suggestion => {
                         const isSelected = selectedTags.some(
                             t => t.toLowerCase() === suggestion.toLowerCase()
                         );
+
                         return (
                             <TouchableOpacity
                                 key={suggestion}
@@ -172,7 +259,7 @@ export default function FilterModal({
                 </View>
             </View>
 
-            {/* Botões de Ação */}
+            {/* Ações do popup */}
             <View style={styles.actionsRow}>
                 <TouchableOpacity
                     style={styles.clearButton}

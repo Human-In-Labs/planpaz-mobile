@@ -399,6 +399,48 @@ export default function SpeciesDetailsScreen() {
                         </View>
                     );
                 })()}
+
+                <TouchableOpacity
+                    style={styles.plantingGuideCard}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Abrir guia de plantio para ${species.name}`}
+                    onPress={() =>
+                        navigation.navigate('PlantingGuide', {
+                            speciesId: species.id,
+                            speciesName: species.name,
+                        })
+                    }
+                >
+                    <View style={styles.plantingGuideHeader}>
+                        <View style={styles.plantingGuideTitleContainer}>
+                            <Text style={styles.plantingGuideTitle}>
+                                Guia de plantio
+                            </Text>
+                            <AppIcon
+                                icon={AppIcons.CHEVRON_RIGHT}
+                                size={12}
+                                color={colors.primary}
+                            />
+                        </View>
+
+                        <View style={styles.plantingGuideBadge}>
+                            <Text
+                                style={styles.plantingGuideBadgeText}
+                                numberOfLines={1}
+                            >
+                                Recomendado para iniciantes
+                            </Text>
+                        </View>
+                    </View>
+
+                    <Text style={styles.plantingGuideDescription}>
+                        <Text style={styles.plantingGuideDescriptionStrong}>
+                            Quer cultivar esta espécie?{' '}
+                        </Text>
+                        Aprenda como começar o cultivo do zero, desde a escolha dos materiais até o plantio.
+                    </Text>
+                </TouchableOpacity>
             </Animated.ScrollView>
 
             <BottomActionOverlay

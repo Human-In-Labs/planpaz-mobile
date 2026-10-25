@@ -56,7 +56,7 @@ export default function CommentInput({
                         <AppIcon
                             icon={AppIcons.CHAT}
                             size={18}
-                            color={colors.primary}
+                            color={colors.black}
                         />
                     </View>
                     <Text style={styles.unexpandedPlaceholder}>{placeholder}</Text>

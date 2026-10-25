@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View,
@@ -40,6 +41,7 @@ import { SocialStackParamList } from '../../navigation/types';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<SocialStackParamList, 'SocialMain'>;
+type FeedTab = 'all' | 'following';
 
 const DEFAULT_AVATAR = require('../../assets/images/blank-avatar.png');
 
@@ -78,7 +80,7 @@ function mapPostResponseToPost(item: PostResponse): Post {
 export default function SocialScreen() {
     const navigation = useNavigation<NavigationProp>();
     const [searchQuery, setSearchQuery] = useState('');
-    const [feedTab, setFeedTab] = useState<'all' | 'following'>('all');
+    const [feedTab, setFeedTab] = useState<FeedTab>('all');
     const [filters, setFilters] = useState<{ id: string; label: string; removable?: boolean }[]>([]);
     const [activeTags, setActiveTags] = useState<string[]>([]);
     const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -98,32 +100,42 @@ export default function SocialScreen() {
     // Efeito de scroll para transição suave com fade no header
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const carregarPosts = useCallback(async (isPullToRefresh = false, tagsToFilter: string[] = activeTags, currentTab: 'all' | 'following' = feedTab) => {
+    const carregarPosts = useCallback(async (
+        isPullToRefresh = false,
+        tagsToFilter: string[] = activeTags,
+        currentTab: FeedTab = feedTab,
+    ) => {
         try {
             if (isPullToRefresh) {
                 setRefreshing(true);
             } else {
                 setLoading(true);
             }
+
             let currentUserId: string | undefined;
+
             try {
                 currentUserId = await getCurrentAuthorId();
             } catch (err) {
                 console.log('[SOCIAL] Usuário logado não identificado para o feed:', err);
             }
+
             const tagParam = tagsToFilter.length > 0 ? tagsToFilter[0] : undefined;
             const followingOnly = currentTab === 'following';
             const data = await listarPosts(0, 15, currentUserId, tagParam, followingOnly);
+
             if (data?.content && Array.isArray(data.content)) {
                 const mappedPosts = data.content.map(mapPostResponseToPost);
                 setPosts(mappedPosts);
 
                 const initialLiked = new Set<string>();
+
                 data.content.forEach(p => {
                     if (p.likedByCurrentUser) {
                         initialLiked.add(p.id);
                     }
                 });
+
                 setLikedPostIds(prev => new Set([...prev, ...initialLiked]));
             } else {
                 setPosts([]);
@@ -147,8 +159,10 @@ export default function SocialScreen() {
         }
 
         const usernameTerm = searchQuery.trim().substring(1);
+
         const timer = setTimeout(async () => {
             setUserSearchLoading(true);
+
             try {
                 const results = await pesquisarUsuarios(usernameTerm);
                 setSearchedUsers(results || []);
@@ -163,16 +177,18 @@ export default function SocialScreen() {
         return () => clearTimeout(timer);
     }, [searchQuery, isUserSearch]);
 
-    // Sincroniza em tempo real caso o post seja curtido/descurtido em qualquer tela (ex: PostIndividual)
+    // Sincroniza curtidas feitas em outras telas
     useEffect(() => {
         const unsubscribe = onPostLikeChanged((postId, liked, totalLikes) => {
             setLikedPostIds(prev => {
                 const next = new Set(prev);
+
                 if (liked) {
                     next.add(postId);
                 } else {
                     next.delete(postId);
                 }
+
                 return next;
             });
 
@@ -193,6 +209,7 @@ export default function SocialScreen() {
 
     useEffect(() => {
         verificarNotificacoesLocais();
+
         const unsubscribe = notificationService.subscribe(verificarNotificacoesLocais);
         return unsubscribe;
     }, [verificarNotificacoesLocais]);
@@ -203,23 +220,31 @@ export default function SocialScreen() {
         }, [carregarPosts])
     );
 
-    const handleApplyFilters = useCallback((selectedTags: string[]) => {
+    const handleApplyFilters = useCallback((
+        selectedTags: string[],
+        selectedTab: FeedTab,
+    ) => {
         setActiveTags(selectedTags);
+        setFeedTab(selectedTab);
+
         const newFilters = selectedTags.map(t => ({
             id: `tag-${t}`,
             label: t.startsWith('#') ? t : `# ${t}`,
             removable: true,
         }));
+
         setFilters(newFilters);
-        carregarPosts(false, selectedTags);
+        carregarPosts(false, selectedTags, selectedTab);
     }, [carregarPosts]);
 
     const handleRemoveFilter = useCallback((filterId: string) => {
         setFilters(prev => {
             const nextFilters = prev.filter(f => f.id !== filterId);
             const nextActiveTags = nextFilters.map(f => f.label.replace(/^#\s*/, ''));
+
             setActiveTags(nextActiveTags);
             carregarPosts(false, nextActiveTags);
+
             return nextFilters;
         });
     }, [carregarPosts]);
@@ -227,14 +252,16 @@ export default function SocialScreen() {
     const handleLikePress = useCallback(async (postId: string) => {
         const currentlyLiked = likedPostIds.has(postId);
 
-        // Atualização otimista imediata na UI
+        // Atualização otimista imediata na interface
         setLikedPostIds(prev => {
             const next = new Set(prev);
+
             if (currentlyLiked) {
                 next.delete(postId);
             } else {
                 next.add(postId);
             }
+
             return next;
         });
 
@@ -245,8 +272,10 @@ export default function SocialScreen() {
                     const newCount = currentlyLiked
                         ? Math.max(0, currentCount - 1)
                         : currentCount + 1;
+
                     return { ...p, likesCount: String(newCount) };
                 }
+
                 return p;
             })
         );
@@ -258,11 +287,13 @@ export default function SocialScreen() {
             // Sincronização com o resultado consolidado do backend
             setLikedPostIds(prev => {
                 const next = new Set(prev);
+
                 if (response.liked) {
                     next.add(postId);
                 } else {
                     next.delete(postId);
                 }
+
                 return next;
             });
 
@@ -271,19 +302,23 @@ export default function SocialScreen() {
                     if (p.id === postId) {
                         return { ...p, likesCount: String(response.totalLikes) };
                     }
+
                     return p;
                 })
             );
         } catch (error) {
             console.log('[SOCIAL] Erro ao curtir/descurtir post:', error);
+
             // Reverte em caso de falha de conexão
             setLikedPostIds(prev => {
                 const next = new Set(prev);
+
                 if (currentlyLiked) {
                     next.add(postId);
                 } else {
                     next.delete(postId);
                 }
+
                 return next;
             });
 
@@ -294,8 +329,10 @@ export default function SocialScreen() {
                         const revertedCount = currentlyLiked
                             ? currentCount + 1
                             : Math.max(0, currentCount - 1);
+
                         return { ...p, likesCount: String(revertedCount) };
                     }
+
                     return p;
                 })
             );
@@ -345,10 +382,17 @@ export default function SocialScreen() {
                 post.tags.some(t => t.label.toLowerCase().includes(query));
 
             const activeFilterLabels = filters.map(f => f.label.toLowerCase());
+
             const matchesChips =
                 activeFilterLabels.length === 0 ||
-                post.tags.some(t => activeFilterLabels.some(chip => t.label.toLowerCase().includes(chip.replace(/^#\s*/, '')))) ||
-                activeFilterLabels.some(chip => post.content.toLowerCase().includes(chip.replace(/^#\s*/, '')));
+                post.tags.some(t =>
+                    activeFilterLabels.some(chip =>
+                        t.label.toLowerCase().includes(chip.replace(/^#\s*/, ''))
+                    )
+                ) ||
+                activeFilterLabels.some(chip =>
+                    post.content.toLowerCase().includes(chip.replace(/^#\s*/, ''))
+                );
 
             return matchesQuery && matchesChips;
         });
@@ -357,7 +401,7 @@ export default function SocialScreen() {
     return (
         <View style={styles.container}>
             <SafeAreaView edges={['top']} style={styles.safeArea}>
-                {/* Cabeçalho fixo no topo com efeito de scroll e fade para logo Planpaz */}
+                {/* Cabeçalho fixo no topo com efeito de scroll */}
                 <AppHeader
                     title="Comunidade"
                     scrollY={scrollY}
@@ -365,7 +409,7 @@ export default function SocialScreen() {
                     onNotificationPress={() => setNotificationVisible(true)}
                 />
 
-                {/* Feed de Publicações ou Lista de Busca de Usuários com Animated.FlatList */}
+                {/* Feed de publicações ou lista de busca de usuários */}
                 {isUserSearch ? (
                     <Animated.FlatList
                         data={searchedUsers}
@@ -398,14 +442,23 @@ export default function SocialScreen() {
                                 activeOpacity={0.7}
                                 onPress={() => handleUserPress(item.id)}
                             >
-                                <Image source={item.avatarUrl ? { uri: item.avatarUrl } : DEFAULT_AVATAR} style={styles.userAvatar} />
+                                <Image
+                                    source={item.avatarUrl ? { uri: item.avatarUrl } : DEFAULT_AVATAR}
+                                    style={styles.userAvatar}
+                                />
+
                                 <View style={styles.userInfo}>
                                     <Text style={styles.userName}>{item.name}</Text>
                                     <Text style={styles.userUsername}>
                                         {item.username.startsWith('@') ? item.username : `@${item.username}`}
                                     </Text>
                                 </View>
-                                <AppIcon icon={AppIcons.CARET_RIGHT} size={18} color="#8E8E93" />
+
+                                <AppIcon
+                                    icon={AppIcons.CARET_RIGHT}
+                                    size={18}
+                                    color="#8E8E93"
+                                />
                             </TouchableOpacity>
                         )}
                     />
@@ -430,7 +483,7 @@ export default function SocialScreen() {
                         contentContainerStyle={styles.feedContent}
                         ListHeaderComponent={
                             <>
-                                {/* Barra de Pesquisa */}
+                                {/* Barra de pesquisa */}
                                 <View style={styles.searchSection}>
                                     <SearchBar
                                         value={searchQuery}
@@ -439,32 +492,7 @@ export default function SocialScreen() {
                                     />
                                 </View>
 
-                                {/* Abas Todos / Seguindo (RF29) */}
-                                <View style={styles.tabContainer}>
-                                    <TouchableOpacity
-                                        style={[styles.tabButton, feedTab === 'all' && styles.tabButtonActive]}
-                                        onPress={() => {
-                                            setFeedTab('all');
-                                            carregarPosts(false, activeTags, 'all');
-                                        }}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Text style={[styles.tabText, feedTab === 'all' && styles.tabTextActive]}>Todos</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        style={[styles.tabButton, feedTab === 'following' && styles.tabButtonActive]}
-                                        onPress={() => {
-                                            setFeedTab('following');
-                                            carregarPosts(false, activeTags, 'following');
-                                        }}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Text style={[styles.tabText, feedTab === 'following' && styles.tabTextActive]}>Seguindo</Text>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {/* Linha de Filtros Ativos */}
+                                {/* Linha de filtros ativos e botão do popup */}
                                 <View style={styles.filtersSection}>
                                     <View style={styles.filtersRow}>
                                         {filters.map(filter => (
@@ -478,7 +506,6 @@ export default function SocialScreen() {
                                         ))}
                                     </View>
 
-                                    {/* Botão de Menu de Filtros */}
                                     <TouchableOpacity
                                         style={styles.menuButton}
                                         activeOpacity={0.7}
@@ -511,8 +538,8 @@ export default function SocialScreen() {
                                 post={item}
                                 isLiked={likedPostIds.has(item.id)}
                                 onPress={() => handlePostPress(item)}
-                                onPressTag={(tagLabel) => {
-                                    handleApplyFilters([tagLabel]);
+                                onPressTag={tagLabel => {
+                                    handleApplyFilters([tagLabel], feedTab);
                                 }}
                                 onUserPress={handleUserPress}
                                 onLikePress={() => handleLikePress(item.id)}
@@ -523,7 +550,7 @@ export default function SocialScreen() {
                     />
                 )}
 
-                {/* Botão de Ação Flutuante (FAB) posicionado corretamente acima da TabBar */}
+                {/* Botão de ação flutuante */}
                 {!notificationVisible && (
                     <View style={styles.floatingButton}>
                         <FloatingActionButton
@@ -534,17 +561,18 @@ export default function SocialScreen() {
                 )}
             </SafeAreaView>
 
-            {/* Overlay de Notificações */}
+            {/* Overlay de notificações */}
             <NotificationOverlay
                 visible={notificationVisible}
                 onClose={() => setNotificationVisible(false)}
             />
 
-            {/* Modal de Seleção de Filtros por Tag */}
+            {/* Popup de filtros do feed e hashtags */}
             <FilterModal
                 visible={filterModalVisible}
                 onClose={() => setFilterModalVisible(false)}
                 activeTags={activeTags}
+                feedTab={feedTab}
                 onApplyFilters={handleApplyFilters}
                 maxTags={3}
             />

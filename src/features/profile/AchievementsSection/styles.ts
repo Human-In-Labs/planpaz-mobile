@@ -12,8 +12,8 @@ import {
 
 export const styles = StyleSheet.create({
     container: {
-        marginTop: verticalScale(20),
-        marginBottom: verticalScale(16),
+        marginTop: verticalScale(26),
+        marginBottom: verticalScale(26),
         paddingHorizontal: scale(spacing.md || 16),
     },
 

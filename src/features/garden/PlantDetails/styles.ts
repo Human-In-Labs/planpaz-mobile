@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: scale(16),
         paddingTop: verticalScale(8),
-        paddingBottom: verticalScale(120),
+        paddingBottom: verticalScale(60),
     },
 
     // Hero Card
@@ -41,6 +41,7 @@ export const styles = StyleSheet.create({
     },
 
     tagsRow: {
+        width: '100%',
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: scale(4),
@@ -51,15 +52,17 @@ export const styles = StyleSheet.create({
     tagBadge: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexShrink: 0,
         backgroundColor: '#D2E6DD',
         borderRadius: radius.xs,
-        paddingHorizontal: scale(6),
+        paddingHorizontal: scale(4),
         paddingVertical: verticalScale(3),
-        gap: scale(4),
+        gap: scale(8),
     },
 
     tagText: {
         ...typography.captionRegular,
+        flexShrink: 0,
     },
 
     speciesLink: {
@@ -80,7 +83,7 @@ export const styles = StyleSheet.create({
     },
 
     descriptionContainer: {
-        paddingHorizontal: scale(24),
+        paddingHorizontal: scale(12),
         marginBottom: verticalScale(16),
     },
 
@@ -96,7 +99,7 @@ export const styles = StyleSheet.create({
     // Stages Section
     stagesSection: {
         height: verticalScale(224),
-        marginBottom: verticalScale(12),
+        marginBottom: verticalScale(4),
     },
 
     stagesList: {
@@ -272,7 +275,7 @@ export const styles = StyleSheet.create({
     // Care Actions Section
     careActionsSection: {
         height: verticalScale(141),
-        marginBottom: verticalScale(16),
+        marginBottom: verticalScale(32),
     },
 
     careActionsList: {

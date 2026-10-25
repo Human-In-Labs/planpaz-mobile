@@ -136,8 +136,58 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.lg,
         padding: scale(16),
+        marginBottom: verticalScale(16),
+        ...shadows.medium,
+    },
+
+    plantingGuideCard: {
+        width: '100%',
+        backgroundColor: colors.white,
+        borderRadius: radius.lg,
+        padding: scale(16),
         marginBottom: verticalScale(20),
         ...shadows.medium,
+    },
+
+    plantingGuideHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: scale(8),
+        marginBottom: verticalScale(8),
+    },
+
+    plantingGuideTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: scale(6),
+        flexShrink: 0,
+    },
+
+    plantingGuideTitle: {
+        ...typography.h7,
+    },
+
+    plantingGuideBadge: {
+        backgroundColor: '#858585',
+        borderRadius: radius.sm,
+        paddingHorizontal: scale(8),
+        paddingVertical: verticalScale(2),
+        flexShrink: 1,
+    },
+
+    plantingGuideBadgeText: {
+        ...typography.captionLight2,
+        color: colors.white,
+    },
+
+    plantingGuideDescription: {
+        ...typography.textLight2,
+        lineHeight: verticalScale(16),
+    },
+
+    plantingGuideDescriptionStrong: {
+        ...typography.textMedium,
     },
 
     sectionHeader: {

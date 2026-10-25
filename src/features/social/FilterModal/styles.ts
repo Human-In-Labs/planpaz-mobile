@@ -1,3 +1,4 @@
+
 import { StyleSheet } from 'react-native';
 import { colors, fonts, radius, shadows, typography } from '../../../shared/theme';
 import { scale, verticalScale } from '../../../shared/theme/scale';
@@ -33,6 +34,34 @@ export const styles = StyleSheet.create({
         paddingHorizontal: scale(10),
         paddingVertical: verticalScale(4),
         borderRadius: radius.md,
+    },
+    feedTabsSection: {
+        marginBottom: verticalScale(16),
+    },
+    feedTabsRow: {
+        flexDirection: 'row',
+        gap: scale(8),
+    },
+    feedTabButton: {
+        flex: 1,
+        minHeight: verticalScale(36),
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: scale(12),
+        paddingVertical: verticalScale(8),
+        borderRadius: radius.md,
+        backgroundColor: '#E8F0EC',
+    },
+    feedTabButtonActive: {
+        backgroundColor: colors.primary,
+    },
+    feedTabText: {
+        fontSize: scale(13),
+        fontFamily: fonts.interSemiBold,
+        color: colors.textSecondary,
+    },
+    feedTabTextActive: {
+        color: colors.white,
     },
     inputSection: {
         marginBottom: verticalScale(16),
@@ -137,7 +166,6 @@ export const styles = StyleSheet.create({
         backgroundColor: colors.white,
         alignItems: 'center',
         justifyContent: 'center',
-
         boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.16)',
     },
     clearButtonText: {

@@ -16,7 +16,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { styles } from './styles';
 import AppHeader from '../../shared/components/AppHeader';
 import WeatherSection from './WeatherSection';
-import WeatherInstructionBanner from './WeatherInstructionBanner';
 import ReminderSection from './ReminderSection';
 import ActivitySection from './ActivitySection';
 
@@ -26,7 +25,7 @@ import NotificationOverlay from './overlays/Notification';
 import { getUserSettings } from '../../shared/api/user';
 import { getUser } from '../../shared/services/storage';
 import { notificationService } from '../../shared/services/notificationService';
-import { syncWeatherReminders, WeatherRemindersSync } from '../../shared/api/weather';
+import { syncWeatherReminders } from '../../shared/api/weather';
 
 import { LocationData } from '../../shared/types/location';
 import { LocationSearchData } from '../../shared/types/locationSearch';
@@ -45,8 +44,6 @@ export default function HomeScreen() {
         'location' | 'notification' | null
     >(null);
     const [hasUnreadNotifications, setHasUnreadNotifications] = useState<boolean>(false);
-    const [weatherAlert, setWeatherAlert] = useState<WeatherRemindersSync | null>(null);
-    const [weatherLoading, setWeatherLoading] = useState<boolean>(false);
     const [reminderRefreshTrigger, setReminderRefreshTrigger] = useState<number>(0);
 
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -92,7 +89,6 @@ export default function HomeScreen() {
     }, []);
 
     const sincronizarLembretesPorClima = useCallback(async (loc: LocationData) => {
-        setWeatherLoading(true);
         try {
             const cityName = loc.city || loc.neighborhood;
             const res = await syncWeatherReminders({
@@ -102,8 +98,6 @@ export default function HomeScreen() {
             });
 
             if (res) {
-                setWeatherAlert(res);
-
                 // Notificação no celular para eventos de chuva ou ar seco (RF24)
                 if (res.isChovendo && res.plantasExternasRegadasPelaChuva > 0) {
                     const alertKey = `chuva-${res.plantasExternasRegadasPelaChuva}-${cityName}`;
@@ -131,8 +125,6 @@ export default function HomeScreen() {
             }
         } catch (error) {
             console.log('[HOME] Erro ao sincronizar lembretes com clima:', error);
-        } finally {
-            setWeatherLoading(false);
         }
     }, []);
 
@@ -146,7 +138,7 @@ export default function HomeScreen() {
 
     useEffect(() => {
         sincronizarLembretesPorClima(location);
-    }, [location.city, location.neighborhood, location.latitude, location.longitude, sincronizarLembretesPorClima]);
+    }, [location, sincronizarLembretesPorClima]);
 
     const handleSelectLocation = (selected: LocationSearchData) => {
         setLocation({
@@ -202,12 +194,6 @@ export default function HomeScreen() {
                                 prev === 'location' ? null : 'location',
                             )
                         }
-                    />
-
-                    <WeatherInstructionBanner
-                        data={weatherAlert}
-                        loading={weatherLoading}
-                        onRefresh={() => sincronizarLembretesPorClima(location)}
                     />
 
                     <ReminderSection refreshTrigger={reminderRefreshTrigger} />

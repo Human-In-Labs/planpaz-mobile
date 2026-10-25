@@ -4,7 +4,6 @@ import { scale, verticalScale } from '../../../shared/theme/scale';
 
 export const styles = StyleSheet.create({
     container: {
-        marginTop: verticalScale(26),
         paddingHorizontal: scale(spacing.md),
         paddingBottom: verticalScale(24),
     },

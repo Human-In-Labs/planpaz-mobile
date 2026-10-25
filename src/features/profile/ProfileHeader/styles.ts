@@ -15,7 +15,7 @@ import {
 export const styles = StyleSheet.create({
     container: {
         paddingHorizontal: scale(16),
-        marginTop: verticalScale(12),
+        marginTop: verticalScale(26),
     },
 
     infoRow: {
@@ -55,7 +55,7 @@ export const styles = StyleSheet.create({
     },
 
     bioText: {
-        marginTop: verticalScale(14),
+        marginTop: verticalScale(8),
         fontSize: 11,
         lineHeight: 16,
         fontFamily: fonts.interRegular,

@@ -134,6 +134,12 @@ export const typography = {
     color: colors.black,
   },
 
+  h7: {
+    fontFamily: fonts.poppinsSemiBold,
+    fontSize: 10,
+    color: colors.primary,
+  },
+
   captionStrong: {
     fontFamily: fonts.interSemiBold,
     fontSize: 10,
