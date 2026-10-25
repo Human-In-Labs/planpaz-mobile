@@ -36,9 +36,11 @@ export default function CommentItem({
     onUserPress,
     onReportPress,
 }: CommentItemProps) {
-    // Por padrão no design do Figma, os comentários aninhados vêm abertos e podem ser fechados
     const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-    const [isLiked, setIsLiked] = useState<boolean>(propIsLiked ?? comment.isLiked ?? false);
+    const [isLiked, setIsLiked] = useState<boolean>(
+        propIsLiked ?? comment.isLiked ?? false,
+    );
+
     const [likesCount, setLikesCount] = useState<number>(() => {
         const parsed = parseInt(comment.likesCount, 10);
         return isNaN(parsed) ? 0 : parsed;
@@ -50,13 +52,19 @@ export default function CommentItem({
     const handleLikePress = () => {
         setIsLiked((prev: boolean) => {
             const next = !prev;
-            setLikesCount((count: number) => (next ? count + 1 : Math.max(0, count - 1)));
+
+            setLikesCount((count: number) =>
+                next ? count + 1 : Math.max(0, count - 1),
+            );
+
             return next;
         });
+
         onLikePress?.(comment.id);
     };
 
-    const authorUserId = (comment as any)?.authorId || (comment.author as any)?.id;
+    const authorUserId =
+        (comment as any)?.authorId || (comment.author as any)?.id;
 
     const handleDeleteClick = () => {
         if (!onDeletePress) return;
@@ -66,110 +74,150 @@ export default function CommentItem({
     return (
         <View style={isReply ? styles.replyContainer : styles.container}>
             <View style={styles.headerRow}>
-                {/* Ícone de seta adjacente ao avatar para expandir/recolher respostas aninhadas */}
-                {hasReplies ? (
+                <View style={styles.avatarColumn}>
                     <TouchableOpacity
-                        style={styles.caretButton}
                         activeOpacity={0.7}
-                        onPress={() => setIsCollapsed(prev => !prev)}
+                        onPress={() => {
+                            if (authorUserId) {
+                                onUserPress?.(authorUserId);
+                            }
+                        }}
                     >
-                        <AppIcon
-                            icon={isCollapsed ? AppIcons.CHEVRON_RIGHT : AppIcons.CHEVRON_DOWN}
-                            size={16}
-                            color={colors.primary}
+                        <Image
+                            source={comment.author.avatar}
+                            style={styles.avatar}
+                            resizeMode="cover"
                         />
                     </TouchableOpacity>
-                ) : (
-                    !isReply && <View style={styles.caretPlaceholder} />
-                )}
 
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => {
-                        if (authorUserId) onUserPress?.(authorUserId);
-                    }}
-                >
-                    <Image
-                        source={comment.author.avatar}
-                        style={styles.avatar}
-                        resizeMode="cover"
-                    />
-                </TouchableOpacity>
+                    {hasReplies && (
+                        <TouchableOpacity
+                            style={styles.caretButton}
+                            activeOpacity={0.7}
+                            onPress={() => setIsCollapsed(prev => !prev)}
+                        >
+                            <AppIcon
+                                icon={
+                                    isCollapsed
+                                        ? AppIcons.CHEVRON_RIGHT
+                                        : AppIcons.CHEVRON_DOWN
+                                }
+                                size={16}
+                                color={colors.primary}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 <View style={styles.contentArea}>
-                    {/* Cabeçalho do Usuário com timestamp relativo dinâmico imediatamente após o username */}
                     <View style={styles.authorHeaderRow}>
-                        <Text style={styles.username}>{comment.author.username}</Text>
-                        {comment.createdAt && (
-                            <>
-                                <Text style={styles.dot}>•</Text>
-                                <Text style={styles.timestamp}>{comment.createdAt}</Text>
-                            </>
+                        <View style={styles.authorInfo}>
+                            <Text style={styles.username}>
+                                {comment.author.username}
+                            </Text>
+
+                            {comment.createdAt && (
+                                <>
+                                    <Text style={styles.dot}>•</Text>
+                                    <Text style={styles.timestamp}>
+                                        {comment.createdAt}
+                                    </Text>
+                                </>
+                            )}
+                        </View>
+
+                        {onReportPress && (
+                            <TouchableOpacity
+                                style={styles.reportButton}
+                                activeOpacity={0.7}
+                                onPress={() => onReportPress(comment)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.replyText,
+                                        styles.reportText,
+                                    ]}
+                                >
+                                    Denunciar
+                                </Text>
+                            </TouchableOpacity>
                         )}
                     </View>
 
-                    <Text style={styles.commentText}>{comment.content}</Text>
+                    <Text style={styles.commentText}>
+                        {comment.content}
+                    </Text>
 
                     <View style={styles.actionsRow}>
-                        {/* Botão de Curtida com toggle e cores fiéis às especificações */}
                         <TouchableOpacity
                             style={styles.actionButton}
                             activeOpacity={0.7}
                             onPress={handleLikePress}
                         >
                             <AppIcon
-                                icon={isLiked ? AppIcons.THUMBS_UP_FILL : AppIcons.THUMBS_UP}
+                                icon={
+                                    isLiked
+                                        ? AppIcons.THUMBS_UP_FILL
+                                        : AppIcons.THUMBS_UP
+                                }
                                 size={14}
-                                color={isLiked ? colors.primary : UNLIKED_COLOR}
+                                color={
+                                    isLiked ? colors.primary : UNLIKED_COLOR
+                                }
                             />
                         </TouchableOpacity>
 
-                        <Text style={[styles.likesCount, isLiked && styles.likesCountActive]}>
+                        <Text
+                            style={[
+                                styles.likesCount,
+                                isLiked && styles.likesCountActive,
+                            ]}
+                        >
                             {likesCount}
                         </Text>
 
-                        {/* Botão Responder: restrito exclusivamente a comentários de nível superior (!isReply) */}
                         {!isReply && (
                             <TouchableOpacity
                                 style={styles.replyButton}
                                 activeOpacity={0.7}
-                                onPress={() => onReplyPress?.(comment.id, comment.author.username)}
+                                onPress={() =>
+                                    onReplyPress?.(
+                                        comment.id,
+                                        comment.author.username,
+                                    )
+                                }
                             >
                                 <AppIcon
                                     icon={AppIcons.CHAT_CIRCLE}
                                     size={13}
                                     color={colors.primary}
                                 />
-                                <Text style={styles.replyText}>Responder</Text>
+                                <Text style={styles.replyText}>
+                                    Responder
+                                </Text>
                             </TouchableOpacity>
                         )}
 
-                        {/* Botão Denunciar Comentário */}
-                        {onReportPress && (
-                            <TouchableOpacity
-                                style={styles.replyButton}
-                                activeOpacity={0.7}
-                                onPress={() => onReportPress(comment)}
-                            >
-                                <Text style={[styles.replyText, { color: colors.warning }]}>Denunciar</Text>
-                            </TouchableOpacity>
-                        )}
-
-                        {/* Botão Excluir Comentário */}
                         {onDeletePress && (
                             <TouchableOpacity
                                 style={styles.replyButton}
                                 activeOpacity={0.7}
                                 onPress={handleDeleteClick}
                             >
-                                <Text style={[styles.replyText, { color: colors.warning, textDecorationLine: 'underline' }]}>Excluir</Text>
+                                <Text
+                                    style={[
+                                        styles.replyText,
+                                        styles.deleteText,
+                                    ]}
+                                >
+                                    Excluir
+                                </Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 </View>
             </View>
 
-            {/* Input inline de resposta montado diretamente abaixo deste comentário (RespostaComentario.svg) */}
             {isReplying && (
                 <InlineReplyInput
                     replyingToUsername={comment.author.username}
@@ -178,10 +226,16 @@ export default function CommentItem({
                 />
             )}
 
-            {/* Respostas aninhadas com recuo aumentado à direita e linha verde fina indicativa (hierarquia pai-filho) */}
             {hasReplies && !isCollapsed && (
-                <View style={styles.repliesListContainer}>
+                <View
+                    style={[
+                        styles.repliesListContainer,
+                        isReplying &&
+                            styles.repliesListContainerAfterComposer,
+                    ]}
+                >
                     <View style={styles.threadLine} />
+
                     <View style={styles.repliesList}>
                         {comment.replies!.map(reply => (
                             <CommentItem

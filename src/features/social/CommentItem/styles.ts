@@ -7,42 +7,51 @@ export const styles = StyleSheet.create({
         marginBottom: verticalScale(16),
     },
     replyContainer: {
-        marginBottom: verticalScale(12),
+        marginBottom: verticalScale(16),
     },
     headerRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
     },
-    caretButton: {
-        width: scale(18),
-        height: scale(32),
+    avatarColumn: {
+        width: scale(32),
+        marginRight: scale(8),
         alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: scale(4),
-    },
-    caretPlaceholder: {
-        width: scale(18),
-        marginRight: scale(4),
     },
     avatar: {
         width: scale(32),
         height: scale(32),
         borderRadius: scale(10),
-        marginRight: scale(10),
+    },
+    caretButton: {
+        width: scale(32),
+        height: verticalScale(24),
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: verticalScale(4),
     },
     contentArea: {
         flex: 1,
+        minWidth: 0,
     },
     authorHeaderRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         marginBottom: verticalScale(2),
+    },
+    authorInfo: {
+        flex: 1,
+        minWidth: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
         flexWrap: 'wrap',
     },
     username: {
         ...typography.textStrong,
         fontSize: 13,
         color: colors.black,
+        flexShrink: 1,
     },
     dot: {
         fontSize: 11,
@@ -52,14 +61,25 @@ export const styles = StyleSheet.create({
     timestamp: {
         ...typography.caption,
         fontSize: 11,
-        color: '#8E8E93',
+        color: '#D2E6DD',
+        flexShrink: 1,
+    },
+    reportButton: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: scale(8),
+        paddingVertical: verticalScale(2),
+    },
+    reportText: {
+        color: colors.warning,
+        marginLeft: 0,
     },
     commentText: {
         ...typography.body,
         fontSize: 13,
         lineHeight: 18,
         color: colors.black,
-        marginBottom: verticalScale(6),
+        paddingVertical: verticalScale(8),
     },
     actionsRow: {
         flexDirection: 'row',
@@ -82,7 +102,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: scale(12),
-        paddingVertical: scale(2),
+        paddingVertical: verticalScale(2),
     },
     replyText: {
         ...typography.captionStrong,
@@ -90,10 +110,17 @@ export const styles = StyleSheet.create({
         color: colors.primary,
         marginLeft: scale(4),
     },
+    deleteText: {
+        color: colors.warning,
+        textDecorationLine: 'underline',
+    },
     repliesListContainer: {
         flexDirection: 'row',
         marginTop: verticalScale(8),
-        paddingLeft: scale(22),
+        paddingLeft: scale(16),
+    },
+    repliesListContainerAfterComposer: {
+        marginTop: verticalScale(16),
     },
     threadLine: {
         width: 1.5,
