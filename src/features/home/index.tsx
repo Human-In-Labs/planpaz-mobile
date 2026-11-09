@@ -23,7 +23,7 @@ import LocationOverlay from './overlays/Location';
 import NotificationOverlay from './overlays/Notification';
 
 import { getUserSettings } from '../../shared/api/user';
-import { getUser } from '../../shared/services/storage';
+import { getUser, saveUser } from '../../shared/services/storage';
 import { notificationService } from '../../shared/services/notificationService';
 import { syncWeatherReminders } from '../../shared/api/weather';
 
@@ -37,8 +37,11 @@ const initialLocation: LocationData = {
     state: 'SP',
 };
 
+const USER_SETTINGS_STALE_MS = 45_000;
+
 export default function HomeScreen() {
     const [location, setLocation] = useState<LocationData>(initialLocation);
+    const [locationResolved, setLocationResolved] = useState<boolean>(false);
     const [userName, setUserName] = useState<string>('');
     const [activeOverlay, setActiveOverlay] = useState<
         'location' | 'notification' | null
@@ -48,6 +51,8 @@ export default function HomeScreen() {
 
     const scrollY = useRef(new Animated.Value(0)).current;
     const lastAlertKeyRef = useRef<string>('');
+    const lastUserFetchRef = useRef<number>(0);
+    const lastSyncedLocationKeyRef = useRef<string>('');
 
     const verificarNotificacoesLocais = useCallback(async () => {
         const list = await notificationService.getAll();
@@ -56,6 +61,7 @@ export default function HomeScreen() {
 
     useEffect(() => {
         verificarNotificacoesLocais();
+        notificationService.requestPermissionAndSyncToken();
         const unsubscribe = notificationService.subscribe(verificarNotificacoesLocais);
         return unsubscribe;
     }, [verificarNotificacoesLocais]);
@@ -64,33 +70,94 @@ export default function HomeScreen() {
         try {
             const storedUser = await getUser();
             if (storedUser?.name) {
-                const firstName = storedUser.name.split(' ')[0];
-                setUserName(firstName);
+                setUserName(storedUser.name.split(' ')[0]);
+            }
+            if (storedUser?.cityName && storedUser.cityName.trim()) {
+                setLocation(prev => {
+                    const nextCity = storedUser.cityName!.trim();
+                    const nextLat = storedUser.latitude ?? prev.latitude;
+                    const nextLon = storedUser.longitude ?? prev.longitude;
+                    if (
+                        prev.city === nextCity &&
+                        prev.latitude === nextLat &&
+                        prev.longitude === nextLon
+                    ) {
+                        return prev;
+                    }
+                    return {
+                        ...prev,
+                        neighborhood: nextCity,
+                        city: nextCity,
+                        latitude: nextLat,
+                        longitude: nextLon,
+                    };
+                });
+                setLocationResolved(true);
+            }
+
+            if (Date.now() - lastUserFetchRef.current < USER_SETTINGS_STALE_MS) {
+                setLocationResolved(true);
+                return;
             }
 
             const settings = await getUserSettings();
+            lastUserFetchRef.current = Date.now();
+
             if (settings?.name) {
-                const firstName = settings.name.split(' ')[0];
-                setUserName(firstName);
+                setUserName(settings.name.split(' ')[0]);
+            }
+
+            if (settings) {
+                await saveUser({
+                    id: settings.id || storedUser?.id,
+                    name: settings.name || storedUser?.name || '',
+                    username: settings.username || storedUser?.username || '',
+                    email: settings.email || storedUser?.email,
+                    bio: settings.bio ?? storedUser?.bio,
+                    cityName: settings.cityName ?? storedUser?.cityName,
+                    latitude: settings.latitude ?? storedUser?.latitude,
+                    longitude: settings.longitude ?? storedUser?.longitude,
+                    avatarUrl: settings.avatarUrl ?? storedUser?.avatarUrl,
+                });
             }
 
             if (settings?.cityName && settings.cityName.trim()) {
-                setLocation(prev => ({
-                    ...prev,
-                    neighborhood: settings.cityName!,
-                    city: settings.cityName!,
-                    latitude: settings.latitude ?? prev.latitude,
-                    longitude: settings.longitude ?? prev.longitude,
-                }));
+                const nextCity = settings.cityName.trim();
+                setLocation(prev => {
+                    const nextLat = settings.latitude ?? prev.latitude;
+                    const nextLon = settings.longitude ?? prev.longitude;
+                    if (
+                        prev.city === nextCity &&
+                        prev.latitude === nextLat &&
+                        prev.longitude === nextLon
+                    ) {
+                        return prev;
+                    }
+                    return {
+                        ...prev,
+                        neighborhood: nextCity,
+                        city: nextCity,
+                        latitude: nextLat,
+                        longitude: nextLon,
+                    };
+                });
             }
         } catch (error) {
             console.log('[HOME] Erro ao carregar dados do usuário:', error);
+        } finally {
+            setLocationResolved(true);
         }
     }, []);
 
     const sincronizarLembretesPorClima = useCallback(async (loc: LocationData) => {
         try {
             const cityName = loc.city || loc.neighborhood;
+            const locKey = `${cityName}:${loc.latitude ?? ''}:${loc.longitude ?? ''}`;
+            if (lastSyncedLocationKeyRef.current === locKey) {
+                return;
+            }
+            lastSyncedLocationKeyRef.current = locKey;
+
             const res = await syncWeatherReminders({
                 latitude: loc.latitude,
                 longitude: loc.longitude,
@@ -98,7 +165,6 @@ export default function HomeScreen() {
             });
 
             if (res) {
-                // Notificação no celular para eventos de chuva ou ar seco (RF24)
                 if (res.isChovendo && res.plantasExternasRegadasPelaChuva > 0) {
                     const alertKey = `chuva-${res.plantasExternasRegadasPelaChuva}-${cityName}`;
                     if (lastAlertKeyRef.current !== alertKey) {
@@ -132,15 +198,18 @@ export default function HomeScreen() {
         useCallback(() => {
             carregarUsuario();
             verificarNotificacoesLocais();
-            notificationService.requestPermissionAndSyncToken();
         }, [carregarUsuario, verificarNotificacoesLocais]),
     );
 
     useEffect(() => {
+        if (!locationResolved) {
+            return;
+        }
         sincronizarLembretesPorClima(location);
-    }, [location, sincronizarLembretesPorClima]);
+    }, [location, locationResolved, sincronizarLembretesPorClima]);
 
     const handleSelectLocation = (selected: LocationSearchData) => {
+        lastSyncedLocationKeyRef.current = '';
         setLocation({
             id: selected.id,
             neighborhood: selected.neighborhood || selected.city,
@@ -182,12 +251,12 @@ export default function HomeScreen() {
                             },
                         ],
                         {
-                            useNativeDriver: false,
+                            useNativeDriver: true,
                         },
                     )}
                 >
                     <WeatherSection
-                        location={location}
+                        location={locationResolved ? location : undefined}
                         locationVisible={activeOverlay === 'location'}
                         onLocationPress={() =>
                             setActiveOverlay(prev =>

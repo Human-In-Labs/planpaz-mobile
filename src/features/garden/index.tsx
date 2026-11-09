@@ -57,11 +57,29 @@ export default function GardenScreen() {
             setLoading(false);
         }
     }, []);
+    const verificarNotificacoesLocais = useCallback(async () => {
+        try {
+            const list = await notificationService.getAll();
+            setHasUnreadNotifications(list.length > 0);
+        } catch {
+            setHasUnreadNotifications(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        verificarNotificacoesLocais();
+        const unsubscribe = notificationService.subscribe(() => {
+            verificarNotificacoesLocais();
+        });
+        return unsubscribe;
+    }, [verificarNotificacoesLocais]);
+
     useFocusEffect(
         useCallback(() => {
             setFabOpen(false);
             carregarJardim();
-        }, [carregarJardim]),
+            verificarNotificacoesLocais();
+        }, [carregarJardim, verificarNotificacoesLocais]),
     );
 
     const handleFilterChange = useCallback((
@@ -134,9 +152,12 @@ export default function GardenScreen() {
                 contentContainerStyle={styles.content}
                 onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false },
+                    { useNativeDriver: true },
                 )}
                 scrollEventThrottle={16}
+                initialNumToRender={6}
+                maxToRenderPerBatch={6}
+                windowSize={7}
                 ListHeaderComponent={
                     <>
                         <View style={styles.searchSection}>

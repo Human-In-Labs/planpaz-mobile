@@ -7,7 +7,7 @@ import { SpeciesCardProps } from './types';
 import { AppIcons } from '../../../shared/constants/appIcons';
 import { getTagIcon, translateTagToPT } from '../../../shared/utils/tagMapper';
 
-export default function SpeciesCard({
+function SpeciesCard({
     image,
     commonName,
     isRecommended,
@@ -82,3 +82,5 @@ export default function SpeciesCard({
         </TouchableOpacity>
     );
 }
+
+export default React.memo(SpeciesCard);

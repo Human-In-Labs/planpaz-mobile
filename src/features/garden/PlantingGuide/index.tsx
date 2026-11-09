@@ -277,7 +277,7 @@ export default function PlantingGuideScreen() {
                 contentContainerStyle={styles.scrollContent}
                 onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false },
+                    { useNativeDriver: true },
                 )}
                 scrollEventThrottle={16}
             >

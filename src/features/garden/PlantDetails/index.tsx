@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
@@ -44,6 +44,7 @@ import { getSpeciesCareGuide } from '../../../shared/utils/plantDataDatabase';
 import AchievementDetailsOverlay from '../../profile/overlays/AchievementDetails';
 import DeletePlantModal from '../DeletePlantModal';
 import ConfirmationModal from '../../../shared/components/ConfirmationModal';
+import LoadingSpinner from '../../../shared/components/LoadingSpinner';
 import { Achievement } from '../../profile/AchievementsSection/types';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -117,6 +118,7 @@ export default function PlantDetailsScreen() {
     const stageSuggestionCheckedRef = useRef(false);
 
     const [plant, setPlant] = useState<GardenPlant | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [plantStats, setPlantStats] = useState<PlantStats | null>(null);
     const [stages, setStages] = useState<PlantStage[]>([]);
     const [isCareLoading, setIsCareLoading] = useState(false);
@@ -186,102 +188,92 @@ export default function PlantDetailsScreen() {
 
     const carregarDados = useCallback(async () => {
         if (!plantId) {
+            setIsLoading(false);
             return;
         }
 
         try {
-            const gardenPlant = await buscarPlantaDoJardim(plantId);
+            setIsLoading(prev => (plant ? prev : true));
+            const shouldCheckStageSuggestion = !stageSuggestionCheckedRef.current;
+            stageSuggestionCheckedRef.current = true;
+
+            const [gardenPlant, stats, suggestion, nextWaterings] = await Promise.all([
+                buscarPlantaDoJardim(plantId),
+                getPlantStats(plantId).catch(err => {
+                    console.error('Erro ao buscar estatísticas da planta:', err);
+                    return null;
+                }),
+                shouldCheckStageSuggestion
+                    ? getStageSuggestion(plantId).catch(err => {
+                        console.error('Erro ao buscar sugestão de estágio:', err);
+                        return null;
+                    })
+                    : Promise.resolve(null),
+                getProximasRegas(plantId).catch(err => {
+                    console.error('Erro ao buscar próximas regas:', err);
+                    return null;
+                }),
+            ]);
+
             setPlant(gardenPlant);
+            if (stats) {
+                setPlantStats(stats);
+            }
 
             if (gardenPlant.plant?.id) {
-                const plantStages = await buscarStagesDaEspecie(
-                    gardenPlant.plant.id,
-                );
-                setStages(plantStages || []);
+                buscarStagesDaEspecie(gardenPlant.plant.id)
+                    .then(plantStages => setStages(plantStages || []))
+                    .catch(() => setStages([]));
             } else {
                 setStages([]);
             }
 
-            try {
-                const stats = await getPlantStats(plantId);
-                setPlantStats(stats);
-            } catch (err) {
-                console.error('Erro ao buscar estatísticas da planta:', err);
-            }
-
-            if (!stageSuggestionCheckedRef.current) {
-                stageSuggestionCheckedRef.current = true;
-                try {
-                    const suggestion = await getStageSuggestion(plantId);
-                    if (suggestion) {
-                        const ignoredStageId = await getIgnoredStageSuggestion(plantId);
-                        if (ignoredStageId !== suggestion.suggestedStage.id) {
-                            navigation.navigate('StageSuggestion', { plantId, suggestion });
-                        }
-                    }
-                } catch (err) {
-                    console.error('Erro ao buscar sugestão de estágio:', err);
+            if (suggestion) {
+                const ignoredStageId = await getIgnoredStageSuggestion(plantId);
+                if (ignoredStageId !== suggestion.suggestedStage.id) {
+                    navigation.navigate('StageSuggestion', { plantId, suggestion });
                 }
             }
 
-            try {
-                const nextWaterings = await getProximasRegas(plantId);
-                const { status, isOverdue } = formatWateringStatus(
-                    nextWaterings,
-                    gardenPlant.lastWatering,
-                );
-                setActions(prev =>
-                    prev.map(a => {
-                        if (a.type === 'rega') {
-                            return {
-                                ...a,
-                                status,
-                                isOverdue,
-                                completed: status === 'Regado hoje!',
-                            };
-                        }
-                        if (a.type === 'poda') {
-                            const isDoneToday = gardenPlant.lastPruning && new Date(gardenPlant.lastPruning).toDateString() === new Date().toDateString();
-                            return {
-                                ...a,
-                                status: isDoneToday ? 'Podado hoje!' : 'Pendente',
-                                completed: !!isDoneToday,
-                            };
-                        }
-                        if (a.type === 'substrato') {
-                            const isDoneToday = gardenPlant.lastFertilizing && new Date(gardenPlant.lastFertilizing).toDateString() === new Date().toDateString();
-                            return {
-                                ...a,
-                                status: isDoneToday ? 'Adubado hoje!' : 'Em dia',
-                                completed: !!isDoneToday,
-                            };
-                        }
-                        return a;
-                    }),
-                );
-            } catch (err) {
-                console.error('Erro ao buscar próximas regas:', err);
-                const { status, isOverdue } = formatWateringStatus(
-                    [],
-                    gardenPlant.lastWatering,
-                );
-                setActions(prev =>
-                    prev.map(a => {
-                        if (a.type === 'rega') {
-                            return {
-                                ...a,
-                                status,
-                                isOverdue,
-                            };
-                        }
-                        return a;
-                    }),
-                );
-            }
+            const { status, isOverdue } = formatWateringStatus(
+                nextWaterings || [],
+                gardenPlant.lastWatering,
+            );
+            setActions(prev =>
+                prev.map(a => {
+                    if (a.type === 'rega') {
+                        return {
+                            ...a,
+                            status,
+                            isOverdue,
+                            completed: status === 'Regado hoje!',
+                        };
+                    }
+                    if (a.type === 'poda') {
+                        const isDoneToday = gardenPlant.lastPruning && new Date(gardenPlant.lastPruning).toDateString() === new Date().toDateString();
+                        return {
+                            ...a,
+                            status: isDoneToday ? 'Podado hoje!' : 'Pendente',
+                            completed: !!isDoneToday,
+                        };
+                    }
+                    if (a.type === 'substrato') {
+                        const isDoneToday = gardenPlant.lastFertilizing && new Date(gardenPlant.lastFertilizing).toDateString() === new Date().toDateString();
+                        return {
+                            ...a,
+                            status: isDoneToday ? 'Adubado hoje!' : 'Em dia',
+                            completed: !!isDoneToday,
+                        };
+                    }
+                    return a;
+                }),
+            );
         } catch (error) {
             console.error('Erro ao carregar planta:', error);
             setPlant(null);
             setStages([]);
+        } finally {
+            setIsLoading(false);
         }
     }, [plantId, navigation]);
 
@@ -363,7 +355,43 @@ export default function PlantDetailsScreen() {
 
 
 
-    if (!plant) {
+    const species = plant?.plant;
+
+    const tags = useMemo(() => {
+        if (!species) return [];
+        const list = [...getPlantTags(species)];
+        if (plant?.room) {
+            const roomLabel = ROOM_ENUM_TO_LABEL[plant.room] || plant.room;
+            list.unshift({
+                label: roomLabel,
+                icon: AppIcons.HOUSE_SIMPLE,
+                category: 'room' as any,
+            });
+        }
+        return list;
+    }, [species, plant?.room]);
+
+    const guideData = useMemo(
+        () => getSpeciesCareGuide(species?.name || plant?.nickname || ''),
+        [species?.name, plant?.nickname],
+    );
+
+    if (isLoading && !plant) {
+        return (
+            <SafeAreaView edges={['top']} style={styles.container}>
+                <AppHeader
+                    title="Planta"
+                    backButton
+                    onBackPress={() => navigation.goBack()}
+                />
+                <View style={styles.emptyContainer}>
+                    <LoadingSpinner />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!plant || !species) {
         return (
             <SafeAreaView edges={['top']} style={styles.container}>
                 <AppHeader
@@ -381,18 +409,6 @@ export default function PlantDetailsScreen() {
         );
     }
 
-    const species = plant.plant;
-
-    const tags = getPlantTags(species);
-    if (plant.room) {
-        const roomLabel = ROOM_ENUM_TO_LABEL[plant.room] || plant.room;
-        tags.unshift({
-            label: roomLabel,
-            icon: AppIcons.HOUSE_SIMPLE,
-            category: 'room' as any,
-        });
-    }
-
     const cultivationDays = plant.plantedAt
         ? Math.max(
             0,
@@ -402,7 +418,7 @@ export default function PlantDetailsScreen() {
                 (1000 * 60 * 60 * 24),
             ),
         )
-        : MOCK_STATS.cultivationDays;
+        : 0;
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
@@ -427,7 +443,7 @@ export default function PlantDetailsScreen() {
                         },
                     ],
                     {
-                        useNativeDriver: false,
+                        useNativeDriver: true,
                     },
                 )}
                 scrollEventThrottle={16}
@@ -616,7 +632,6 @@ export default function PlantDetailsScreen() {
                 </View>
 
                 {(() => {
-                    const guideData = getSpeciesCareGuide(species.name || plant?.nickname);
                     return (
                         <View style={styles.careGuideCard}>
                             <View style={styles.guideHeaderRow}>

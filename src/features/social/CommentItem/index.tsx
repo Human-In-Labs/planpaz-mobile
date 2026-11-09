@@ -23,7 +23,7 @@ interface CommentItemProps {
 
 const UNLIKED_COLOR = '#8E8E93';
 
-export default function CommentItem({
+function CommentItem({
     comment,
     isReply = false,
     isLiked: propIsLiked,
@@ -258,3 +258,5 @@ export default function CommentItem({
         </View>
     );
 }
+
+export default React.memo(CommentItem);

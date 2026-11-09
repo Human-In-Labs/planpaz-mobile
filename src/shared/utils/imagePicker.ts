@@ -12,6 +12,14 @@ export interface SelectedImage {
     fileName?: string;
 }
 
+export interface ImagePickerCustomOptions {
+    allowsEditing?: boolean;
+    aspect?: [number, number];
+    quality?: number;
+    maxWidth?: number;
+    maxHeight?: number;
+}
+
 export async function requestCameraPermission(): Promise<boolean> {
     if (Platform.OS !== 'android') return true;
 
@@ -34,13 +42,15 @@ export async function requestCameraPermission(): Promise<boolean> {
 }
 
 export async function pickImageFromGallery(
-    options: { allowsEditing?: boolean; aspect?: [number, number]; quality?: number } = {},
+    options: ImagePickerCustomOptions = {},
 ): Promise<SelectedImage | null> {
     try {
         const response: ImagePickerResponse = await launchImageLibrary({
             mediaType: 'photo',
             quality: (options.quality as any) ?? 0.8,
-            includeBase64: true,
+            maxWidth: options.maxWidth ?? 1600,
+            maxHeight: options.maxHeight ?? 1600,
+            includeBase64: false,
             selectionLimit: 1,
         });
 
@@ -57,13 +67,8 @@ export async function pickImageFromGallery(
         const asset = response.assets[0];
         if (!asset.uri) return null;
 
-        const base64Data = asset.base64
-            ? `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`
-            : undefined;
-
         return {
             uri: asset.uri,
-            base64: base64Data,
             mimeType: asset.type || 'image/jpeg',
             fileName: asset.fileName || `gallery_${Date.now()}.jpg`,
         };
@@ -75,7 +80,7 @@ export async function pickImageFromGallery(
 }
 
 export async function takePhotoWithCamera(
-    options: { allowsEditing?: boolean; aspect?: [number, number]; quality?: number } = {},
+    options: ImagePickerCustomOptions = {},
 ): Promise<SelectedImage | null> {
     try {
         const hasPermission = await requestCameraPermission();
@@ -90,7 +95,9 @@ export async function takePhotoWithCamera(
         const response: ImagePickerResponse = await launchCamera({
             mediaType: 'photo',
             quality: (options.quality as any) ?? 0.8,
-            includeBase64: true,
+            maxWidth: options.maxWidth ?? 1600,
+            maxHeight: options.maxHeight ?? 1600,
+            includeBase64: false,
             saveToPhotos: false,
         });
 
@@ -107,13 +114,8 @@ export async function takePhotoWithCamera(
         const asset = response.assets[0];
         if (!asset.uri) return null;
 
-        const base64Data = asset.base64
-            ? `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`
-            : undefined;
-
         return {
             uri: asset.uri,
-            base64: base64Data,
             mimeType: asset.type || 'image/jpeg',
             fileName: asset.fileName || `camera_${Date.now()}.jpg`,
         };

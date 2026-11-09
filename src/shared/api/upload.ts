@@ -39,6 +39,7 @@ export async function uploadImagem(
     } as any);
 
     const response = await api.post<UploadResponse>('/uploads', formData, {
+        timeout: 45000,
         headers: {
             'Content-Type': 'multipart/form-data',
         },

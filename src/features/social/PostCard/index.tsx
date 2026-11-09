@@ -25,7 +25,7 @@ interface PostCardProps {
 const ACTION_ICON_COLOR = '#1C1C1E';
 const UNLIKED_COLOR = '#8E8E93';
 
-export default function PostCard({
+function PostCard({
     post,
     isLiked = false,
     showReportButton = false,
@@ -211,3 +211,5 @@ export default function PostCard({
         </TouchableOpacity>
     );
 }
+
+export default React.memo(PostCard);

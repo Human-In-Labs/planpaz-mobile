@@ -35,14 +35,8 @@ export default function AppHeader({
         if (!scrollY) return;
 
         const listenerId = scrollY.addListener(({ value }) => {
-            const scrolled =
-                value >= 45 / sensitivity;
-
-            setIsScrolled(prev =>
-                prev !== scrolled
-                    ? scrolled
-                    : prev,
-            );
+            const scrolled = value >= 45 / sensitivity;
+            setIsScrolled(prev => (prev !== scrolled ? scrolled : prev));
         });
 
         return () => {
@@ -52,60 +46,26 @@ export default function AppHeader({
 
     const normalOpacity = scrollY
         ? scrollY.interpolate({
-            inputRange: [
-                0,
-                45 / sensitivity,
-            ],
-            outputRange: [1, 0],
-            extrapolate: 'clamp',
-        })
+              inputRange: [0, 45 / sensitivity],
+              outputRange: [1, 0],
+              extrapolate: 'clamp',
+          })
         : 1;
-
-    const buttonElevation = scrollY
-        ? scrollY.interpolate({
-            inputRange: [
-                0,
-                30 / sensitivity,
-                45 / sensitivity,
-            ],
-            outputRange: [2, 0.5, 0],
-            extrapolate: 'clamp',
-        })
-        : 2;
-
-    const buttonShadowOpacity = scrollY
-        ? scrollY.interpolate({
-            inputRange: [
-                0,
-                30 / sensitivity,
-                45 / sensitivity,
-            ],
-            outputRange: [0.10, 0.03, 0],
-            extrapolate: 'clamp',
-        })
-        : 0.10;
 
     const buttonScale = scrollY
         ? scrollY.interpolate({
-            inputRange: [
-                0,
-                35 / sensitivity,
-                45 / sensitivity,
-            ],
-            outputRange: [1, 0.8, 0],
-            extrapolate: 'clamp',
-        })
+              inputRange: [0, 35 / sensitivity, 45 / sensitivity],
+              outputRange: [1, 0.8, 0],
+              extrapolate: 'clamp',
+          })
         : 1;
 
     const scrolledOpacity = scrollY
         ? scrollY.interpolate({
-            inputRange: [
-                20 / sensitivity,
-                50 / sensitivity,
-            ],
-            outputRange: [0, 1],
-            extrapolate: 'clamp',
-        })
+              inputRange: [20 / sensitivity, 50 / sensitivity],
+              outputRange: [0, 1],
+              extrapolate: 'clamp',
+          })
         : 0;
 
     return (
@@ -149,8 +109,6 @@ export default function AppHeader({
                         styles.notificationButton,
                         {
                             opacity: normalOpacity,
-                            elevation: buttonElevation,
-                            shadowOpacity: buttonShadowOpacity,
                             transform: [{ scale: buttonScale }],
                         },
                     ]}

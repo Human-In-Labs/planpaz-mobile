@@ -126,7 +126,7 @@ export default function PostIndividualScreen() {
 
     useEffect(() => {
         let isMounted = true;
-        if (post?.id) {
+        if (post?.id && routePost?.likesCount === undefined) {
             obterQuantidadeLikesPost(post.id)
                 .then(count => {
                     if (isMounted && typeof count === 'number') {
@@ -138,7 +138,7 @@ export default function PostIndividualScreen() {
         return () => {
             isMounted = false;
         };
-    }, [post?.id]);
+    }, [post?.id, routePost?.likesCount]);
 
     useEffect(() => {
         const unsubscribe = onPostLikeChanged((likedPostId, liked, totalLikes) => {
@@ -159,6 +159,12 @@ export default function PostIndividualScreen() {
             if (data?.content && Array.isArray(data.content)) {
                 const commentsWithReplies = await Promise.all(
                     data.content.map(async (commentItem) => {
+                        if (Array.isArray(commentItem.replies)) {
+                            const replies = commentItem.replies.map(r =>
+                                mapCommentResponseToPostComment(r)
+                            );
+                            return mapCommentResponseToPostComment(commentItem, replies);
+                        }
                         try {
                             const repliesData = await listarRespostas(post.id, commentItem.id);
                             const replies = (repliesData?.content || []).map(r =>

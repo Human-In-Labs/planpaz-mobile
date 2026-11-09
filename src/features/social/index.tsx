@@ -84,12 +84,15 @@ export default function SocialScreen() {
     const [filters, setFilters] = useState<{ id: string; label: string; removable?: boolean }[]>([]);
     const [activeTags, setActiveTags] = useState<string[]>([]);
     const [filterModalVisible, setFilterModalVisible] = useState(false);
-    const [posts, setPosts] = useState<Post[]>(mockPosts);
+    const [posts, setPosts] = useState<Post[]>([]);
     const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
 
     // Estado para busca de usuários por @
     const [searchedUsers, setSearchedUsers] = useState<UserSummary[]>([]);
@@ -100,13 +103,18 @@ export default function SocialScreen() {
     // Efeito de scroll para transição suave com fade no header
     const scrollY = useRef(new Animated.Value(0)).current;
 
+    const PAGE_SIZE = 15;
+
     const carregarPosts = useCallback(async (
         isPullToRefresh = false,
         tagsToFilter: string[] = activeTags,
         currentTab: FeedTab = feedTab,
+        targetPage = 0,
     ) => {
         try {
-            if (isPullToRefresh) {
+            if (targetPage > 0) {
+                setLoadingMore(true);
+            } else if (isPullToRefresh) {
                 setRefreshing(true);
             } else {
                 setLoading(true);
@@ -122,11 +130,27 @@ export default function SocialScreen() {
 
             const tagParam = tagsToFilter.length > 0 ? tagsToFilter[0] : undefined;
             const followingOnly = currentTab === 'following';
-            const data = await listarPosts(0, 15, currentUserId, tagParam, followingOnly);
+            const data = await listarPosts(targetPage, PAGE_SIZE, currentUserId, tagParam, followingOnly);
 
             if (data?.content && Array.isArray(data.content)) {
                 const mappedPosts = data.content.map(mapPostResponseToPost);
-                setPosts(mappedPosts);
+                setPage(targetPage);
+                const totalPages = typeof data.totalPages === 'number' ? data.totalPages : undefined;
+                setHasMore(
+                    totalPages !== undefined
+                        ? targetPage + 1 < totalPages
+                        : mappedPosts.length >= PAGE_SIZE,
+                );
+
+                if (targetPage === 0) {
+                    setPosts(mappedPosts);
+                } else {
+                    setPosts(prev => {
+                        const existingIds = new Set(prev.map(p => p.id));
+                        const uniqueNew = mappedPosts.filter(p => !existingIds.has(p.id));
+                        return [...prev, ...uniqueNew];
+                    });
+                }
 
                 const initialLiked = new Set<string>();
 
@@ -136,20 +160,37 @@ export default function SocialScreen() {
                     }
                 });
 
-                setLikedPostIds(prev => new Set([...prev, ...initialLiked]));
-            } else {
+                setLikedPostIds(prev => {
+                    if (targetPage === 0) {
+                        return initialLiked;
+                    }
+                    return new Set([...prev, ...initialLiked]);
+                });
+            } else if (targetPage === 0) {
                 setPosts([]);
+                setHasMore(false);
+            } else {
+                setHasMore(false);
             }
         } catch (error) {
             console.log('[SOCIAL] Erro ao listar posts da API, mantendo dados locais:', error);
         } finally {
-            if (isPullToRefresh) {
+            if (targetPage > 0) {
+                setLoadingMore(false);
+            } else if (isPullToRefresh) {
                 setRefreshing(false);
             } else {
                 setLoading(false);
             }
         }
     }, [activeTags, feedTab]);
+
+    const handleLoadMore = useCallback(() => {
+        if (loading || refreshing || loadingMore || !hasMore || searchQuery.trim().length > 0) {
+            return;
+        }
+        carregarPosts(false, activeTags, feedTab, page + 1);
+    }, [loading, refreshing, loadingMore, hasMore, searchQuery, carregarPosts, activeTags, feedTab, page]);
 
     // Busca de usuários por @ em tempo real (com debounce)
     useEffect(() => {
@@ -158,7 +199,12 @@ export default function SocialScreen() {
             return;
         }
 
-        const usernameTerm = searchQuery.trim().substring(1);
+        const usernameTerm = searchQuery.trim().substring(1).trim();
+        if (!usernameTerm) {
+            setSearchedUsers([]);
+            setUserSearchLoading(false);
+            return;
+        }
 
         const timer = setTimeout(async () => {
             setUserSearchLoading(true);
@@ -234,8 +280,7 @@ export default function SocialScreen() {
         }));
 
         setFilters(newFilters);
-        carregarPosts(false, selectedTags, selectedTab);
-    }, [carregarPosts]);
+    }, []);
 
     const handleRemoveFilter = useCallback((filterId: string) => {
         setFilters(prev => {
@@ -243,11 +288,10 @@ export default function SocialScreen() {
             const nextActiveTags = nextFilters.map(f => f.label.replace(/^#\s*/, ''));
 
             setActiveTags(nextActiveTags);
-            carregarPosts(false, nextActiveTags);
 
             return nextFilters;
         });
-    }, [carregarPosts]);
+    }, []);
 
     const handleLikePress = useCallback(async (postId: string) => {
         const currentlyLiked = likedPostIds.has(postId);
@@ -470,8 +514,13 @@ export default function SocialScreen() {
                         scrollEventThrottle={16}
                         onScroll={Animated.event(
                             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                            { useNativeDriver: false }
+                            { useNativeDriver: true }
                         )}
+                        initialNumToRender={5}
+                        maxToRenderPerBatch={5}
+                        windowSize={7}
+                        onEndReached={handleLoadMore}
+                        onEndReachedThreshold={0.4}
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}

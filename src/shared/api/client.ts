@@ -95,8 +95,6 @@ api.interceptors.response.use(
 
                 delete api.defaults.headers.common.Authorization;
                 await removeToken();
-                await removeUser();
-                await removeUserId();
 
                 onUnauthorized?.();
 

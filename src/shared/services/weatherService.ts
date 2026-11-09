@@ -14,6 +14,19 @@ import {
 
 import { WeatherSummary } from '../constants/weatherSummary';
 
+const WEATHER_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes client-side cache
+const currentCache = new Map<string, { data: WeatherResponse; timestamp: number }>();
+const forecastCache = new Map<string, { data: WeatherCardData[]; timestamp: number }>();
+const inFlightCurrent = new Map<string, Promise<WeatherResponse>>();
+const inFlightForecast = new Map<string, Promise<WeatherCardData[]>>();
+
+function buildWeatherKey(cidade?: string, lat?: number, lng?: number): string {
+    if (typeof lat === 'number' && typeof lng === 'number') {
+        return `coords:${lat.toFixed(2)},${lng.toFixed(2)}`;
+    }
+    return `city:${(cidade || 'sao paulo').trim().toLowerCase()}`;
+}
+
 export function mapWeatherIcon(
     icone?: string | null,
     descricao?: string,
@@ -22,76 +35,40 @@ export function mapWeatherIcon(
     const isNight = icone?.endsWith('n');
 
     switch (code) {
-        // Tempestade
         case '11':
             return WeatherIcons.STORM;
-
-        // Chuva / garoa
         case '09':
         case '10':
             return WeatherIcons.RAIN;
-
-        // Neve
         case '13':
-            return isNight
-                ? WeatherIcons.CLOUD_MOON
-                : WeatherIcons.CLOUD_SUN;
-
-        // Névoa, fumaça, neblina etc.
         case '50':
             return isNight
                 ? WeatherIcons.CLOUD_MOON
                 : WeatherIcons.CLOUD_SUN;
-
-        // Céu limpo
         case '01':
             return isNight
                 ? WeatherIcons.MOON
                 : WeatherIcons.SUN;
-
-        // Poucas nuvens
         case '02':
-            return isNight
-                ? WeatherIcons.CLOUD_MOON
-                : WeatherIcons.CLOUD_SUN;
-
-        // Nublado
         case '03':
         case '04':
             return isNight
                 ? WeatherIcons.CLOUD_MOON
                 : WeatherIcons.CLOUD_SUN;
-
         default: {
-            const desc = (
-                descricao || ''
-            ).toLowerCase();
+            const desc = (descricao || '').toLowerCase();
 
-            if (
-                desc.includes('tempestade') ||
-                desc.includes('trovoada')
-            ) {
+            if (desc.includes('tempestade') || desc.includes('trovoada')) {
                 return WeatherIcons.STORM;
             }
-
-            if (
-                desc.includes('chuva') ||
-                desc.includes('garoa') ||
-                desc.includes('chovendo')
-            ) {
+            if (desc.includes('chuva') || desc.includes('garoa') || desc.includes('chovendo')) {
                 return WeatherIcons.RAIN;
             }
-
-            if (
-                desc.includes('nuvem') ||
-                desc.includes('nublado') ||
-                desc.includes('encoberto')
-            ) {
+            if (desc.includes('nuvem') || desc.includes('nublado') || desc.includes('encoberto')) {
                 return isNight
                     ? WeatherIcons.CLOUD_MOON
                     : WeatherIcons.CLOUD_SUN;
             }
-
             return isNight
                 ? WeatherIcons.MOON
                 : WeatherIcons.SUN;
@@ -100,17 +77,34 @@ export function mapWeatherIcon(
 }
 
 export const weatherService = {
-
     async getCurrent(
         cidade?: string,
         lat?: number,
         lng?: number,
     ): Promise<WeatherResponse> {
-        return getCurrentWeather(
-            cidade,
-            lat,
-            lng,
-        );
+        const key = buildWeatherKey(cidade, lat, lng);
+        const cached = currentCache.get(key);
+        if (cached && Date.now() - cached.timestamp < WEATHER_CACHE_TTL_MS) {
+            return cached.data;
+        }
+
+        const existingPromise = inFlightCurrent.get(key);
+        if (existingPromise) {
+            return existingPromise;
+        }
+
+        const promise = (async () => {
+            try {
+                const data = await getCurrentWeather(cidade, lat, lng);
+                currentCache.set(key, { data, timestamp: Date.now() });
+                return data;
+            } finally {
+                inFlightCurrent.delete(key);
+            }
+        })();
+
+        inFlightCurrent.set(key, promise);
+        return promise;
     },
 
     formatCurrentWeatherToCard(current: WeatherResponse): WeatherCardData {
@@ -134,69 +128,45 @@ export const weatherService = {
         lat?: number,
         lng?: number,
     ): Promise<WeatherCardData[]> {
-        try {
-            const list = await getWeatherForecast(
-                cidade,
-                lat,
-                lng,
-            );
+        const key = buildWeatherKey(cidade, lat, lng);
+        const cached = forecastCache.get(key);
+        if (cached && Date.now() - cached.timestamp < WEATHER_CACHE_TTL_MS) {
+            return cached.data;
+        }
 
-            return list.map(
-                (item, index) => ({
+        const existingPromise = inFlightForecast.get(key);
+        if (existingPromise) {
+            return existingPromise;
+        }
+
+        const promise = (async () => {
+            try {
+                const list = await getWeatherForecast(cidade, lat, lng);
+                const cards = list.map((item, index) => ({
                     id: String(index + 1),
-
                     hour:
                         item.horario ||
-                        (
-                            item.dataHora
-                                ? item.dataHora.substring(
-                                    11,
-                                    16,
-                                )
-                                : '12:00'
-                        ),
+                        (item.dataHora ? item.dataHora.substring(11, 16) : '12:00'),
+                    temperature: Math.round(item.temperatura ?? 0),
+                    condition: item.descricao || 'Indisponível',
+                    icon: mapWeatherIcon(item.icone, item.descricao),
+                    humidity: item.umidade ?? 0,
+                    rainProbability: Math.round(item.probabilidadeChuva ?? 0),
+                    tempMin: Math.round(item.tempMin ?? item.temperatura ?? 0),
+                    tempMax: Math.round(item.tempMax ?? item.temperatura ?? 0),
+                }));
+                forecastCache.set(key, { data: cards, timestamp: Date.now() });
+                return cards;
+            } catch (error) {
+                console.error('[WEATHER_SERVICE] Erro ao buscar previsão:', error);
+                return [];
+            } finally {
+                inFlightForecast.delete(key);
+            }
+        })();
 
-                    temperature: Math.round(
-                        item.temperatura ?? 0,
-                    ),
-
-                    condition:
-                        item.descricao ||
-                        'Indisponível',
-
-                    icon: mapWeatherIcon(
-                        item.icone,
-                        item.descricao,
-                    ),
-
-                    humidity:
-                        item.umidade ?? 0,
-
-                    rainProbability: Math.round(
-                        item.probabilidadeChuva ?? 0,
-                    ),
-
-                    tempMin: Math.round(
-                        item.tempMin ??
-                        item.temperatura ??
-                        0,
-                    ),
-
-                    tempMax: Math.round(
-                        item.tempMax ??
-                        item.temperatura ??
-                        0,
-                    ),
-                }),
-            );
-        } catch (error) {
-            console.error(
-                '[WEATHER_SERVICE] Erro ao buscar previsão:',
-                error,
-            );
-
-            return [];
-        }
+        inFlightForecast.set(key, promise);
+        return promise;
     },
 
     async getSummary(
@@ -208,25 +178,12 @@ export const weatherService = {
         currentWeather: WeatherResponse | null;
     }> {
         try {
-            const currentWeather =
-                await getCurrentWeather(
-                    cidade,
-                    lat,
-                    lng,
-                );
+            const currentWeather = await this.getCurrent(cidade, lat, lng);
 
             const rainPercent = Math.round(
-                currentWeather.probabilidadeChuva ??
-                (
-                    currentWeather.chovendo
-                        ? 100
-                        : 0
-                ),
+                currentWeather.probabilidadeChuva ?? (currentWeather.chovendo ? 100 : 0),
             );
-
-            const windSpeed = Math.round(
-                currentWeather.velocidadeVentoKmh ?? 0,
-            );
+            const windSpeed = Math.round(currentWeather.velocidadeVentoKmh ?? 0);
 
             const summaryCards: WeatherSummaryCardData[] = [
                 {
@@ -255,13 +212,8 @@ export const weatherService = {
                 summaryCards,
                 currentWeather,
             };
-
         } catch (error) {
-            console.error(
-                '[WEATHER_SERVICE] Erro ao buscar resumo do clima:',
-                error,
-            );
-
+            console.error('[WEATHER_SERVICE] Erro ao buscar resumo do clima:', error);
             return {
                 summaryCards: [],
                 currentWeather: null,

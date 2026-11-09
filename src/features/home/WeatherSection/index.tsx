@@ -1,10 +1,10 @@
 import React, {
+    useCallback,
     useEffect,
     useState,
 } from 'react';
 
 import {
-    ActivityIndicator,
     FlatList,
     Text,
     TouchableOpacity,
@@ -29,17 +29,10 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
 
-const currentDate =
-    formatShortDate(
-        new Date(),
-    );
+const currentDate = formatShortDate(new Date());
 
 function Separator() {
-    return (
-        <View
-            style={styles.separator}
-        />
-    );
+    return <View style={styles.separator} />;
 }
 
 export default function WeatherSection({
@@ -50,24 +43,26 @@ export default function WeatherSection({
     const [weatherSummary, setWeatherSummary] = useState<WeatherSummaryCardData[]>([]);
 
     useEffect(() => {
+        if (!location) {
+            return;
+        }
+
+        let cancelled = false;
+
         async function loadWeather() {
             try {
                 const targetCity = location?.city || location?.neighborhood || 'São Paulo';
-                const forecast = await weatherService.getForecast(targetCity, location?.latitude, location?.longitude);
-                const { summaryCards, currentWeather } = await weatherService.getSummary(targetCity, location?.latitude, location?.longitude);
+                const [forecast, summaryResult] = await Promise.all([
+                    weatherService.getForecast(targetCity, location?.latitude, location?.longitude),
+                    weatherService.getSummary(targetCity, location?.latitude, location?.longitude),
+                ]);
 
-                let current = currentWeather;
-                if (!current) {
-                    try {
-                        current = await weatherService.getCurrent(targetCity, location?.latitude, location?.longitude);
-                    } catch (currentErr) {
-                        console.warn('[WEATHER_SECTION] Não foi possível carregar clima atual via getCurrent:', currentErr);
-                    }
-                }
+                if (cancelled) return;
 
+                const { summaryCards, currentWeather } = summaryResult;
                 const cards: WeatherCardData[] = [];
-                if (current) {
-                    cards.push(weatherService.formatCurrentWeatherToCard(current));
+                if (currentWeather) {
+                    cards.push(weatherService.formatCurrentWeatherToCard(currentWeather));
                 }
                 if (forecast && forecast.length > 0) {
                     cards.push(...forecast);
@@ -80,11 +75,19 @@ export default function WeatherSection({
             }
         }
         loadWeather();
-    }, [location?.city, location?.neighborhood, location?.latitude, location?.longitude]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [location, location?.city, location?.neighborhood, location?.latitude, location?.longitude]);
+
+    const renderWeatherItem = useCallback(
+        ({ item }: { item: WeatherCardData }) => <WeatherPreviewCard weather={item} />,
+        [],
+    );
 
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
                 <Text style={styles.title}>
                     {currentDate}
@@ -94,41 +97,21 @@ export default function WeatherSection({
                     style={styles.locationButton}
                     onPress={onLocationPress}
                 >
-                    <View
-                        style={
-                            styles.locationButtonContainer
-                        }
-                    >
+                    <View style={styles.locationButtonContainer}>
                         <AppIcon
-                            icon={
-                                AppIcons.MAP_PIN
-                            }
+                            icon={AppIcons.MAP_PIN}
                             size={14}
-                            color={
-                                colors.black
-                            }
+                            color={colors.black}
                         />
 
-                        <Text
-                            style={
-                                styles.locationButtonText
-                            }
-                        >
-                            {
-                                formatLocation(
-                                    location,
-                                )
-                            }
+                        <Text style={styles.locationButtonText}>
+                            {location ? formatLocation(location) : 'Definir localização'}
                         </Text>
 
                         <AppIcon
-                            icon={
-                                AppIcons.PENCIL_SIMPLE
-                            }
+                            icon={AppIcons.PENCIL_SIMPLE}
                             size={14}
-                            color={
-                                colors.primary
-                            }
+                            color={colors.primary}
                         />
                     </View>
                 </TouchableOpacity>
@@ -138,9 +121,7 @@ export default function WeatherSection({
                 horizontal
                 data={weatherData}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <WeatherPreviewCard weather={item} />
-                )}
+                renderItem={renderWeatherItem}
                 ItemSeparatorComponent={Separator}
                 contentContainerStyle={styles.listContent}
                 showsHorizontalScrollIndicator={false}
@@ -166,7 +147,6 @@ export default function WeatherSection({
                     </View>
                 ))}
             </View>
-
         </View>
     );
 }

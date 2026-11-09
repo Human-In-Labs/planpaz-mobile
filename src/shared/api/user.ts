@@ -1,4 +1,5 @@
 import { api } from './client';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 // Espelha com.humanin.planpaz.dto.UserSettingsDTO
 export interface UserSettings {
@@ -53,11 +54,27 @@ export interface UserSummary {
     avatarUrl?: string | null;
 }
 
+function normalizeUserSummary(u: UserSummary): UserSummary {
+    if (!u) return u;
+    return {
+        ...u,
+        avatarUrl: optimizeCloudinaryUrl(u.avatarUrl, 'avatar') || u.avatarUrl,
+    };
+}
+
+function normalizeUserSettings(s: UserSettings): UserSettings {
+    if (!s) return s;
+    return {
+        ...s,
+        avatarUrl: optimizeCloudinaryUrl(s.avatarUrl, 'avatar') || s.avatarUrl,
+    };
+}
+
 // Backend: @RequestMapping("/api/user") em UserController
 
 export async function getMinhasConfiguracoes(): Promise<UserSettings> {
     const response = await api.get<UserSettings>('/user/settings');
-    return response.data;
+    return normalizeUserSettings(response.data);
 }
 
 // Alias para compatibilidade
@@ -65,17 +82,17 @@ export const getUserSettings = getMinhasConfiguracoes;
 
 export async function atualizarPreferencias(data: UserPreferences): Promise<UserSettings> {
     const response = await api.put<UserSettings>('/user/preferences', data);
-    return response.data;
+    return normalizeUserSettings(response.data);
 }
 
 export async function atualizarConfiguracoes(data: UserSettings): Promise<UserSettings> {
     const response = await api.put<UserSettings>('/user/settings', data);
-    return response.data;
+    return normalizeUserSettings(response.data);
 }
 
 export async function pesquisarUsuarios(username: string): Promise<UserSummary[]> {
     const response = await api.get<UserSummary[]>('/user/search', { params: { username } });
-    return response.data;
+    return Array.isArray(response.data) ? response.data.map(normalizeUserSummary) : [];
 }
 
 export async function verificarDisponibilidadeUsername(username: string): Promise<boolean> {
@@ -97,12 +114,12 @@ export async function deixarDeSeguirUsuario(id: string): Promise<void> {
 
 export async function getSeguidores(id: string): Promise<UserSummary[]> {
     const response = await api.get<UserSummary[]>(`/user/${id}/followers`);
-    return response.data;
+    return Array.isArray(response.data) ? response.data.map(normalizeUserSummary) : [];
 }
 
 export async function getSeguindo(id: string): Promise<UserSummary[]> {
     const response = await api.get<UserSummary[]>(`/user/${id}/following`);
-    return response.data;
+    return Array.isArray(response.data) ? response.data.map(normalizeUserSummary) : [];
 }
 
 export async function removerSeguidor(followerId: string): Promise<void> {
@@ -117,6 +134,8 @@ export interface UserStats {
     totalPosts: number;
     daysOnApp: number;
     streakCount: number;
+    followersCount?: number;
+    followingCount?: number;
 }
 
 export async function getUserStats(userId?: string): Promise<UserStats> {
@@ -146,7 +165,10 @@ export interface PublicUserProfile {
 
 export async function getPublicUserProfile(id: string): Promise<PublicUserProfile> {
     const response = await api.get<PublicUserProfile>(`/user/${id}/profile`);
-    return response.data;
+    return {
+        ...response.data,
+        avatarUrl: optimizeCloudinaryUrl(response.data?.avatarUrl, 'avatar') || response.data?.avatarUrl,
+    };
 }
 
 export interface RecentActivityResponse {
@@ -164,5 +186,11 @@ export interface RecentActivityResponse {
 
 export async function getFollowingActivities(userId: string): Promise<RecentActivityResponse[]> {
     const response = await api.get<RecentActivityResponse[]>(`/user/${userId}/activities`);
-    return response.data;
+    return Array.isArray(response.data)
+        ? response.data.map(act => ({
+              ...act,
+              userAvatarUrl: optimizeCloudinaryUrl(act.userAvatarUrl, 'avatar') || act.userAvatarUrl,
+              imageUrl: optimizeCloudinaryUrl(act.imageUrl, 'thumb') || act.imageUrl,
+          }))
+        : [];
 }

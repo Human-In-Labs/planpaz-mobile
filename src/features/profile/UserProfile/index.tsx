@@ -175,62 +175,46 @@ export default function UserProfileScreen() {
 
             setUserStatistics(stats);
 
-            try {
-                const userAchData = await obterConquistasUsuario(userId);
-                if (Array.isArray(userAchData) && userAchData.length > 0) {
-                    const mappedAchievements: Achievement[] = userAchData
-                        .filter((item: any) => Boolean(item.unlocked))
-                        .map((item: any) => ({
-                            id: item.id,
-                            title: item.name,
-                            description: item.description,
-                            icon: item.icon,
-                            unlocked: true,
-                            progress: item.progress,
-                            maxProgress: item.maxProgress,
-                            date: item.unlockedAt
-                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
-                                : undefined,
-                        }));
-                    setAchievements(mappedAchievements);
-                } else if (data.achievements && Array.isArray(data.achievements)) {
-                    const mappedAchievements: Achievement[] = data.achievements
-                        .filter((item: any) => Boolean(item.unlocked))
-                        .map((item: any) => ({
-                            id: item.id,
-                            title: item.name,
-                            description: item.description,
-                            icon: item.icon,
-                            unlocked: true,
-                            progress: item.progress,
-                            maxProgress: item.maxProgress,
-                            date: item.unlockedAt
-                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
-                                : undefined,
-                        }));
-                    setAchievements(mappedAchievements);
-                } else {
-                    setAchievements([]);
-                }
-            } catch (achErr) {
-                console.log('[USER_PROFILE] Erro ao buscar conquistas do usuário:', achErr);
-                if (data.achievements && Array.isArray(data.achievements)) {
-                    const mappedAchievements: Achievement[] = data.achievements
-                        .filter((item: any) => Boolean(item.unlocked))
-                        .map((item: any) => ({
-                            id: item.id,
-                            title: item.name,
-                            description: item.description,
-                            icon: item.icon,
-                            unlocked: true,
-                            progress: item.progress,
-                            maxProgress: item.maxProgress,
-                            date: item.unlockedAt
-                                ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
-                                : undefined,
-                        }));
-                    setAchievements(mappedAchievements);
-                } else {
+            if (data.achievements && Array.isArray(data.achievements) && data.achievements.length > 0) {
+                const mappedAchievements: Achievement[] = data.achievements
+                    .filter((item: any) => Boolean(item.unlocked))
+                    .map((item: any) => ({
+                        id: item.id,
+                        title: item.name,
+                        description: item.description,
+                        icon: item.icon,
+                        unlocked: true,
+                        progress: item.progress,
+                        maxProgress: item.maxProgress,
+                        date: item.unlockedAt
+                            ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                            : undefined,
+                    }));
+                setAchievements(mappedAchievements);
+            } else {
+                try {
+                    const userAchData = await obterConquistasUsuario(userId);
+                    if (Array.isArray(userAchData) && userAchData.length > 0) {
+                        const mappedAchievements: Achievement[] = userAchData
+                            .filter((item: any) => Boolean(item.unlocked))
+                            .map((item: any) => ({
+                                id: item.id,
+                                title: item.name,
+                                description: item.description,
+                                icon: item.icon,
+                                unlocked: true,
+                                progress: item.progress,
+                                maxProgress: item.maxProgress,
+                                date: item.unlockedAt
+                                    ? new Date(item.unlockedAt).toLocaleDateString('pt-BR')
+                                    : undefined,
+                            }));
+                        setAchievements(mappedAchievements);
+                    } else {
+                        setAchievements([]);
+                    }
+                } catch (achErr) {
+                    console.log('[USER_PROFILE] Erro ao buscar conquistas do usuário:', achErr);
                     setAchievements([]);
                 }
             }
@@ -271,7 +255,7 @@ export default function UserProfileScreen() {
         setFollowersOverlayTitle(
             `Seguidores de @${cleanUsername}`,
         );
-
+        setFollowersOverlayUsers([]);
         setFollowersOverlayVisible(true);
 
         try {
@@ -309,7 +293,7 @@ export default function UserProfileScreen() {
         setFollowersOverlayTitle(
             `Pessoas que @${cleanUsername} segue`,
         );
-
+        setFollowersOverlayUsers([]);
         setFollowersOverlayVisible(true);
 
         try {

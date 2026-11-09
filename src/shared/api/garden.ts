@@ -3,6 +3,7 @@ import { Plant, PlantStage } from './plant';
 import { AchievementProgress } from './achievement';
 import { CultivatedPlant } from '../../features/garden/types';
 import { translateTagToPT, translateTagsToPT } from '../utils/tagMapper';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 // Espelha com.humanin.planpaz.dto.GardenPlantResponseDTO
 export interface GardenPlant {
@@ -83,6 +84,11 @@ export interface WateringReminder {
     message?: string;
 }
 
+export interface GardenRemindersResponse {
+    totalGardenPlants: number;
+    reminders: WateringReminder[];
+}
+
 export interface WateringStatus {
     plantaId: string;
     nomePlanta: string;
@@ -115,10 +121,71 @@ export const ROOM_ENUM_TO_LABEL: Record<string, string> = {
     'OTHER': 'Outro',
 };
 
+const GARDEN_CACHE_TTL_MS = 20_000;
+let gardenListCache: { data: GardenPlant[]; timestamp: number } | null = null;
+let inFlightGardenPromise: Promise<GardenPlant[]> | null = null;
+
+export function invalidateGardenCache(): void {
+    gardenListCache = null;
+    inFlightGardenPromise = null;
+}
+
+function normalizeGardenPlant(gp: GardenPlant): GardenPlant {
+    if (!gp) return gp;
+    return {
+        ...gp,
+        imagePath: optimizeCloudinaryUrl(gp.imagePath, 'card') || gp.imagePath,
+        plant: gp.plant
+            ? {
+                  ...gp.plant,
+                  imagePath: optimizeCloudinaryUrl(gp.plant.imagePath, 'card') || gp.plant.imagePath,
+              }
+            : gp.plant,
+        stage: gp.stage
+            ? {
+                  ...gp.stage,
+                  imagePath: optimizeCloudinaryUrl(gp.stage.imagePath, 'thumb') || gp.stage.imagePath,
+              }
+            : gp.stage,
+    };
+}
+
+function normalizeWateringReminder(r: WateringReminder): WateringReminder {
+    if (!r) return r;
+    return {
+        ...r,
+        plantImage: optimizeCloudinaryUrl(r.plantImage, 'thumb') || r.plantImage,
+    };
+}
+
 // GET /api/garden
-export async function listarJardim(): Promise<GardenPlant[]> {
-    const response = await api.get<GardenPlant[]>('/garden');
-    return response.data;
+export async function listarJardim(forceRefresh = false): Promise<GardenPlant[]> {
+    if (
+        !forceRefresh &&
+        gardenListCache &&
+        Date.now() - gardenListCache.timestamp < GARDEN_CACHE_TTL_MS
+    ) {
+        return gardenListCache.data;
+    }
+
+    if (!forceRefresh && inFlightGardenPromise) {
+        return inFlightGardenPromise;
+    }
+
+    inFlightGardenPromise = (async () => {
+        try {
+            const response = await api.get<GardenPlant[]>('/garden');
+            const normalized = Array.isArray(response.data)
+                ? response.data.map(normalizeGardenPlant)
+                : [];
+            gardenListCache = { data: normalized, timestamp: Date.now() };
+            return normalized;
+        } finally {
+            inFlightGardenPromise = null;
+        }
+    })();
+
+    return inFlightGardenPromise;
 }
 
 // GET /api/garden/{id}
@@ -126,7 +193,7 @@ export async function buscarPlantaDoJardim(
     id: string,
 ): Promise<GardenPlant> {
     const response = await api.get<GardenPlant>(`/garden/${id}`);
-    return response.data;
+    return normalizeGardenPlant(response.data);
 }
 
 export interface ApiResponse {
@@ -145,6 +212,7 @@ export async function adicionarAoJardim(
         room: data.room ? (ROOM_LABEL_TO_ENUM[data.room] || data.room) : undefined,
     };
     const response = await api.post<ApiResponse>('/garden/add', payload);
+    invalidateGardenCache();
     return response.data;
 }
 
@@ -158,6 +226,7 @@ export async function editarPlantaDoJardim(
         room: data.room ? (ROOM_LABEL_TO_ENUM[data.room] || data.room) : undefined,
     };
     const response = await api.put<ApiResponse>(`/garden/${id}`, payload);
+    invalidateGardenCache();
     return response.data;
 }
 
@@ -166,6 +235,7 @@ export async function excluirPlantaDoJardim(
     id: string,
 ): Promise<ApiResponse> {
     const response = await api.delete<ApiResponse>(`/garden/${id}`);
+    invalidateGardenCache();
     return response.data;
 }
 
@@ -174,6 +244,7 @@ export async function regarPlanta(
     id: string,
 ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(`/garden/watering/${id}`);
+    invalidateGardenCache();
     return response.data;
 }
 
@@ -182,6 +253,7 @@ export async function adubarPlanta(
     id: string,
 ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(`/garden/fertilize/${id}`);
+    invalidateGardenCache();
     return response.data;
 }
 
@@ -190,6 +262,7 @@ export async function podarPlanta(
     id: string,
 ): Promise<ApiResponse> {
     const response = await api.post<ApiResponse>(`/garden/prune/${id}`);
+    invalidateGardenCache();
     return response.data;
 }
 
@@ -206,7 +279,43 @@ export async function getStageSuggestion(
     id: string,
 ): Promise<StageSuggestion | null> {
     const response = await api.get<StageSuggestion>(`/garden/${id}/stage-suggestion`);
-    return response.status === 204 ? null : response.data;
+    if (response.status === 204 || !response.data) {
+        return null;
+    }
+    return {
+        ...response.data,
+        currentStage: response.data.currentStage
+            ? {
+                  ...response.data.currentStage,
+                  imagePath:
+                      optimizeCloudinaryUrl(response.data.currentStage.imagePath, 'thumb') ||
+                      response.data.currentStage.imagePath,
+              }
+            : response.data.currentStage,
+        suggestedStage: response.data.suggestedStage
+            ? {
+                  ...response.data.suggestedStage,
+                  imagePath:
+                      optimizeCloudinaryUrl(response.data.suggestedStage.imagePath, 'thumb') ||
+                      response.data.suggestedStage.imagePath,
+              }
+            : response.data.suggestedStage,
+    };
+}
+
+// GET /api/garden/reminders?count=...
+export async function getLembretesJardim(
+    count = 1,
+): Promise<GardenRemindersResponse> {
+    const response = await api.get<GardenRemindersResponse>('/garden/reminders', {
+        params: { count },
+    });
+    return {
+        totalGardenPlants: response.data?.totalGardenPlants ?? 0,
+        reminders: Array.isArray(response.data?.reminders)
+            ? response.data.reminders.map(normalizeWateringReminder)
+            : [],
+    };
 }
 
 // GET /api/garden/next-watering/{id}
@@ -214,7 +323,7 @@ export async function getProximaRega(
     id: string,
 ): Promise<WateringReminder> {
     const response = await api.get<WateringReminder>(`/garden/next-watering/${id}`);
-    return response.data;
+    return normalizeWateringReminder(response.data);
 }
 
 // GET /api/garden/next-waterings/{id}
@@ -222,7 +331,9 @@ export async function getProximasRegas(
     id: string,
 ): Promise<WateringReminder[]> {
     const response = await api.get<WateringReminder[]>(`/garden/next-waterings/${id}`);
-    return response.data;
+    return Array.isArray(response.data)
+        ? response.data.map(normalizeWateringReminder)
+        : [];
 }
 
 // GET /api/garden/watering-status/{id}?cidade=...
@@ -279,11 +390,12 @@ export function mapGardenPlantToCultivatedPlant(item: GardenPlant): CultivatedPl
 
     const description = item.plant?.description || 'Planta cultivada no jardim Planpaz.';
 
-    const imageSource = item.imagePath
-        ? { uri: item.imagePath }
-        : item.plant?.imagePath
-            ? { uri: item.plant.imagePath }
-            : defaultImage;
+    const optimizedPlantUri = optimizeCloudinaryUrl(item.imagePath || item.plant?.imagePath, 'card');
+    const imageSource = optimizedPlantUri
+        ? { uri: optimizedPlantUri }
+        : defaultImage;
+
+    const optimizedStageUri = optimizeCloudinaryUrl(item.stage?.imagePath, 'thumb');
 
     return {
         id: String(item.id),
@@ -322,7 +434,7 @@ export function mapGardenPlantToCultivatedPlant(item: GardenPlant): CultivatedPl
                 title: 'Estágio atual',
                 label: item.stage?.name || 'Crescimento',
                 description: item.stage?.description || 'Planta em desenvolvimento ativo.',
-                image: item.stage?.imagePath ? { uri: item.stage.imagePath } : defaultImage,
+                image: optimizedStageUri ? { uri: optimizedStageUri } : defaultImage,
             },
         ],
         careActions: [

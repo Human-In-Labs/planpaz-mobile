@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Animated,
     View,
@@ -29,6 +29,7 @@ import {
 import { getPlantTags } from '../../../shared/utils/tagMapper';
 import { getSpeciesCareGuide } from '../../../shared/utils/plantDataDatabase';
 import BottomActionOverlay from '../../../shared/components/BottomActionOverlay';
+import LoadingSpinner from '../../../shared/components/LoadingSpinner';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -59,6 +60,7 @@ export default function SpeciesDetailsScreen() {
     );
 
     const [species, setSpecies] = useState<Plant | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [descriptionExpanded, setDescriptionExpanded] =
         useState(false);
     const [descriptionHasOverflow, setDescriptionHasOverflow] =
@@ -67,6 +69,7 @@ export default function SpeciesDetailsScreen() {
 
     useEffect(() => {
         if (!speciesId) {
+            setIsLoading(false);
             return;
         }
 
@@ -74,6 +77,7 @@ export default function SpeciesDetailsScreen() {
 
         const carregarEspecie = async () => {
             try {
+                setIsLoading(true);
                 const data = await buscarPlantPorId(speciesId);
 
                 if (isMounted) {
@@ -84,6 +88,10 @@ export default function SpeciesDetailsScreen() {
 
                 if (isMounted) {
                     setSpecies(null);
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoading(false);
                 }
             }
         };
@@ -100,6 +108,33 @@ export default function SpeciesDetailsScreen() {
         };
     }, [speciesId]);
 
+    const tags = useMemo(() => (species ? getPlantTags(species) : []), [species]);
+    const guideData = useMemo(
+        () => getSpeciesCareGuide(species?.name || ''),
+        [species?.name],
+    );
+
+    if (isLoading) {
+        return (
+            <SafeAreaView edges={['top']} style={styles.container}>
+                <AppHeader
+                    title="Espécie"
+                    backButton
+                    onBackPress={() => navigation.goBack()}
+                />
+                <View
+                    style={{
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 16,
+                    }}
+                >
+                    <LoadingSpinner />
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     if (!species) {
         return (
@@ -125,8 +160,6 @@ export default function SpeciesDetailsScreen() {
             </SafeAreaView>
         );
     }
-
-    const tags = getPlantTags(species);
 
     const description =
         species.description || 'Sem descrição disponível.';
@@ -155,7 +188,7 @@ export default function SpeciesDetailsScreen() {
                         },
                     ],
                     {
-                        useNativeDriver: false,
+                        useNativeDriver: true,
                     },
                 )}
                 scrollEventThrottle={16}
@@ -336,7 +369,6 @@ export default function SpeciesDetailsScreen() {
                 </View>
 
                 {(() => {
-                    const guideData = getSpeciesCareGuide(species.name);
                     return (
                         <View style={styles.careGuideCard}>
                             <Text style={styles.sectionHeader}>

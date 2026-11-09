@@ -7,7 +7,12 @@ import {
     RemoteMessage,
 } from '@react-native-firebase/messaging';
 import { NotificationData } from '../types/notification';
-import { getToken, getUserId } from './storage';
+import {
+    getLastSyncedFcmToken,
+    getToken,
+    getUserId,
+    saveLastSyncedFcmToken,
+} from './storage';
 import { atualizarPreferencias } from '../api/user';
 
 const NOTIFICATIONS_STORAGE_PREFIX = '@planpaz:local_notifications:';
@@ -15,6 +20,7 @@ const MAX_LOCAL_NOTIFICATIONS = 50;
 
 type NotificationListener = () => void;
 const listeners = new Set<NotificationListener>();
+const notificationsMemoryCache = new Map<string, NotificationData[]>();
 
 function notifyListeners() {
     listeners.forEach(listener => {
@@ -70,7 +76,7 @@ export const notificationService = {
 
         try {
             const key = await getStorageKey();
-            const current = await this.getAll();
+            const current = await this.getAll(key);
             const id = `weather-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const newItem: NotificationData = {
                 id,
@@ -81,6 +87,7 @@ export const notificationService = {
             };
 
             const updated = [newItem, ...current].slice(0, MAX_LOCAL_NOTIFICATIONS);
+            notificationsMemoryCache.set(key, updated);
             await AsyncStorage.setItem(key, JSON.stringify(updated));
             notifyListeners();
             return newItem;
@@ -90,15 +97,21 @@ export const notificationService = {
         }
     },
 
-    async getAll(): Promise<NotificationData[]> {
+    async getAll(resolvedKey?: string): Promise<NotificationData[]> {
         try {
-            const key = await getStorageKey();
+            const key = resolvedKey || (await getStorageKey());
+            if (notificationsMemoryCache.has(key)) {
+                return notificationsMemoryCache.get(key)!;
+            }
             const raw = await AsyncStorage.getItem(key);
             if (!raw) {
+                notificationsMemoryCache.set(key, []);
                 return [];
             }
             const parsed = JSON.parse(raw);
-            return Array.isArray(parsed) ? parsed : [];
+            const list = Array.isArray(parsed) ? parsed : [];
+            notificationsMemoryCache.set(key, list);
+            return list;
         } catch (error) {
             console.warn('[NOTIFICATIONS] Erro ao ler notificações locais:', error);
             return [];
@@ -135,7 +148,7 @@ export const notificationService = {
 
         try {
             const key = await getStorageKey();
-            const current = await this.getAll();
+            const current = await this.getAll(key);
 
             if (current.some(item => item.id === id)) {
                 return null;
@@ -150,6 +163,7 @@ export const notificationService = {
             };
 
             const updated = [newItem, ...current].slice(0, MAX_LOCAL_NOTIFICATIONS);
+            notificationsMemoryCache.set(key, updated);
             await AsyncStorage.setItem(key, JSON.stringify(updated));
             notifyListeners();
             return newItem;
@@ -166,8 +180,9 @@ export const notificationService = {
 
         try {
             const key = await getStorageKey();
-            const current = await this.getAll();
+            const current = await this.getAll(key);
             const remaining = current.filter(item => !ids.includes(item.id));
+            notificationsMemoryCache.set(key, remaining);
             await AsyncStorage.setItem(key, JSON.stringify(remaining));
             notifyListeners();
             return remaining;
@@ -198,8 +213,12 @@ export const notificationService = {
             const fcmToken = await getFcmToken(messagingInstance);
 
             if (fcmToken) {
-                await atualizarPreferencias({ fcmToken });
-                console.log('[FCM] Token sincronizado com o backend com sucesso.');
+                const lastSynced = await getLastSyncedFcmToken();
+                if (lastSynced !== fcmToken) {
+                    await atualizarPreferencias({ fcmToken });
+                    await saveLastSyncedFcmToken(fcmToken);
+                    console.log('[FCM] Token sincronizado com o backend com sucesso.');
+                }
                 return fcmToken;
             }
         } catch (error) {
@@ -213,6 +232,7 @@ export const notificationService = {
             const authToken = await getToken();
             if (authToken) {
                 await atualizarPreferencias({ fcmToken: '' });
+                await saveLastSyncedFcmToken('');
             }
         } catch (error) {
             console.log('[FCM] Aviso ao limpar fcmToken no logout:', error);

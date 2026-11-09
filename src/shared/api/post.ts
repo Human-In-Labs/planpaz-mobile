@@ -1,5 +1,6 @@
 import { api } from './client';
 import { AchievementProgress } from './achievement';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 export interface PostResponse {
     id: string;
@@ -39,6 +40,26 @@ export interface CreatePostRequest {
     tags?: string[];
 }
 
+function normalizePost(post: PostResponse): PostResponse {
+    if (!post) return post;
+    return {
+        ...post,
+        media: optimizeCloudinaryUrl(post.media, 'feed') || post.media,
+        authorAvatarUrl: optimizeCloudinaryUrl(post.authorAvatarUrl, 'avatar') || post.authorAvatarUrl,
+    };
+}
+
+function normalizeComment(comment: CommentResponse): CommentResponse {
+    if (!comment) return comment;
+    return {
+        ...comment,
+        authorAvatarUrl: optimizeCloudinaryUrl(comment.authorAvatarUrl, 'avatar') || comment.authorAvatarUrl,
+        replies: Array.isArray(comment.replies)
+            ? comment.replies.map(normalizeComment)
+            : comment.replies,
+    };
+}
+
 export async function listarPosts(
     page?: number,
     size?: number,
@@ -50,7 +71,12 @@ export async function listarPosts(
         params: { page, size, currentUserId: authorId, tag, followingOnly },
     });
 
-    return response.data;
+    return {
+        ...response.data,
+        content: Array.isArray(response.data?.content)
+            ? response.data.content.map(normalizePost)
+            : [],
+    };
 }
 
 export async function obterPostPorId(
@@ -61,7 +87,7 @@ export async function obterPostPorId(
         params: { currentUserId },
     });
 
-    return response.data;
+    return normalizePost(response.data);
 }
 
 export async function criarPost(
@@ -69,7 +95,7 @@ export async function criarPost(
 ): Promise<PostResponse> {
     const response = await api.post<PostResponse>('/posts', data);
 
-    return response.data;
+    return normalizePost(response.data);
 }
 
 export interface CommentResponse {
@@ -81,6 +107,7 @@ export interface CommentResponse {
     authorUsername: string;
     authorAvatarUrl?: string | null;
     parentCommentId?: string | null;
+    replies?: CommentResponse[];
     unlockedAchievement?: AchievementProgress;
     unlockedAchievements?: AchievementProgress[];
 }
@@ -103,7 +130,12 @@ export async function listarComentarios(
         },
     );
 
-    return response.data;
+    return {
+        ...response.data,
+        content: Array.isArray(response.data?.content)
+            ? response.data.content.map(normalizeComment)
+            : [],
+    };
 }
 
 export async function criarComentario(
@@ -115,7 +147,7 @@ export async function criarComentario(
         data,
     );
 
-    return response.data;
+    return normalizeComment(response.data);
 }
 
 export async function listarRespostas(
@@ -131,7 +163,12 @@ export async function listarRespostas(
         },
     );
 
-    return response.data;
+    return {
+        ...response.data,
+        content: Array.isArray(response.data?.content)
+            ? response.data.content.map(normalizeComment)
+            : [],
+    };
 }
 
 export interface ToggleLikePostResponse {
@@ -209,6 +246,3 @@ export async function excluirPost(
         params: { authorId },
     });
 }
-
-
-

@@ -16,7 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../navigation/types';
 import { colors } from '../../../shared/theme';
 import { login, getUserSettings } from '../../../shared/api';
-import { saveToken, getToken, saveUserId, isUUID } from '../../../shared/services/storage';
+import { saveUser, saveUserId, isUUID } from '../../../shared/services/storage';
 import { verticalScale } from '../../../shared/theme/scale';
 import AppIcon from '../../../shared/components/AppIcon';
 import { showFeedback } from '../../../shared/components/FeedbackPopup';
@@ -74,28 +74,31 @@ export default function LoginScreen() {
       console.log('[LOGIN] Botão pressionado');
       console.log('[LOGIN] Email:', cleanEmail);
 
-      const data = await login({
+      await login({
         email: cleanEmail,
         password,
       });
 
-      if (data?.token) {
-        await saveToken(data.token);
-      }
-
-      try {
-        const userSettings = await getUserSettings();
-        if (userSettings?.id && isUUID(userSettings.id)) {
-          await saveUserId(userSettings.id);
-          console.log('[LOGIN] UserId salvo com sucesso:', userSettings.id);
-        }
-      } catch (userErr) {
-        console.log('[LOGIN] Aviso: erro ao buscar dados do usuário após login:', userErr);
-      }
-
-      const tokenSalvo = await getToken();
-
-      console.log('[LOGIN] Token salvo:', tokenSalvo);
+      // Warm user settings cache non-blockingly so HomeScreen has city/coords immediately
+      getUserSettings()
+        .then(async (userSettings) => {
+          if (userSettings?.id && isUUID(userSettings.id)) {
+            await saveUserId(userSettings.id);
+            await saveUser({
+              id: userSettings.id,
+              name: userSettings.name,
+              email: userSettings.email,
+              username: userSettings.username,
+              avatarUrl: userSettings.avatarUrl,
+              cityName: userSettings.cityName,
+              latitude: userSettings.latitude,
+              longitude: userSettings.longitude,
+            });
+          }
+        })
+        .catch((userErr) => {
+          console.log('[LOGIN] Aviso: erro ao buscar dados do usuário após login:', userErr);
+        });
 
       navigation.reset({
         index: 0,

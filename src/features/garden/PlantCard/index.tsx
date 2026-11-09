@@ -6,7 +6,7 @@ import AppIcon from '../../../shared/components/AppIcon';
 import { colors } from '../../../shared/theme';
 import { AppIcons } from '../../../shared/constants/appIcons';
 
-export default function PlantCard({
+function PlantCard({
     image,
     nickname,
     species,
@@ -56,3 +56,5 @@ export default function PlantCard({
         </TouchableOpacity>
     );
 }
+
+export default React.memo(PlantCard);

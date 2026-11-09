@@ -24,12 +24,11 @@ import {
     getSeguindo,
     getUserStats,
     listarJardim,
-    listarPosts,
     obterConquistasMe,
     UserSummary,
-    deixarDeSeguirUsuario
+    deixarDeSeguirUsuario,
 } from '../../shared/api';
-import { getUser } from '../../shared/services/storage';
+import { getUser, saveUser } from '../../shared/services/storage';
 import { notificationService } from '../../shared/services/notificationService';
 import { Profile } from './types';
 import { styles } from './styles';
@@ -50,6 +49,7 @@ export default function ProfileScreen() {
     const [followersList, setFollowersList] = useState<FollowerUser[]>([]);
     const [followingList, setFollowingList] = useState<FollowerUser[]>([]);
     const [userStatistics, setUserStatistics] = useState<Statistic[]>([]);
+    const [currentProfileUserId, setCurrentProfileUserId] = useState<string | null>(null);
 
     const [profile, setProfile] = useState<Profile>({
         username: '',
@@ -60,6 +60,41 @@ export default function ProfileScreen() {
         following: 0,
     });
 
+    const mapUsersToFollowers = useCallback((users: UserSummary[]): FollowerUser[] => {
+        return users.map((u: UserSummary) => ({
+            id: u.id,
+            username: u.username.startsWith('@') ? u.username : `@${u.username}`,
+            name: u.name,
+            avatar: u.avatarUrl ? { uri: u.avatarUrl } : DEFAULT_AVATAR,
+            isFollowing: true,
+        }));
+    }, []);
+
+    const carregarSeguidoresSobDemanda = useCallback(async (userId: string) => {
+        try {
+            const seguidores = await getSeguidores(userId);
+            if (Array.isArray(seguidores)) {
+                const mapped = mapUsersToFollowers(seguidores);
+                setFollowersList(mapped);
+                setProfile(prev => ({ ...prev, followers: mapped.length }));
+            }
+        } catch (err) {
+            console.log('[PROFILE] Erro ao carregar seguidores:', err);
+        }
+    }, [mapUsersToFollowers]);
+
+    const carregarSeguindoSobDemanda = useCallback(async (userId: string) => {
+        try {
+            const seguindo = await getSeguindo(userId);
+            if (Array.isArray(seguindo)) {
+                const mapped = mapUsersToFollowers(seguindo);
+                setFollowingList(mapped);
+                setProfile(prev => ({ ...prev, following: mapped.length }));
+            }
+        } catch (err) {
+            console.log('[PROFILE] Erro ao carregar seguindo:', err);
+        }
+    }, [mapUsersToFollowers]);
 
     const verificarNotificacoesLocais = useCallback(async () => {
         const list = await notificationService.getAll();
@@ -76,53 +111,61 @@ export default function ProfileScreen() {
         useCallback(() => {
             async function fetchUser() {
                 try {
-                    const settings = await getMinhasConfiguracoes();
+                    const [settings, statsData, achData] = await Promise.all([
+                        getMinhasConfiguracoes().catch(err => {
+                            console.log('[PROFILE] Erro ao carregar dados do usuário do backend:', err);
+                            return null;
+                        }),
+                        getUserStats().catch(statsErr => {
+                            console.log('[PROFILE] Erro ao carregar estatísticas do backend:', statsErr);
+                            return null;
+                        }),
+                        obterConquistasMe().catch(achErr => {
+                            console.log('[PROFILE] Erro ao buscar conquistas do backend:', achErr);
+                            return null;
+                        }),
+                    ]);
+
                     if (settings) {
                         const cleanUsername = settings.username
                             ? (settings.username.startsWith('@') ? settings.username.substring(1) : settings.username)
                             : '';
 
-                        let followersCount = 0;
-                        let followingCount = 0;
-                        let followersMapped: FollowerUser[] = [];
-                        let followingMapped: FollowerUser[] = [];
-
                         if (settings.id) {
-                            try {
-                                const seguidores = await getSeguidores(settings.id);
-                                if (Array.isArray(seguidores)) {
-                                    followersCount = seguidores.length;
-                                    followersMapped = seguidores.map((u: UserSummary) => ({
-                                        id: u.id,
-                                        username: u.username.startsWith('@') ? u.username : `@${u.username}`,
-                                        name: u.name,
-                                        avatar: u.avatarUrl ? { uri: u.avatarUrl } : DEFAULT_AVATAR,
-                                        isFollowing: true,
-                                    }));
-                                }
-                            } catch (err) {
-                                console.log('[PROFILE] Erro ao carregar seguidores:', err);
-                            }
-
-                            try {
-                                const seguindo = await getSeguindo(settings.id);
-                                if (Array.isArray(seguindo)) {
-                                    followingCount = seguindo.length;
-                                    followingMapped = seguindo.map((u: UserSummary) => ({
-                                        id: u.id,
-                                        username: u.username.startsWith('@') ? u.username : `@${u.username}`,
-                                        name: u.name,
-                                        avatar: u.avatarUrl ? { uri: u.avatarUrl } : DEFAULT_AVATAR,
-                                        isFollowing: true,
-                                    }));
-                                }
-                            } catch (err) {
-                                console.log('[PROFILE] Erro ao carregar seguindo:', err);
-                            }
+                            setCurrentProfileUserId(settings.id);
+                            await saveUser({
+                                id: settings.id,
+                                name: settings.name,
+                                email: settings.email,
+                                username: settings.username,
+                                avatarUrl: settings.avatarUrl,
+                                cityName: settings.cityName,
+                                latitude: settings.latitude,
+                                longitude: settings.longitude,
+                            });
                         }
 
-                        setFollowersList(followersMapped);
-                        setFollowingList(followingMapped);
+                        let followersCount = typeof statsData?.followersCount === 'number' ? statsData.followersCount : 0;
+                        let followingCount = typeof statsData?.followingCount === 'number' ? statsData.followingCount : 0;
+
+                        // Fallback if backend stats does not include follower/following counts
+                        if (
+                            settings.id &&
+                            (statsData?.followersCount === undefined || statsData?.followingCount === undefined)
+                        ) {
+                            const [seguidores, seguindo] = await Promise.all([
+                                getSeguidores(settings.id).catch(() => []),
+                                getSeguindo(settings.id).catch(() => []),
+                            ]);
+                            if (Array.isArray(seguidores)) {
+                                followersCount = seguidores.length;
+                                setFollowersList(mapUsersToFollowers(seguidores));
+                            }
+                            if (Array.isArray(seguindo)) {
+                                followingCount = seguindo.length;
+                                setFollowingList(mapUsersToFollowers(seguindo));
+                            }
+                        }
 
                         let plantsCount = 0;
                         let postsCount = 0;
@@ -131,20 +174,16 @@ export default function ProfileScreen() {
                         let ecoscoreVal = settings.ecoscore ?? 0;
                         let streakCount = 0;
 
-                        try {
-                            const statsData = await getUserStats(settings.id);
-                            if (statsData) {
-                                plantsCount = statsData.totalPlants;
-                                postsCount = statsData.totalPosts;
-                                daysInPlanpaz = statsData.daysOnApp;
-                                ecoscoreVal = statsData.totalEcoScore;
-                                streakCount = statsData.streakCount ?? 0;
-                                co2Display = statsData.totalCo2Grams >= 1000
-                                    ? `${(statsData.totalCo2Grams / 1000).toFixed(1)}kg`
-                                    : `${statsData.totalCo2Grams}g`;
-                            }
-                        } catch (statsErr) {
-                            console.log('[PROFILE] Erro ao carregar estatísticas do backend:', statsErr);
+                        if (statsData) {
+                            plantsCount = statsData.totalPlants;
+                            postsCount = statsData.totalPosts;
+                            daysInPlanpaz = statsData.daysOnApp;
+                            ecoscoreVal = statsData.totalEcoScore;
+                            streakCount = statsData.streakCount ?? 0;
+                            co2Display = statsData.totalCo2Grams >= 1000
+                                ? `${(statsData.totalCo2Grams / 1000).toFixed(1)}kg`
+                                : `${statsData.totalCo2Grams}g`;
+                        } else {
                             try {
                                 const jardim = await listarJardim();
                                 if (Array.isArray(jardim)) {
@@ -206,26 +245,22 @@ export default function ProfileScreen() {
                             followers: followersCount,
                             following: followingCount,
                         }));
+                    } else {
+                        const localUser = await getUser();
+                        if (localUser) {
+                            const cleanUsername = localUser.username
+                                ? (localUser.username.startsWith('@') ? localUser.username.substring(1) : localUser.username)
+                                : '';
+                            setProfile(prev => ({
+                                ...prev,
+                                username: cleanUsername || prev.username,
+                                name: localUser.name || prev.name,
+                            }));
+                        }
                     }
-                } catch (err) {
-                    console.log('[PROFILE] Erro ao carregar dados do usuário do backend:', err);
-                    const localUser = await getUser();
-                    if (localUser) {
-                        const cleanUsername = localUser.username
-                            ? (localUser.username.startsWith('@') ? localUser.username.substring(1) : localUser.username)
-                            : '';
-                        setProfile(prev => ({
-                            ...prev,
-                            username: cleanUsername || prev.username,
-                            name: localUser.name || prev.name,
-                        }));
-                    }
-                }
 
-                try {
-                    const data = await obterConquistasMe();
-                    if (data && Array.isArray(data)) {
-                        const mapped: Achievement[] = data.map(item => ({
+                    if (achData && Array.isArray(achData)) {
+                        const mapped: Achievement[] = achData.map(item => ({
                             id: item.id,
                             title: item.name,
                             description: item.description,
@@ -241,13 +276,13 @@ export default function ProfileScreen() {
                         const unlockedAchievements = mapped.filter(item => Boolean(item.unlocked));
                         setAchievements(unlockedAchievements);
                     }
-                } catch (achErr) {
-                    console.log('[PROFILE] Erro ao buscar conquistas do backend:', achErr);
+                } catch (err) {
+                    console.log('[PROFILE] Erro ao carregar perfil:', err);
                 }
             }
 
             fetchUser();
-        }, [])
+        }, [mapUsersToFollowers])
     );
 
     const handleConfirmUnfollow = async () => {
@@ -295,10 +330,16 @@ export default function ProfileScreen() {
                         onFollowersPress={() => {
                             setFollowersTitle('Meus seguidores');
                             setActiveOverlay('followers');
+                            if (currentProfileUserId) {
+                                carregarSeguidoresSobDemanda(currentProfileUserId);
+                            }
                         }}
                         onFollowingPress={() => {
                             setFollowersTitle('Todos que eu sigo');
                             setActiveOverlay('followers');
+                            if (currentProfileUserId) {
+                                carregarSeguindoSobDemanda(currentProfileUserId);
+                            }
                         }}
                         onActionPress={() => {
                             navigation.navigate('Configuracoes');

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
     FlatList,
@@ -38,19 +38,33 @@ export default function LibraryScreen() {
 
     const [scrollY] = useState(() => new Animated.Value(0));
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({});
     const [filterVisible, setFilterVisible] = useState(false);
     const [rawPlants, setRawPlants] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const hasLoadedOnceRef = useRef(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
 
     // Dispara a busca via API no backend com os parâmetros de pesquisa e filtro
-    const carregarPlantas = useCallback(async () => {
+    const carregarPlantas = useCallback(async (isPullToRefresh = false) => {
         try {
-            setLoading(true);
+            if (isPullToRefresh) {
+                setRefreshing(true);
+            } else {
+                setLoading(true);
+            }
 
             const params: PlantFilterParams = {};
-            if (search.trim()) {
-                params.search = search.trim();
+            if (debouncedSearch.trim()) {
+                params.search = debouncedSearch.trim();
             }
             if (selectedFilters.type && selectedFilters.type !== 'Todas') {
                 params.type = translateTagToEN(selectedFilters.type);
@@ -70,17 +84,19 @@ export default function LibraryScreen() {
 
             const plantsData = await listarPlants(params);
             setRawPlants(plantsData || []);
+            hasLoadedOnceRef.current = true;
         } catch (error) {
             console.error('[LIBRARY] Erro ao carregar biblioteca:', error);
             setRawPlants([]);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    }, [search, selectedFilters]);
+    }, [debouncedSearch, selectedFilters]);
 
     useFocusEffect(
         useCallback(() => {
-            carregarPlantas();
+            carregarPlantas(false);
         }, [carregarPlantas]),
     );
 
@@ -144,13 +160,16 @@ export default function LibraryScreen() {
                 ItemSeparatorComponent={ItemSeparator}
                 onScroll={Animated.event(
                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false },
+                    { useNativeDriver: true },
                 )}
                 scrollEventThrottle={16}
+                initialNumToRender={6}
+                maxToRenderPerBatch={6}
+                windowSize={7}
                 refreshControl={
                     <RefreshControl
-                        refreshing={loading}
-                        onRefresh={carregarPlantas}
+                        refreshing={refreshing}
+                        onRefresh={() => carregarPlantas(true)}
                         colors={[colors.primary]}
                         tintColor={colors.primary}
                     />

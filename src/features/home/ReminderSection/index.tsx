@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, FlatList, Text, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, FlatList, Text, ActivityIndicator } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { styles } from './styles';
@@ -30,14 +30,15 @@ export default function ReminderSection({ refreshTrigger }: ReminderSectionProps
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string>('');
 
-    const carregarLembretes = useCallback(async () => {
-        setLoading(true);
+    const carregarLembretes = useCallback(async (silent = false) => {
+        if (!silent) {
+            setLoading(true);
+        }
         setErrorMsg('');
         try {
-            const [remindersData, gardenPlants] = await Promise.all([
-                reminderService.getAll(),
-                reminderService.getGardenPlantsCount(),
-            ]);
+            // Execute getAll() first so lastKnownGardenPlantsCount is populated in a single call
+            const remindersData = await reminderService.getAll();
+            const gardenPlants = await reminderService.getGardenPlantsCount();
             setReminders(remindersData || []);
             setTotalPlantsCount(gardenPlants);
         } catch (error) {
@@ -50,50 +51,68 @@ export default function ReminderSection({ refreshTrigger }: ReminderSectionProps
 
     useFocusEffect(
         useCallback(() => {
-            carregarLembretes();
-        }, [carregarLembretes]),
+            carregarLembretes(reminders.length > 0);
+        }, [carregarLembretes, reminders.length]),
     );
 
     useEffect(() => {
         if (refreshTrigger) {
-            carregarLembretes();
+            carregarLembretes(true);
         }
     }, [refreshTrigger, carregarLembretes]);
 
-    const handlePressCard = (item: ReminderCardData) => {
-        const targetId = item.gardenPlantId || item.id;
-        if (!targetId) return;
-        (navigation as any).navigate('Garden', {
-            screen: 'PlantDetails',
-            params: { plantId: targetId },
-        });
-    };
+    const handlePressCard = useCallback(
+        (item: ReminderCardData) => {
+            const targetId = item.gardenPlantId || item.id;
+            if (!targetId) return;
+            (navigation as any).navigate('Garden', {
+                screen: 'PlantDetails',
+                params: { plantId: targetId },
+            });
+        },
+        [navigation],
+    );
 
-    const handleConcluirRega = async (item: ReminderCardData) => {
-        const targetId = item.gardenPlantId || item.id;
-        if (!targetId || actionLoadingId) return;
+    const handleConcluirRega = useCallback(
+        async (item: ReminderCardData) => {
+            const targetId = item.gardenPlantId || item.id;
+            if (!targetId || actionLoadingId) return;
 
-        try {
-            setActionLoadingId(targetId);
-            await reminderService.completeWatering(targetId);
-            showFeedback('Rega concluída');
-            await carregarLembretes();
-        } catch (err: any) {
-            console.error('[REMINDER_SECTION] Erro ao regar planta:', err);
-            const errorCode = err?.response?.data?.errorCode;
-            const backendMsg = err?.response?.data?.message;
+            try {
+                setActionLoadingId(targetId);
+                await reminderService.completeWatering(targetId);
+                showFeedback('Rega concluída');
+                await carregarLembretes(true);
+            } catch (err: any) {
+                console.error('[REMINDER_SECTION] Erro ao regar planta:', err);
+                const errorCode = err?.response?.data?.errorCode;
+                const backendMsg = err?.response?.data?.message;
 
-            if (errorCode === 'WATERING_TOO_EARLY') {
-                showFeedback(backendMsg || 'Não é possível marcar lembretes muito distantes como concluídos.');
-            } else if (backendMsg) {
-                showFeedback(backendMsg);
-            } else {
-                showFeedback('Não foi possível registrar a rega da planta.');
+                if (errorCode === 'WATERING_TOO_EARLY') {
+                    showFeedback(backendMsg || 'Não é possível marcar lembretes muito distantes como concluídos.');
+                } else if (backendMsg) {
+                    showFeedback(backendMsg);
+                } else {
+                    showFeedback('Não foi possível registrar a rega da planta.');
+                }
+            } finally {
+                setActionLoadingId(null);
             }
-        } finally {
-            setActionLoadingId(null);
-        }
-    };
+        },
+        [actionLoadingId, carregarLembretes],
+    );
+
+    const renderReminderItem = useCallback(
+        ({ item }: { item: ReminderCardData }) => (
+            <ReminderCard
+                reminder={item}
+                loading={actionLoadingId === (item.gardenPlantId || item.id)}
+                onPressCard={handlePressCard}
+                onPressButton={handleConcluirRega}
+            />
+        ),
+        [actionLoadingId, handlePressCard, handleConcluirRega],
+    );
 
     return (
         <View style={styles.container}>
@@ -133,14 +152,7 @@ export default function ReminderSection({ refreshTrigger }: ReminderSectionProps
                     horizontal
                     data={reminders}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <ReminderCard
-                            reminder={item}
-                            loading={actionLoadingId === (item.gardenPlantId || item.id)}
-                            onPressCard={handlePressCard}
-                            onPressButton={handleConcluirRega}
-                        />
-                    )}
+                    renderItem={renderReminderItem}
                     ItemSeparatorComponent={Separator}
                     contentContainerStyle={styles.listContent}
                     showsHorizontalScrollIndicator={false}
